@@ -24,6 +24,23 @@
     justify-content: center;
   }
 
+  #result {
+    position: absolute;
+    top: 4%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 420px;
+    min-height: 1.4em;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1b333a;
+    padding: 6px 10px;
+    box-sizing: border-box;
+    word-wrap: break-word;
+  }
+
   #menu {
     position: relative;
     width: min(90vw, 90vh, 440px);
@@ -91,6 +108,7 @@
 </head>
 <body>
   <div id="app">
+    <div id="result"></div>
     <div id="menu">
       <div class="btn-wrap" id="wrap1">
         <button class="menu-button" id="btn1" aria-label="Кнопка 1"></button>
@@ -111,11 +129,70 @@
     tg.expand();
   }
 
-  // Кнопка 1: пока ничего не делает
+  // ==== Генератор трюков ====
+  const resultEl = document.getElementById('result');
+
+  let additions = [];
+  let mainTricks = [];
+  let dataLoaded = false;
+  let hasResult = false; // есть ли сейчас текст на экране
+
+  // Загружаем оба списка из текстовых файлов рядом со страницей
+  async function loadLists() {
+    try {
+      const [addRes, mainRes] = await Promise.all([
+        fetch('data/additions.txt'),
+        fetch('data/main_tricks.txt'),
+      ]);
+      const addText = await addRes.text();
+      const mainText = await mainRes.text();
+
+      additions = addText.split('\n').map(s => s.trim()).filter(Boolean);
+      mainTricks = mainText.split('\n').map(s => s.trim()).filter(Boolean);
+      dataLoaded = additions.length > 0 && mainTricks.length > 0;
+    } catch (e) {
+      console.error('Не удалось загрузить списки трюков:', e);
+      dataLoaded = false;
+    }
+  }
+
+  function pickRandom(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function generateTrick() {
+    const mainTrick = pickRandom(mainTricks);
+
+    // Вероятность 1 к 3 — пропустить добавку из Additions
+    const skipAddition = Math.random() < (1 / 3);
+
+    if (skipAddition) {
+      return mainTrick;
+    }
+
+    const addition = pickRandom(additions);
+    return `${addition} ${mainTrick}`;
+  }
+
+  loadLists();
+
+  // Кнопка 1: стирает предыдущий результат и генерирует новый
   document.getElementById('btn1').addEventListener('click', () => {
-    // Пока намеренно ничего не происходит.
-    // Сюда позже можно добавить нужную логику.
-    console.log('Кнопка 1 нажата — действие пока не назначено');
+    // Шаг 1: стереть текущий текст
+    resultEl.textContent = '';
+    hasResult = false;
+
+    if (!dataLoaded) {
+      // На случай, если списки ещё не успели загрузиться
+      resultEl.textContent = 'Списки трюков ещё загружаются...';
+      return;
+    }
+
+    // Шаг 2: небольшая пауза для эффекта "стёрли — написали заново"
+    setTimeout(() => {
+      resultEl.textContent = generateTrick();
+      hasResult = true;
+    }, 120);
   });
 
   // Кнопка 2: закрывает приложение
