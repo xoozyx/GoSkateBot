@@ -132,46 +132,73 @@
   // ==== Генератор трюков ====
   const resultEl = document.getElementById('result');
 
-  let additions = [];
+  let stances = [];
   let mainTricks = [];
+  let additions = [];
   let dataLoaded = false;
-  let hasResult = false; // есть ли сейчас текст на экране
 
-  // Загружаем оба списка из текстовых файлов рядом со страницей
+  // Формат строки в файле: "Название" или "Название,вес" (вес по умолчанию — 1)
+  function parseWeightedList(text) {
+    return text
+      .split('\n')
+      .map(line => line.trim())
+      .filter(Boolean)
+      .map(line => {
+        const parts = line.split(',');
+        const name = parts[0].trim();
+        const weightRaw = parts.length > 1 ? parseFloat(parts[1]) : NaN;
+        const weight = !isNaN(weightRaw) && weightRaw > 0 ? weightRaw : 1;
+        return { value: name, weight };
+      });
+  }
+
+  // Взвешенный случайный выбор одного элемента из списка {value, weight}
+  function weightedPick(items) {
+    const total = items.reduce((sum, it) => sum + it.weight, 0);
+    let r = Math.random() * total;
+    for (const it of items) {
+      if (r < it.weight) return it.value;
+      r -= it.weight;
+    }
+    return items[items.length - 1].value; // подстраховка на случай погрешности округления
+  }
+
+  // Загружаем все три списка из текстовых файлов рядом со страницей
   async function loadLists() {
     try {
-      const [addRes, mainRes] = await Promise.all([
-        fetch('data/additions.txt'),
+      const [stanceRes, mainRes, addRes] = await Promise.all([
+        fetch('data/stances.txt'),
         fetch('data/main_tricks.txt'),
+        fetch('data/additions.txt'),
       ]);
-      const addText = await addRes.text();
-      const mainText = await mainRes.text();
+      stances = parseWeightedList(await stanceRes.text());
+      mainTricks = parseWeightedList(await mainRes.text());
+      additions = parseWeightedList(await addRes.text());
 
-      additions = addText.split('\n').map(s => s.trim()).filter(Boolean);
-      mainTricks = mainText.split('\n').map(s => s.trim()).filter(Boolean);
-      dataLoaded = additions.length > 0 && mainTricks.length > 0;
+      dataLoaded = mainTricks.length > 0; // stances и additions могут быть пустыми — это ок
     } catch (e) {
       console.error('Не удалось загрузить списки трюков:', e);
       dataLoaded = false;
     }
   }
 
-  function pickRandom(arr) {
-    return arr[Math.floor(Math.random() * arr.length)];
-  }
-
   function generateTrick() {
-    const mainTrick = pickRandom(mainTricks);
+    const parts = [];
 
-    // Вероятность 1 к 3 — пропустить добавку из Additions
-    const skipAddition = Math.random() < (1 / 3);
-
-    if (skipAddition) {
-      return mainTrick;
+    // Stance: попадает в результат в 1 случае из 3, иначе остаётся пустым
+    if (stances.length > 0 && Math.random() < (1 / 3)) {
+      parts.push(weightedPick(stances));
     }
 
-    const addition = pickRandom(additions);
-    return `${addition} ${mainTrick}`;
+    // Основной трюк — присутствует всегда
+    parts.push(weightedPick(mainTricks));
+
+    // Addition: пропускается с вероятностью 1 из 3, иначе добавляется
+    if (additions.length > 0 && Math.random() < (2 / 3)) {
+      parts.push(weightedPick(additions));
+    }
+
+    return parts.join(' ');
   }
 
   loadLists();
@@ -180,7 +207,6 @@
   document.getElementById('btn1').addEventListener('click', () => {
     // Шаг 1: стереть текущий текст
     resultEl.textContent = '';
-    hasResult = false;
 
     if (!dataLoaded) {
       // На случай, если списки ещё не успели загрузиться
@@ -191,7 +217,6 @@
     // Шаг 2: небольшая пауза для эффекта "стёрли — написали заново"
     setTimeout(() => {
       resultEl.textContent = generateTrick();
-      hasResult = true;
     }, 120);
   });
 
