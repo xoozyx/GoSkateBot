@@ -137,8 +137,9 @@
   let additions = [];
   let dataLoaded = false;
 
-  // Формат строки в файле: "Название" или "Название,вес" (вес — целое число от 1 до 5, по умолчанию 1).
-  // Строка "NULL,вес" — это шанс оставить данную часть трюка пустой.
+  // Формат строки в файле: "Название" или "Название,сложность" (сложность — целое число от 1 до 5, по умолчанию 1).
+  // Чем больше сложность, тем РЕЖЕ выпадает трюк — 1 самый частый, 5 самый редкий.
+  // Строка "NULL,вес" — особый случай: число здесь не сложность, а вес НАПРЯМУЮ (шанс оставить часть трюка пустой).
   function parseWeightedList(text) {
     return text
       .split('\n')
@@ -147,14 +148,20 @@
       .map(line => {
         const parts = line.split(',');
         const rawName = parts[0].trim();
-        const weightRaw = parts.length > 1 ? parseFloat(parts[1]) : NaN;
+        const numRaw = parts.length > 1 ? parseFloat(parts[1]) : NaN;
 
-        // Вес ограничен диапазоном 1–5 и округляется до целого
-        let weight = !isNaN(weightRaw) ? Math.round(weightRaw) : 1;
-        weight = Math.min(5, Math.max(1, weight));
+        // Число ограничено диапазоном 1–5 и округляется до целого
+        let num = !isNaN(numRaw) ? Math.round(numRaw) : 1;
+        num = Math.min(5, Math.max(1, num));
 
         // NULL (в любом регистре) — специальное значение "оставить пустым"
-        const value = rawName.toUpperCase() === 'NULL' ? null : rawName;
+        const isNull = rawName.toUpperCase() === 'NULL';
+        const value = isNull ? null : rawName;
+
+        // Для NULL число — это вес напрямую.
+        // Для обычного трюка число — это сложность, поэтому вес инвертируем:
+        // сложность 1 → вес 5 (часто), сложность 5 → вес 1 (редко)
+        const weight = isNull ? num : (6 - num);
 
         return { value, weight };
       });
