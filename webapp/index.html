@@ -15,6 +15,11 @@
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
 
+  img {
+    -webkit-user-drag: none;
+    user-select: none;
+  }
+
   #app {
     position: relative;
     width: 100%;
@@ -22,101 +27,143 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
   }
 
-  #result {
+  /* ==== Экран загрузки с логотипом ==== */
+  #logoScreen {
     position: absolute;
-    top: 4%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 90%;
-    max-width: 420px;
-    min-height: 1.4em;
-    text-align: center;
-    font-size: 18px;
-    font-weight: 600;
-    color: #1b333a;
-    padding: 6px 10px;
-    box-sizing: border-box;
-    word-wrap: break-word;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #cfe9ee;
+    opacity: 1;
+    transition: opacity 0.6s ease;
   }
 
+  #logoScreen.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  #logoScreen img {
+    width: 70%;
+    max-width: 360px;
+    height: auto;
+    image-rendering: pixelated;
+  }
+
+  /* ==== Главное меню ==== */
   #menu {
     position: relative;
-    width: min(90vw, 90vh, 440px);
-    height: min(90vw, 90vh, 440px);
+    width: min(80vw, 80vh, 380px);
+    aspect-ratio: 180 / 215;
     background-image: url('images/Main_menu_background.png');
     background-size: 100% 100%;
     background-repeat: no-repeat;
-    image-rendering: pixelated; /* убрать при желании более плавного масштабирования */
+    image-rendering: pixelated;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+  }
+
+  #menu.visible {
+    opacity: 1;
+  }
+
+  /* ==== Речевой пузырь с результатом ==== */
+  #bubble {
+    position: absolute;
+    top: -14%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 92%;
+    max-width: 360px;
+    box-sizing: border-box;
+    padding: 14px 16px 22px;
+    background-image: url('images/Text_bubble.png');
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    image-rendering: pixelated;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+  }
+
+  #bubble.active {
+    opacity: 1;
+  }
+
+  #result {
+    text-align: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff;
+    word-wrap: break-word;
+  }
+
+  /* ==== Кнопки ==== */
+  #buttons {
+    position: absolute;
+    left: 8%;
+    right: 8%;
+    top: 30%;
+    bottom: 10%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-evenly;
   }
 
   .menu-button {
-    position: absolute;
-    width: 34%;
-    aspect-ratio: 1 / 1;
-    background-size: 100% 100%;
-    background-repeat: no-repeat;
     border: none;
     cursor: pointer;
     padding: 0;
-    background-color: transparent;
+    background: transparent;
     -webkit-tap-highlight-color: transparent;
     transition: transform 0.08s ease;
-    image-rendering: pixelated;
   }
 
   .menu-button:active {
     transform: scale(0.93);
   }
 
-  #btn1 {
-    background-image: url('images/Main_menu_button_01.png');
-    left: 15%;
-    top: 38%;
+  .menu-button img {
+    display: block;
+    image-rendering: pixelated;
   }
 
-  #btn2 {
-    background-image: url('images/Main_menu_button_02.png');
-    right: 15%;
-    top: 38%;
-  }
-
-  .label {
-    position: absolute;
+  #btn1 img {
     width: 100%;
-    text-align: center;
-    top: 100%;
-    margin-top: 6px;
-    font-size: 12px;
-    color: #2c4a52;
+    height: auto;
   }
 
-  .btn-wrap {
-    position: absolute;
-    width: 34%;
-    top: 38%;
-  }
-  #wrap1 { left: 15%; }
-  #wrap2 { right: 15%; }
-
-  .btn-wrap .menu-button {
-    position: static;
-    width: 100%;
+  #btn2 img {
+    width: 62%;
+    height: auto;
+    margin: 0 auto;
   }
 </style>
 </head>
 <body>
   <div id="app">
-    <div id="result"></div>
+    <div id="logoScreen">
+      <img src="images/Logo.gif" alt="Логотип">
+    </div>
+
     <div id="menu">
-      <div class="btn-wrap" id="wrap1">
-        <button class="menu-button" id="btn1" aria-label="Кнопка 1"></button>
-        <div class="label">Кнопка 1</div>
+      <div id="bubble">
+        <div id="result"></div>
       </div>
-      <div class="btn-wrap" id="wrap2">
-        <button class="menu-button" id="btn2" aria-label="Закрыть"></button>
-        <div class="label">Закрыть</div>
+
+      <div id="buttons">
+        <button class="menu-button" id="btn1" aria-label="Кинуть трюк">
+          <img src="images/Roll_button.gif" alt="Кинуть трюк">
+        </button>
+        <button class="menu-button" id="btn2" aria-label="Закрыть">
+          <img src="images/Exit_button.gif" alt="Закрыть">
+        </button>
       </div>
     </div>
   </div>
@@ -129,8 +176,19 @@
     tg.expand();
   }
 
+  // ==== Заставка с логотипом ====
+  const LOGO_DURATION_MS = 2000;
+  const logoScreen = document.getElementById('logoScreen');
+  const menuEl = document.getElementById('menu');
+
+  setTimeout(() => {
+    logoScreen.classList.add('hidden');
+    menuEl.classList.add('visible');
+  }, LOGO_DURATION_MS);
+
   // ==== Генератор трюков ====
   const resultEl = document.getElementById('result');
+  const bubbleEl = document.getElementById('bubble');
 
   let stances = [];
   let mainTricks = [];
@@ -285,6 +343,7 @@
   const lastResult = loadFromStorage(STORAGE_KEY_LAST, '');
   if (lastResult) {
     resultEl.textContent = lastResult;
+    bubbleEl.classList.add('active');
   }
 
   function generateUniqueTrick() {
@@ -309,20 +368,23 @@
 
   loadLists();
 
-  // Кнопка 1: стирает предыдущий результат и генерирует новый
+  // Кнопка 1: стирает предыдущий результат, прячет пузырь и генерирует новый трюк
   document.getElementById('btn1').addEventListener('click', () => {
-    // Шаг 1: стереть текущий текст
+    // Шаг 1: спрятать пузырь и стереть текущий текст
+    bubbleEl.classList.remove('active');
     resultEl.textContent = '';
 
     if (!dataLoaded) {
       // На случай, если списки ещё не успели загрузиться
       resultEl.textContent = 'Списки трюков ещё загружаются...';
+      bubbleEl.classList.add('active');
       return;
     }
 
-    // Шаг 2: небольшая пауза для эффекта "стёрли — написали заново"
+    // Шаг 2: небольшая пауза для эффекта "стёрли — написали заново", затем показать пузырь с новым текстом
     setTimeout(() => {
       resultEl.textContent = generateUniqueTrick();
+      bubbleEl.classList.add('active');
     }, 120);
   });
 
