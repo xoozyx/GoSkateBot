@@ -227,7 +227,9 @@
     }
   }
 
-  function generateTrick() {
+  const MAX_REROLL_ATTEMPTS = 20; // защита от зацикливания, если правила REROLL противоречивы
+
+  function generateTrick(attempt = 0) {
     const stanceValue = stances.length > 0 ? weightedPick(stances) : null;
     const additionValue = additions.length > 0 ? weightedPick(additions) : null;
     const mainValue = weightedPick(mainTricks);
@@ -236,7 +238,73 @@
     const combo = [stanceValue, additionValue, mainValue].filter(Boolean).join(' ');
 
     // Если для получившейся комбинации есть замена названия — используем её
-    return nameReplacements.get(combo) || combo;
+    const finalResult = nameReplacements.get(combo) || combo;
+
+    // Особое значение REROLL — сгенерировать комбинацию заново
+    if (finalResult === 'REROLL') {
+      if (attempt >= MAX_REROLL_ATTEMPTS) {
+        console.warn('Достигнут лимит REROLL-попыток, показываю как есть.');
+        return combo;
+      }
+      return generateTrick(attempt + 1);
+    }
+
+    return finalResult;
+  }
+
+  // ==== Фильтр от повторов + сохранение между открытиями (localStorage) ====
+  const HISTORY_SIZE = 15;
+  const MAX_UNIQUE_ATTEMPTS = 30; // защита от зацикливания, если уникальных вариантов почти не осталось
+  const STORAGE_KEY_HISTORY = 'goskate_recentResults';
+  const STORAGE_KEY_LAST = 'goskate_lastResult';
+
+  // Безопасные обёртки: некоторые webview (в т.ч. иногда внутри Telegram) могут
+  // ограничивать доступ к localStorage — тогда просто работаем в режиме "только память".
+  function loadFromStorage(key, fallback) {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw !== null ? JSON.parse(raw) : fallback;
+    } catch (e) {
+      console.warn('localStorage недоступен, используем данные только в памяти:', e);
+      return fallback;
+    }
+  }
+
+  function saveToStorage(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (e) {
+      console.warn('Не удалось сохранить в localStorage:', e);
+    }
+  }
+
+  // Последние 15 результатов — не даём им повториться подряд
+  let recentResults = loadFromStorage(STORAGE_KEY_HISTORY, []);
+
+  // Показываем последний сгенерированный результат сразу при открытии приложения
+  const lastResult = loadFromStorage(STORAGE_KEY_LAST, '');
+  if (lastResult) {
+    resultEl.textContent = lastResult;
+  }
+
+  function generateUniqueTrick() {
+    let result;
+    let attempts = 0;
+
+    do {
+      result = generateTrick();
+      attempts++;
+    } while (recentResults.includes(result) && attempts < MAX_UNIQUE_ATTEMPTS);
+
+    recentResults.push(result);
+    if (recentResults.length > HISTORY_SIZE) {
+      recentResults.shift(); // убираем самый старый, окно "едет" вперёд
+    }
+
+    saveToStorage(STORAGE_KEY_HISTORY, recentResults);
+    saveToStorage(STORAGE_KEY_LAST, result);
+
+    return result;
   }
 
   loadLists();
@@ -254,7 +322,7 @@
 
     // Шаг 2: небольшая пауза для эффекта "стёрли — написали заново"
     setTimeout(() => {
-      resultEl.textContent = generateTrick();
+      resultEl.textContent = generateUniqueTrick();
     }, 120);
   });
 
