@@ -84,7 +84,6 @@
     width: 65%;
     height: 20.5%;
     box-sizing: border-box;
-    padding: 6% 8% 14%;
     background-image: url('images/Text_bubble.png');
     background-size: 100% 100%;
     background-repeat: no-repeat;
@@ -92,9 +91,6 @@
     opacity: 0;
     transition: opacity 0.25s ease;
     pointer-events: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
 
   #bubble.active {
@@ -102,6 +98,11 @@
   }
 
   #result {
+    position: absolute;
+    left: 8%;
+    right: 8%;
+    top: 44%; /* центр чёрной "подложки" пузыря, без учёта хвостика снизу */
+    transform: translateY(-50%);
     text-align: center;
     font-family: 'Press Start 2P', monospace;
     font-size: 9px;
@@ -190,7 +191,7 @@
   }
 
   // ==== Заставка с логотипом ====
-  const LOGO_DURATION_MS = 5000;
+  const LOGO_DURATION_MS = 3000;
   const logoScreen = document.getElementById('logoScreen');
   const menuEl = document.getElementById('menu');
 
@@ -401,8 +402,16 @@
     }, 120);
   });
 
-  // Кнопка 2: закрывает приложение
+  // Кнопка 2: стирает сохранённый трюк и закрывает приложение
   document.getElementById('btn2').addEventListener('click', () => {
+    // Стираем последний сохранённый результат — при следующем открытии
+    // приложение будет "чистым", без старого трюка на экране
+    try {
+      localStorage.removeItem(STORAGE_KEY_LAST);
+    } catch (e) {
+      console.warn('Не удалось очистить localStorage:', e);
+    }
+
     if (tg) {
       tg.close();
     } else {
