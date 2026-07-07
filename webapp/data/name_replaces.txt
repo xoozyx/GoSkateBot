@@ -1,0 +1,4 @@
+FS 180 Pop Shove-It,FS Big Spin
+BS 180 Pop Shove-It,BS Big Spin
+FS 360 Pop Shove-It,FS Bigger Spin
+BS 360 Pop Shove-It,BS Bigger Spin

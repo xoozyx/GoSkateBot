@@ -135,6 +135,7 @@
   let stances = [];
   let mainTricks = [];
   let additions = [];
+  let nameReplacements = new Map(); // "исходная комбинация" -> "замена"
   let dataLoaded = false;
 
   // Формат строки в файле: "Название" или "Название,сложность" (сложность — целое число от 1 до 5, по умолчанию 1).
@@ -167,6 +168,24 @@
       });
   }
 
+  // Формат строки в name_replaces.txt: "Исходная комбинация,Замена"
+  // Разбиваем по ПЕРВОЙ запятой — так замена сама может содержать запятые, если понадобится.
+  function parseReplacements(text) {
+    const map = new Map();
+    text
+      .split('\n')
+      .map(line => line.trim())
+      .filter(Boolean)
+      .forEach(line => {
+        const commaIndex = line.indexOf(',');
+        if (commaIndex === -1) return; // строка без запятой — пропускаем
+        const from = line.slice(0, commaIndex).trim();
+        const to = line.slice(commaIndex + 1).trim();
+        if (from && to) map.set(from, to);
+      });
+    return map;
+  }
+
   // Взвешенный случайный выбор одного элемента из списка {value, weight}
   // Может вернуть null, если выпало значение NULL — значит, эта часть трюка остаётся пустой
   function weightedPick(items) {
@@ -179,7 +198,8 @@
     return items[items.length - 1].value; // подстраховка на случай погрешности округления
   }
 
-  // Загружаем все три списка из текстовых файлов рядом со страницей
+  // Загружаем все списки из текстовых файлов рядом со страницей.
+  // Файл name_replaces.txt необязателен — если его нет, замены просто не применяются.
   async function loadLists() {
     try {
       const [stanceRes, mainRes, addRes] = await Promise.all([
@@ -196,14 +216,27 @@
       console.error('Не удалось загрузить списки трюков:', e);
       dataLoaded = false;
     }
+
+    try {
+      const replRes = await fetch('data/name_replaces.txt');
+      if (replRes.ok) {
+        nameReplacements = parseReplacements(await replRes.text());
+      }
+    } catch (e) {
+      console.warn('Файл name_replaces.txt не найден — замены названий не применяются.');
+    }
   }
 
   function generateTrick() {
     const stanceValue = stances.length > 0 ? weightedPick(stances) : null;
-    const mainValue = weightedPick(mainTricks);
     const additionValue = additions.length > 0 ? weightedPick(additions) : null;
+    const mainValue = weightedPick(mainTricks);
 
-    return [stanceValue, mainValue, additionValue].filter(Boolean).join(' ');
+    // Порядок: stance -> addition -> основной трюк
+    const combo = [stanceValue, additionValue, mainValue].filter(Boolean).join(' ');
+
+    // Если для получившейся комбинации есть замена названия — используем её
+    return nameReplacements.get(combo) || combo;
   }
 
   loadLists();
