@@ -267,7 +267,11 @@
         // сложность 1 → вес 5 (часто), сложность 5 → вес 1 (редко)
         const weight = isNull ? num : (6 - num);
 
-        return { value, weight };
+        // Саму сложность тоже сохраняем (пригодится для "лёгкого режима").
+        // У NULL сложности нет (пустая часть трюка ничего не усложняет) — считаем её 0.
+        const difficulty = isNull ? 0 : num;
+
+        return { value, weight, difficulty };
       });
   }
 
@@ -289,16 +293,17 @@
     return map;
   }
 
-  // Взвешенный случайный выбор одного элемента из списка {value, weight}
-  // Может вернуть null, если выпало значение NULL — значит, эта часть трюка остаётся пустой
+  // Взвешенный случайный выбор одного элемента из списка {value, weight, difficulty}
+  // Возвращает весь объект целиком (не только value), чтобы можно было учитывать сложность.
+  // value может быть null, если выпало значение NULL — значит, эта часть трюка остаётся пустой
   function weightedPick(items) {
     const total = items.reduce((sum, it) => sum + it.weight, 0);
     let r = Math.random() * total;
     for (const it of items) {
-      if (r < it.weight) return it.value;
+      if (r < it.weight) return it;
       r -= it.weight;
     }
-    return items[items.length - 1].value; // подстраховка на случай погрешности округления
+    return items[items.length - 1]; // подстраховка на случай погрешности округления
   }
 
   // Загружаем все списки из текстовых файлов рядом со страницей.
@@ -331,23 +336,30 @@
   }
 
   const MAX_REROLL_ATTEMPTS = 20; // защита от зацикливания, если правила REROLL противоречивы
+  const MAX_DIFFICULTY_SUM = 5;   // "лёгкий режим": если сумма сложностей выше — REROLL
 
   function generateTrick(attempt = 0) {
-    const stanceValue = stances.length > 0 ? weightedPick(stances) : null;
-    const additionValue = additions.length > 0 ? weightedPick(additions) : null;
-    const mainValue = weightedPick(mainTricks);
+    const stancePick = stances.length > 0 ? weightedPick(stances) : { value: null, difficulty: 0 };
+    const additionPick = additions.length > 0 ? weightedPick(additions) : { value: null, difficulty: 0 };
+    const mainPick = weightedPick(mainTricks);
 
     // Порядок: stance -> addition -> основной трюк
-    const combo = [stanceValue, additionValue, mainValue].filter(Boolean).join(' ');
+    const combo = [stancePick.value, additionPick.value, mainPick.value].filter(Boolean).join(' ');
+
+    const difficultySum = stancePick.difficulty + additionPick.difficulty + mainPick.difficulty;
 
     // Если для получившейся комбинации есть замена названия — используем её
     const finalResult = nameReplacements.get(combo) || combo;
 
-    // Особое значение REROLL — сгенерировать комбинацию заново
-    if (finalResult === 'REROLL') {
+    // REROLL происходит если: 1) явно указан REROLL в name_replaces.txt,
+    // 2) суммарная сложность выше лимита ("лёгкий режим"),
+    // 3) комбинация оказалась полностью пустой (все три части — NULL)
+    const needsReroll = finalResult === 'REROLL' || difficultySum > MAX_DIFFICULTY_SUM || combo === '';
+
+    if (needsReroll) {
       if (attempt >= MAX_REROLL_ATTEMPTS) {
         console.warn('Достигнут лимит REROLL-попыток, показываю как есть.');
-        return combo;
+        return combo || finalResult;
       }
       return generateTrick(attempt + 1);
     }
