@@ -1,4 +1,4 @@
-NULL,3
-Nollie,1
-Switch,1
+NULL,1
+Nollie,3
+Switch,5
 Fakie,2

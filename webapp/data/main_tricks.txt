@@ -1,4 +1,4 @@
-Kickflip,1
-Heelflip,1
-Pop Shove-It,2
-FS Pop Shove-It,2
+Kickflip,3
+Heelflip,3
+Pop Shove-It,1
+FS Pop Shove-It,1
