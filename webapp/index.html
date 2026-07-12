@@ -61,7 +61,7 @@
   /* ==== Общий контейнер-"устройство" (общий для Mainscreen и Flatmode) ==== */
   .device {
     position: relative;
-    width: min(80vw, 80vh, 380px);
+    width: min(94vw, 90vh, 460px);
     aspect-ratio: 208 / 306;
     background-image: url('images/Background_mainmenu.png');
     background-size: 100% 100%;
@@ -306,7 +306,10 @@
 
   #tricklistInner {
     position: absolute;
-    inset: 12% 8%;
+    top: 20%;
+    bottom: 20%;
+    left: 8%;
+    right: 8%;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
@@ -333,8 +336,8 @@
 
   .trick-entry span {
     font-family: 'Press Start 2P', monospace;
-    font-size: 5.5px;
-    line-height: 1.4;
+    font-size: 5px;
+    line-height: 1.35;
     color: #d8e8d0;
   }
 </style>
