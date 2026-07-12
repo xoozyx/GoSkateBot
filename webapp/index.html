@@ -118,24 +118,24 @@
   }
 
   #modeFlat {
-    left: 28.5%;
-    top: 21.4%;
-    width: 9.6%;
-    height: 2.6%;
+    left: 23.1%;
+    top: 20.9%;
+    width: 38.5%;
+    height: 10.5%;
   }
 
   #modeStreet {
-    left: 28.4%;
-    top: 37.5%;
-    width: 9.85%;
-    height: 3.19%;
+    left: 23.1%;
+    top: 35%;
+    width: 38.5%;
+    height: 12.1%;
   }
 
   #modeRamp {
-    left: 28.85%;
-    top: 56.5%;
-    width: 9.6%;
-    height: 2.6%;
+    left: 23.1%;
+    top: 52.3%;
+    width: 38.5%;
+    height: 10.5%;
   }
 
   /* ==== Речевой пузырь с результатом (Flatmode) ==== */
@@ -245,6 +245,98 @@
     width: 5.45%;
     height: 5.2%;
   }
+
+  /* Кнопки-иконки "засчитано / не засчитано" — появляются на месте Roll после броска */
+  #judgeButtons {
+    position: absolute;
+    left: 27.1%;
+    top: 41.8%;
+    width: 27.7%;
+    height: 5.75%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12%;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 3;
+  }
+
+  #judgeButtons.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .judge-button {
+    border: none;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    height: 100%;
+    aspect-ratio: 13 / 15;
+    transition: transform 0.08s ease;
+  }
+
+  .judge-button:active {
+    transform: scale(0.88);
+  }
+
+  .judge-button img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+  }
+
+  /* Прокручиваемый лог трюков */
+  #tricklist {
+    position: absolute;
+    left: 25.4%;
+    top: 50%;
+    width: 48.3%;
+    height: 17%;
+    box-sizing: border-box;
+    background-image: url('images/Tricklist_background.png');
+    background-size: 100% 100%;
+    image-rendering: pixelated;
+    z-index: 2;
+  }
+
+  #tricklistInner {
+    position: absolute;
+    inset: 12% 8%;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  #tricklistInner::-webkit-scrollbar {
+    width: 3px;
+  }
+
+  .trick-entry {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .trick-entry img {
+    width: 8px;
+    height: 8px;
+    flex-shrink: 0;
+    image-rendering: pixelated;
+  }
+
+  .trick-entry span {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 5.5px;
+    line-height: 1.4;
+    color: #d8e8d0;
+  }
 </style>
 </head>
 <body>
@@ -286,6 +378,20 @@
         <button class="menu-button" id="btn1" aria-label="Кинуть трюк">
           <img src="images/Roll_button.png" alt="Кинуть трюк">
         </button>
+
+        <div id="judgeButtons">
+          <button class="judge-button" id="btnLanded" aria-label="Засчитано">
+            <img src="images/Icon_landed.png" alt="Засчитано">
+          </button>
+          <button class="judge-button" id="btnFailed" aria-label="Не засчитано">
+            <img src="images/Icon_failed.png" alt="Не засчитано">
+          </button>
+        </div>
+
+        <div id="tricklist">
+          <div id="tricklistInner"></div>
+        </div>
+
         <button class="menu-button" id="btn2" aria-label="Назад в меню">
           <img src="images/Exit_button.png" alt="Назад в меню">
         </button>
@@ -491,11 +597,49 @@
   // Последние 15 результатов — не даём им повториться подряд
   let recentResults = loadFromStorage(STORAGE_KEY_HISTORY, []);
 
-  // Показываем последний сгенерированный результат сразу при открытии Flatmode
+  // ==== Лог засчитанных/незасчитанных трюков ====
+  const STORAGE_KEY_TRICKLIST = 'goskate_tricklist';
+  const tricklistInner = document.getElementById('tricklistInner');
+  const judgeButtonsEl = document.getElementById('judgeButtons');
+  const btn1El = document.getElementById('btn1');
+
+  let tricklistEntries = loadFromStorage(STORAGE_KEY_TRICKLIST, []); // [{text, status}], новые в начале
+
+  function renderTricklist() {
+    tricklistInner.innerHTML = '';
+    tricklistEntries.forEach(entry => {
+      const row = document.createElement('div');
+      row.className = 'trick-entry';
+
+      const icon = document.createElement('img');
+      icon.src = entry.status === 'landed' ? 'images/Icon_landed.png' : 'images/Icon_failed.png';
+      icon.alt = entry.status === 'landed' ? 'Засчитано' : 'Не засчитано';
+
+      const span = document.createElement('span');
+      span.textContent = entry.text;
+
+      row.appendChild(icon);
+      row.appendChild(span);
+      tricklistInner.appendChild(row);
+    });
+  }
+
+  function addTricklistEntry(text, status) {
+    tricklistEntries.unshift({ text, status }); // новая запись — наверх списка
+    saveToStorage(STORAGE_KEY_TRICKLIST, tricklistEntries);
+    renderTricklist();
+  }
+
+  renderTricklist();
+
+  // Показываем последний сгенерированный результат сразу при открытии Flatmode.
+  // Если трюк уже ждёт оценки — сразу показываем кнопки-иконки вместо Roll.
   const lastResult = loadFromStorage(STORAGE_KEY_LAST, '');
   if (lastResult) {
     resultEl.textContent = lastResult;
     bubbleEl.classList.add('active');
+    btn1El.style.display = 'none';
+    judgeButtonsEl.classList.add('visible');
   }
 
   function generateUniqueTrick() {
@@ -518,42 +662,63 @@
     return result;
   }
 
-  loadLists();
-
-  // Кнопка 1: стирает предыдущий результат, прячет пузырь и генерирует новый трюк
-  document.getElementById('btn1').addEventListener('click', () => {
-    // Шаг 1: спрятать пузырь и стереть текущий текст
+  // Общая функция генерации нового трюка (используется и кнопкой Roll, и кнопками-иконками)
+  function rollNextTrick() {
     bubbleEl.classList.remove('active');
     resultEl.textContent = '';
 
     if (!dataLoaded) {
-      // На случай, если списки ещё не успели загрузиться
       resultEl.textContent = 'Списки трюков ещё загружаются...';
       bubbleEl.classList.add('active');
       return;
     }
 
-    // Шаг 2: небольшая пауза для эффекта "стёрли — написали заново", затем показать пузырь с новым текстом
     setTimeout(() => {
       resultEl.textContent = generateUniqueTrick();
       bubbleEl.classList.add('active');
     }, 120);
+  }
+
+  loadLists();
+
+  // Кнопка Roll: первый бросок — прячет Roll, показывает кнопки-иконки
+  btn1El.addEventListener('click', () => {
+    btn1El.style.display = 'none';
+    judgeButtonsEl.classList.add('visible');
+    rollNextTrick();
   });
 
-  // Кнопка 2: стирает сохранённый трюк и историю последних результатов,
+  // Кнопки "засчитано / не засчитано": записывают текущий трюк в лог и сразу кидают следующий
+  document.getElementById('btnLanded').addEventListener('click', () => {
+    if (resultEl.textContent) addTricklistEntry(resultEl.textContent, 'landed');
+    rollNextTrick();
+  });
+
+  document.getElementById('btnFailed').addEventListener('click', () => {
+    if (resultEl.textContent) addTricklistEntry(resultEl.textContent, 'failed');
+    rollNextTrick();
+  });
+
+  // Кнопка 2: стирает сохранённый трюк, историю последних результатов и лог трюков,
   // возвращает на Mainscreen (Telegram-приложение НЕ закрывается)
   document.getElementById('btn2').addEventListener('click', () => {
     try {
       localStorage.removeItem(STORAGE_KEY_LAST);
       localStorage.removeItem(STORAGE_KEY_HISTORY);
+      localStorage.removeItem(STORAGE_KEY_TRICKLIST);
     } catch (e) {
       console.warn('Не удалось очистить localStorage:', e);
     }
     recentResults = [];
+    tricklistEntries = [];
+    renderTricklist();
 
-    // Прячем пузырь и текст, чтобы при следующем заходе в Flatmode экран был чистым
+    // Прячем пузырь/текст и возвращаем кнопку Roll на место, чтобы при следующем
+    // заходе в Flatmode экран был полностью чистым
     bubbleEl.classList.remove('active');
     resultEl.textContent = '';
+    judgeButtonsEl.classList.remove('visible');
+    btn1El.style.display = '';
 
     showScreen(mainscreenEl);
   });
