@@ -52,8 +52,31 @@
   }
 
   #logoScreen img {
-    width: 70%;
-    max-width: 360px;
+    width: min(94vw, 90vh, 460px);
+    aspect-ratio: 208 / 306;
+    height: auto;
+    image-rendering: pixelated;
+  }
+
+  /* ==== Анимация перехода между экранами ==== */
+  #changeOverlay {
+    position: absolute;
+    inset: 0;
+    z-index: 25;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  #changeOverlay.visible {
+    opacity: 1;
+  }
+
+  #changeOverlay img {
+    width: min(94vw, 90vh, 460px);
+    aspect-ratio: 208 / 306;
     height: auto;
     image-rendering: pixelated;
   }
@@ -345,7 +368,11 @@
 <body>
   <div id="app">
     <div id="logoScreen">
-      <img src="images/Logo.gif" alt="Логотип">
+      <img src="images/Intro_screen.png" alt="Загрузка">
+    </div>
+
+    <div id="changeOverlay">
+      <img id="changeScreenImg" src="images/Change_screen.png" alt="">
     </div>
 
     <!-- ==== Mainscreen: выбор режима игры ==== -->
@@ -414,23 +441,45 @@
   const logoScreen = document.getElementById('logoScreen');
   const mainscreenEl = document.getElementById('mainscreen');
   const flatmodeEl = document.getElementById('flatmode');
+  const changeOverlay = document.getElementById('changeOverlay');
+  const changeScreenImg = document.getElementById('changeScreenImg');
 
   function showScreen(el) {
     [mainscreenEl, flatmodeEl].forEach(s => s.classList.remove('active'));
     el.classList.add('active');
   }
 
-  // ==== Заставка с логотипом ====
-  const LOGO_DURATION_MS = 3000;
+  // ==== Заставка (Intro_screen.png): 15 кадров по 83мс = 1245мс на один проигрыш.
+  // Показываем ровно один цикл, чтобы анимация не зациклилась повторно ==== 
+  const LOGO_DURATION_MS = 1245;
 
   setTimeout(() => {
     logoScreen.classList.add('hidden');
     showScreen(mainscreenEl);
   }, LOGO_DURATION_MS);
 
+  // ==== Анимация перехода между экранами (Change_screen.png): 9 кадров по 83мс = 747мс.
+  // Экран меняется "под прикрытием" ровно в середине анимации, сама анимация проигрывается один раз.
+  const CHANGE_DURATION_MS = 747;
+  const CHANGE_SWAP_AT_MS = 374;
+
+  function transitionToScreen(targetEl) {
+    // Перезапускаем APNG с первого кадра (иначе она просто продолжит бесконечный цикл)
+    changeScreenImg.src = 'images/Change_screen.png?t=' + Date.now();
+    changeOverlay.classList.add('visible');
+
+    setTimeout(() => {
+      showScreen(targetEl);
+    }, CHANGE_SWAP_AT_MS);
+
+    setTimeout(() => {
+      changeOverlay.classList.remove('visible');
+    }, CHANGE_DURATION_MS);
+  }
+
   // Kнопка Flat на Mainscreen — открывает Flatmode
   document.getElementById('modeFlat').addEventListener('click', () => {
-    showScreen(flatmodeEl);
+    transitionToScreen(flatmodeEl);
   });
 
   // Street и Ramp пока неактивны — обработчиков клика намеренно нет
@@ -723,7 +772,7 @@
     judgeButtonsEl.classList.remove('visible');
     btn1El.style.display = '';
 
-    showScreen(mainscreenEl);
+    transitionToScreen(mainscreenEl);
   });
 </script>
 </body>
