@@ -164,10 +164,10 @@
   /* ==== Речевой пузырь с результатом (Flatmode) ==== */
   #bubble {
     position: absolute;
-    left: 25.4%;
-    top: 22.8%;
-    width: 48.3%;
-    height: 11.5%;
+    left: 22.1%;
+    top: 11.8%;
+    width: 54.8%;
+    height: 10.8%;
     box-sizing: border-box;
     background-image: url('images/Text_bubble.png');
     background-size: 100% 100%;
@@ -205,10 +205,10 @@
   }
 
   #flatground {
-    left: 46%;
-    top: 32%;
-    width: 21%;
-    height: 9.5%;
+    left: 38.5%;
+    top: 21.9%;
+    width: 39.3%;
+    height: 10.7%;
     z-index: 1;
   }
 
@@ -219,10 +219,10 @@
   }
 
   #coach {
-    left: 26.65%;
-    top: 34.6%;
-    width: 5.9%;
-    height: 5.2%;
+    left: 22.1%;
+    top: 21.9%;
+    width: 11.5%;
+    height: 5.6%;
     z-index: 2;
   }
 
@@ -256,30 +256,34 @@
   }
 
   #btn1 {
-    left: 27.1%;
-    top: 41.8%;
-    width: 27.7%;
-    height: 5.75%;
+    left: 26.9%;
+    top: 34.3%;
+    width: 47%;
+    height: 8.43%;
   }
 
   #btn2 {
-    left: 67%;
-    top: 42.35%;
-    width: 5.45%;
-    height: 5.2%;
+    left: 78.4%;
+    top: 8.5%;
+    width: 9.13%;
+    height: 8.82%;
+    z-index: 6;
   }
 
-  /* Кнопки-иконки "засчитано / не засчитано" — появляются на месте Roll после броска */
+  #btn2.hidden {
+    display: none;
+  }
+
+  /* Кнопки-иконки "засчитано / не засчитано" — появляются на месте Start Game после броска */
   #judgeButtons {
     position: absolute;
-    left: 27.1%;
-    top: 41.8%;
-    width: 27.7%;
-    height: 5.75%;
+    left: 22.6%;
+    top: 34.3%;
+    width: 76.71%; /* от левого края landed до правого края failed */
+    height: 8.43%;
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 12%;
+    justify-content: space-between;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.2s ease;
@@ -297,13 +301,13 @@
     background: transparent;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
+    width: 28.1%; /* 21.54% от ширины канваса / 76.71% ширины контейнера */
     height: 100%;
-    aspect-ratio: 13 / 15;
     transition: transform 0.08s ease;
   }
 
   .judge-button:active {
-    transform: scale(0.88);
+    transform: scale(0.93);
   }
 
   .judge-button img {
@@ -313,26 +317,90 @@
     image-rendering: pixelated;
   }
 
-  /* Прокручиваемый лог трюков */
+  /* Прокручиваемый лог трюков — свёрнутое состояние */
   #tricklist {
     position: absolute;
-    left: 25.4%;
-    top: 50%;
-    width: 48.3%;
-    height: 17%;
+    left: 12.02%;
+    top: 44.44%;
+    width: 75.87%;
+    height: 26.73%;
     box-sizing: border-box;
     background-image: url('images/Tricklist_background.png');
     background-size: 100% 100%;
     image-rendering: pixelated;
     z-index: 2;
+    transition: top 0.3s ease, height 0.3s ease;
+  }
+
+  /* Развёрнутое состояние — панель растягивается вверх, накрывая пузырь/Coach/Flatground/Quit */
+  #tricklist.expanded {
+    top: 8.17%;
+    height: 63%;
+    background-image: url('images/Tricklist_background_expanded.png');
+    z-index: 15;
+  }
+
+  #tricklistHeader {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 22%;
+    box-sizing: border-box;
+    padding: 0 6%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .trick-stats {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .trick-stat {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .trick-stat img {
+    width: 9px;
+    height: 9px;
+    image-rendering: pixelated;
+  }
+
+  .trick-stat span {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    color: #d8e8d0;
+  }
+
+  #logToggleBtn {
+    border: none;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    width: 12px;
+    height: 14px;
+    flex-shrink: 0;
+  }
+
+  #logToggleBtn img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
   }
 
   #tricklistInner {
     position: absolute;
-    top: 20%;
-    bottom: 20%;
-    left: 8%;
-    right: 8%;
+    top: 24%;
+    bottom: 4%;
+    left: 6%;
+    right: 6%;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
@@ -405,25 +473,40 @@
           <div id="result"></div>
         </div>
 
-        <button class="menu-button" id="btn1" aria-label="Кинуть трюк">
-          <img src="images/Roll_button.png" alt="Кинуть трюк">
+        <button class="menu-button" id="btn1" aria-label="Начать">
+          <img src="images/Button_startgame.png" alt="Начать">
         </button>
 
         <div id="judgeButtons">
           <button class="judge-button" id="btnLanded" aria-label="Засчитано">
-            <img src="images/Icon_landed.png" alt="Засчитано">
+            <img src="images/Button_landed.png" alt="Засчитано">
           </button>
           <button class="judge-button" id="btnFailed" aria-label="Не засчитано">
-            <img src="images/Icon_failed.png" alt="Не засчитано">
+            <img src="images/Button_failed.png" alt="Не засчитано">
           </button>
         </div>
 
         <div id="tricklist">
+          <div id="tricklistHeader">
+            <div class="trick-stats">
+              <div class="trick-stat">
+                <img src="images/Icon_landed.png" alt="Засчитано">
+                <span id="landedCount">0</span>
+              </div>
+              <div class="trick-stat">
+                <img src="images/Icon_failed.png" alt="Не засчитано">
+                <span id="failedCount">0</span>
+              </div>
+            </div>
+            <button id="logToggleBtn" aria-label="Развернуть лог">
+              <img src="images/Button_expand.png" alt="Развернуть">
+            </button>
+          </div>
           <div id="tricklistInner"></div>
         </div>
 
         <button class="menu-button" id="btn2" aria-label="Назад в меню">
-          <img src="images/Exit_button.png" alt="Назад в меню">
+          <img src="images/Button_quit.png" alt="Назад в меню">
         </button>
       </div>
     </div>
@@ -652,14 +735,26 @@
   // ==== Лог засчитанных/незасчитанных трюков ====
   const STORAGE_KEY_TRICKLIST = 'goskate_tricklist';
   const tricklistInner = document.getElementById('tricklistInner');
+  const tricklistEl = document.getElementById('tricklist');
   const judgeButtonsEl = document.getElementById('judgeButtons');
   const btn1El = document.getElementById('btn1');
+  const btn2El = document.getElementById('btn2');
+  const landedCountEl = document.getElementById('landedCount');
+  const failedCountEl = document.getElementById('failedCount');
+  const logToggleBtn = document.getElementById('logToggleBtn');
+  const logToggleImg = logToggleBtn.querySelector('img');
 
   let tricklistEntries = loadFromStorage(STORAGE_KEY_TRICKLIST, []); // [{text, status}], новые в начале
 
   function renderTricklist() {
     tricklistInner.innerHTML = '';
+    let landed = 0;
+    let failed = 0;
+
     tricklistEntries.forEach(entry => {
+      if (entry.status === 'landed') landed++;
+      else failed++;
+
       const row = document.createElement('div');
       row.className = 'trick-entry';
 
@@ -674,6 +769,9 @@
       row.appendChild(span);
       tricklistInner.appendChild(row);
     });
+
+    landedCountEl.textContent = landed;
+    failedCountEl.textContent = failed;
   }
 
   function addTricklistEntry(text, status) {
@@ -683,6 +781,20 @@
   }
 
   renderTricklist();
+
+  // ==== Разворачивание / сворачивание лога ====
+  let logExpanded = false;
+
+  function setLogExpanded(expanded) {
+    logExpanded = expanded;
+    tricklistEl.classList.toggle('expanded', expanded);
+    logToggleImg.src = expanded ? 'images/Button_minimize.png' : 'images/Button_expand.png';
+    logToggleBtn.setAttribute('aria-label', expanded ? 'Свернуть лог' : 'Развернуть лог');
+  }
+
+  logToggleBtn.addEventListener('click', () => {
+    setLogExpanded(!logExpanded);
+  });
 
   // Показываем последний сгенерированный результат сразу при открытии Flatmode.
   // Если трюк уже ждёт оценки — сразу показываем кнопки-иконки вместо Roll.
@@ -753,7 +865,7 @@
 
   // Кнопка 2: стирает сохранённый трюк, историю последних результатов и лог трюков,
   // возвращает на Mainscreen (Telegram-приложение НЕ закрывается)
-  document.getElementById('btn2').addEventListener('click', () => {
+  btn2El.addEventListener('click', () => {
     try {
       localStorage.removeItem(STORAGE_KEY_LAST);
       localStorage.removeItem(STORAGE_KEY_HISTORY);
@@ -765,12 +877,13 @@
     tricklistEntries = [];
     renderTricklist();
 
-    // Прячем пузырь/текст и возвращаем кнопку Roll на место, чтобы при следующем
-    // заходе в Flatmode экран был полностью чистым
+    // Прячем пузырь/текст и возвращаем кнопку Start Game на место, сворачиваем лог,
+    // чтобы при следующем заходе в Flatmode экран был полностью чистым
     bubbleEl.classList.remove('active');
     resultEl.textContent = '';
     judgeButtonsEl.classList.remove('visible');
     btn1El.style.display = '';
+    setLogExpanded(false);
 
     transitionToScreen(mainscreenEl);
   });
