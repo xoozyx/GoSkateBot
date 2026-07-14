@@ -615,6 +615,14 @@
 
   setTimeout(() => {
     logoScreen.classList.add('hidden');
+    // ==== ВРЕМЕННО ДЛЯ ОТЛАДКИ ====
+    // Открываем Flatmode сразу после заставки, минуя Mainscreen, чтобы проверить,
+    // работает ли сам экран Flatmode в Telegram, если до него дойти без клика
+    // по кнопке Flat. Верните оригинальную логику (закомментирована ниже), когда
+    // отладка закончена.
+    showScreen(flatmodeEl);
+    return;
+    /* --- оригинальная логика ---
     const activeMode = getActiveMode();
     if (activeMode === ACTIVE_MODE_FLAT) {
       showScreen(flatmodeEl);
@@ -624,6 +632,7 @@
       if (activeMode !== 0) setActiveMode(0);
       showScreen(mainscreenEl);
     }
+    */
   }, LOGO_DURATION_MS);
 
   // ==== Анимация перехода между экранами (Change_screen.png): 9 кадров по 83мс = 747мс.
