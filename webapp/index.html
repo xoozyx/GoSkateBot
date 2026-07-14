@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>GoSkateBot</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -540,6 +543,83 @@
   </div>
 
 <script>
+  // ==== Борьба с кэшированием внутри Telegram WebView ====
+  // Telegram (особенно на Android/iOS) может подолгу держать в кэше старую версию
+  // index.html/картинок, даже если на GitHub Pages уже лежит новая версия и обычный
+  // браузер это видит. Решение: при каждом запуске добавляем/обновляем в URL
+  // метку времени и один раз перезагружаем страницу с ней — так WebView вынужден
+  // запросить файл заново, а не отдавать закэшированную копию. Тот же токен потом
+  // используется, чтобы "пробить" кэш и для всех картинок (img и CSS background).
+  let CACHE_BUST_TOKEN = '';
+
+  (function bustTelegramCache() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const cacheParam = params.get('_cb');
+      const isTelegram = !!(window.Telegram && window.Telegram.WebApp);
+      // Перезагружаем только один раз за сессию (флаг в sessionStorage),
+      // чтобы не уйти в бесконечный цикл reload.
+      const alreadyBusted = sessionStorage.getItem('goskate_cacheBusted') === '1';
+      if (isTelegram && !cacheParam && !alreadyBusted) {
+        sessionStorage.setItem('goskate_cacheBusted', '1');
+        params.set('_cb', Date.now().toString());
+        window.location.replace(window.location.pathname + '?' + params.toString());
+        return;
+      }
+      CACHE_BUST_TOKEN = cacheParam || Date.now().toString();
+    } catch (e) {
+      console.warn('Cache-busting reload не выполнен:', e);
+      CACHE_BUST_TOKEN = Date.now().toString();
+    }
+  })();
+
+  // Добавляем токен ко всем <img src="images/..."> и CSS background-image,
+  // заданным через инлайн-стиль. Общие фоны из <style>-блока браузер и так
+  // подтянет заново, т.к. сам index.html теперь загружается по новому URL,
+  // но картинки WebView может кэшировать по своему собственному правилу —
+  // поэтому "прокалываем" их отдельно.
+  function bustImageCache() {
+    if (!CACHE_BUST_TOKEN) return;
+    document.querySelectorAll('img[src^="images/"]').forEach((img) => {
+      if (!img.src.includes('_cb=')) {
+        img.src = img.getAttribute('src') + '?_cb=' + CACHE_BUST_TOKEN;
+      }
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bustImageCache);
+  } else {
+    bustImageCache();
+  }
+
+  // CSS background-image (в <style> в <head>) нельзя пробить через querySelectorAll —
+  // добавляем отдельное правило с тем же токеном и более высоким приоритетом.
+  function bustCssBackgroundCache() {
+    if (!CACHE_BUST_TOKEN) return;
+    const overrideCss = `
+      .device { background-image: url('images/Background_mainmenu.png?_cb=${CACHE_BUST_TOKEN}') !important; }
+      #bubble { background-image: url('images/Text_bubble.png?_cb=${CACHE_BUST_TOKEN}') !important; }
+      #tricklist { background-image: url('images/Tricklist_background.png?_cb=${CACHE_BUST_TOKEN}') !important; }
+      #tricklist.expanded { background-image: url('images/Tricklist_background_expanded.png?_cb=${CACHE_BUST_TOKEN}') !important; }
+    `;
+    const styleTag = document.createElement('style');
+    styleTag.textContent = overrideCss;
+    document.head.appendChild(styleTag);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bustCssBackgroundCache);
+  } else {
+    bustCssBackgroundCache();
+  }
+
+  // На всякий случай отключаем Service Worker, если он когда-либо был
+  // зарегистрирован для этого источника (он мог бы отдавать старые файлы из кэша).
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then((regs) => {
+      regs.forEach((reg) => reg.unregister());
+    }).catch(() => {});
+  }
+
   // Инициализация Telegram Web App SDK (если открыто внутри Telegram)
   const tg = window.Telegram ? window.Telegram.WebApp : null;
   if (tg) {
