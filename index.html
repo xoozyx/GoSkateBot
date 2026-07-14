@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>GoSkateBot</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    background: #cfe9ee;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  img {
+    -webkit-user-drag: none;
+    user-select: none;
+  }
+
+  #app {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  /* ==== Экран загрузки с логотипом ==== */
+  #logoScreen {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #cfe9ee;
+    opacity: 1;
+    transition: opacity 0.6s ease;
+  }
+
+  #logoScreen.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  #logoScreen img {
+    width: min(94vw, 90vh, 460px);
+    aspect-ratio: 208 / 306;
+    height: auto;
+    image-rendering: pixelated;
+  }
+
+  /* ==== Анимация перехода между экранами ==== */
+  #changeOverlay {
+    position: absolute;
+    inset: 0;
+    z-index: 25;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  #changeOverlay.visible {
+    opacity: 1;
+  }
+
+  #changeOverlay img {
+    width: min(94vw, 90vh, 460px);
+    aspect-ratio: 208 / 306;
+    height: auto;
+    image-rendering: pixelated;
+  }
+
+  /* ==== Общий контейнер-"устройство" (общий для Mainscreen и Flatmode) ==== */
+  .device {
+    position: relative;
+    width: min(94vw, 90vh, 460px);
+    aspect-ratio: 208 / 306;
+    background-image: url('images/Background_mainmenu.png');
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    image-rendering: pixelated;
+  }
+
+  /* ==== Экраны (Mainscreen / Flatmode) — переключаются плавным fade ==== */
+  .screen {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+  }
+
+  .screen.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* ==== Mainscreen: кнопки выбора режима ==== */
+  .mode-button {
+    position: absolute;
+    border: none;
+    padding: 0;
+    background: transparent;
+    -webkit-tap-highlight-color: transparent;
+    image-rendering: pixelated;
+  }
+
+  .mode-button img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+  }
+
+  .mode-button.enabled {
+    cursor: pointer;
+    transition: transform 0.08s ease;
+  }
+
+  .mode-button.enabled:active {
+    transform: scale(0.93);
+  }
+
+  .mode-button.disabled {
+    cursor: default;
+  }
+
+  #modeFlat {
+    left: 23.1%;
+    top: 20.9%;
+    width: 38.5%;
+    height: 10.5%;
+  }
+
+  #modeStreet {
+    left: 23.1%;
+    top: 35%;
+    width: 38.5%;
+    height: 12.1%;
+  }
+
+  #modeRamp {
+    left: 23.1%;
+    top: 52.3%;
+    width: 38.5%;
+    height: 10.5%;
+  }
+
+  /* ==== Речевой пузырь с результатом (Flatmode) ==== */
+  #bubble {
+    position: absolute;
+    left: 22.1%;
+    top: 11.8%;
+    width: 54.8%;
+    height: 10.8%;
+    box-sizing: border-box;
+    background-image: url('images/Text_bubble.png');
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    image-rendering: pixelated;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  #bubble.active {
+    opacity: 1;
+  }
+
+  #result {
+    position: absolute;
+    left: 8%;
+    right: 8%;
+    top: 38%; /* центр чёрной "подложки" пузыря, без учёта хвостика снизу */
+    transform: translateY(-50%);
+    text-align: center;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+    line-height: 1.4;
+    color: #ffffff;
+    word-wrap: break-word;
+  }
+
+  /* ==== Декоративные спрайты (стоят позади кнопок) ==== */
+  #flatground, #coach {
+    position: absolute;
+    pointer-events: none;
+    image-rendering: pixelated;
+  }
+
+  #flatground {
+    left: 38.5%;
+    top: 21.9%;
+    width: 39.3%;
+    height: 10.7%;
+    z-index: 1;
+  }
+
+  #flatground img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: contain;
+  }
+
+  #coach {
+    left: 22.1%;
+    top: 21.9%;
+    width: 11.5%;
+    height: 5.6%;
+    z-index: 2;
+  }
+
+  #coach img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: contain;
+  }
+
+  /* ==== Кнопки Flatmode ==== */
+  .menu-button {
+    position: absolute;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    background: transparent;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.08s ease;
+    z-index: 3;
+  }
+
+  .menu-button:active {
+    transform: scale(0.93);
+  }
+
+  .menu-button img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+  }
+
+  #btn1 {
+    left: 26.9%;
+    top: 34.3%;
+    width: 47%;
+    height: 8.43%;
+  }
+
+  #btn2 {
+    left: 78.4%;
+    top: 8.5%;
+    width: 9.13%;
+    height: 8.82%;
+    z-index: 6;
+  }
+
+  #btn2.hidden {
+    display: none;
+  }
+
+  /* Кнопки-иконки "засчитано / не засчитано" — появляются на месте Start Game после броска */
+  #judgeButtons {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 3;
+  }
+
+  #judgeButtons.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .judge-button {
+    position: absolute;
+    top: 34.31%;
+    width: 21.54%;
+    height: 8.43%;
+    border: none;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.08s ease;
+  }
+
+  #btnLanded {
+    left: 22.6%;
+  }
+
+  #btnFailed {
+    left: 55.77%;
+  }
+
+  .judge-button:active {
+    transform: scale(0.93);
+  }
+
+  .judge-button img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+  }
+
+  /* Прокручиваемый лог трюков — свёрнутое состояние */
+  #tricklist {
+    position: absolute;
+    left: 12.02%;
+    top: 44.44%;
+    width: 75.87%;
+    height: 26.73%;
+    box-sizing: border-box;
+    background-image: url('images/Tricklist_background.png');
+    background-size: 100% 100%;
+    image-rendering: pixelated;
+    z-index: 4;
+    transition: top 0.3s ease, height 0.3s ease;
+  }
+
+  /* Развёрнутое состояние — панель растягивается вверх, накрывая пузырь/Coach/Flatground/Quit */
+  #tricklist.expanded {
+    top: 8.17%;
+    height: 63%;
+    background-image: url('images/Tricklist_background_expanded.png');
+    z-index: 15;
+  }
+
+  /* Отступы здесь подобраны по реальной тёмной области внутри Tricklist_background.png
+     (за вычетом рамки) — у свёрнутого и развёрнутого фона они чуть отличаются по высоте. */
+  #tricklistContent {
+    position: absolute;
+    top: 4.82%;
+    bottom: 8.43%;
+    left: 2.53%;
+    right: 2.53%;
+  }
+
+  #tricklist.expanded #tricklistContent {
+    top: 2.07%;
+    bottom: 3.63%;
+  }
+
+  #tricklistHeader {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 22%;
+    box-sizing: border-box;
+    padding: 0 4%;
+    display: flex;
+    align-items: center;
+    z-index: 5;
+  }
+
+  .trick-stats {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .trick-stat {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .trick-stat img {
+    width: 9px;
+    height: 9px;
+    image-rendering: pixelated;
+  }
+
+  .trick-stat span {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    color: #d8e8d0;
+  }
+
+  #logToggleBtn {
+    position: absolute;
+    top: 4%;
+    right: 3%;
+    border: none;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    width: 12%;
+    aspect-ratio: 12 / 14;
+    flex-shrink: 0;
+    z-index: 6;
+  }
+
+  #logToggleBtn img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+  }
+
+  #tricklistInner {
+    position: absolute;
+    top: 24%;
+    bottom: 2%;
+    left: 3%;
+    right: 3%;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  #tricklistInner::-webkit-scrollbar {
+    width: 3px;
+  }
+
+  .trick-entry {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+  }
+
+  .trick-entry img {
+    width: 10px;
+    height: 10px;
+    flex-shrink: 0;
+    image-rendering: pixelated;
+  }
+
+  .trick-entry span {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    line-height: 1.35;
+    color: #d8e8d0;
+  }
+</style>
+</head>
+<body>
+  <div id="app">
+    <div id="logoScreen">
+      <img src="images/Intro_screen.png" alt="Загрузка">
+    </div>
+
+    <div id="changeOverlay">
+      <img id="changeScreenImg" src="images/Change_screen.png" alt="">
+    </div>
+
+    <!-- ==== Mainscreen: выбор режима игры ==== -->
+    <div id="mainscreen" class="screen">
+      <div class="device">
+        <button class="mode-button enabled" id="modeFlat" aria-label="Flat">
+          <img src="images/Button_mainmenu_flat.png" alt="Flat">
+        </button>
+        <button class="mode-button disabled" id="modeStreet" aria-label="Street" disabled>
+          <img src="images/Button_mainmenu_street.png" alt="Street">
+        </button>
+        <button class="mode-button disabled" id="modeRamp" aria-label="Ramp" disabled>
+          <img src="images/Button_mainmenu_ramp.png" alt="Ramp">
+        </button>
+      </div>
+    </div>
+
+    <!-- ==== Flatmode: генератор трюков ==== -->
+    <div id="flatmode" class="screen">
+      <div class="device">
+        <div id="flatground">
+          <img src="images/Flatground.png" alt="">
+        </div>
+
+        <div id="coach">
+          <img src="images/Coach.png" alt="">
+        </div>
+
+        <div id="bubble">
+          <div id="result"></div>
+        </div>
+
+        <button class="menu-button" id="btn1" aria-label="Начать">
+          <img src="images/Button_startgame.png" alt="Начать">
+        </button>
+
+        <div id="judgeButtons">
+          <button class="judge-button" id="btnLanded" aria-label="Засчитано">
+            <img src="images/Button_landed.png" alt="Засчитано">
+          </button>
+          <button class="judge-button" id="btnFailed" aria-label="Не засчитано">
+            <img src="images/Button_failed.png" alt="Не засчитано">
+          </button>
+        </div>
+
+        <div id="tricklist">
+          <div id="tricklistContent">
+            <div id="tricklistHeader">
+              <div class="trick-stats">
+                <div class="trick-stat">
+                  <img src="images/Icon_landed.png" alt="Засчитано">
+                  <span id="landedCount">0</span>
+                </div>
+                <div class="trick-stat">
+                  <img src="images/Icon_failed.png" alt="Не засчитано">
+                  <span id="failedCount">0</span>
+                </div>
+              </div>
+            </div>
+            <button id="logToggleBtn" aria-label="Развернуть лог">
+              <img src="images/Button_expand.png" alt="Развернуть">
+            </button>
+            <div id="tricklistInner"></div>
+          </div>
+        </div>
+
+        <button class="menu-button" id="btn2" aria-label="Назад в меню">
+          <img src="images/Button_quit.png" alt="Назад в меню">
+        </button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // Инициализация Telegram Web App SDK (если открыто внутри Telegram)
+  const tg = window.Telegram ? window.Telegram.WebApp : null;
+  if (tg) {
+    tg.ready();
+    tg.expand();
+  }
+
+  // ==== Флаг незавершённой игры ====
+  // 0 — игра не начата / завершена (Quit). 1 — Flat, 2 — Street, 3 — Ramp.
+  // Ставится при нажатии Start Game в соответствующем режиме, сбрасывается по Quit.
+  // Используется, чтобы после заставки открывать сразу нужный режим, если игра не была завершена.
+  const STORAGE_KEY_ACTIVE_MODE = 'goskate_activeMode';
+
+  function getActiveMode() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_ACTIVE_MODE);
+      const val = raw !== null ? parseInt(raw, 10) : 0;
+      return Number.isNaN(val) ? 0 : val;
+    } catch (e) {
+      console.warn('localStorage недоступен, используем 0 (нет активной игры):', e);
+      return 0;
+    }
+  }
+
+  function setActiveMode(mode) {
+    try {
+      localStorage.setItem(STORAGE_KEY_ACTIVE_MODE, String(mode));
+    } catch (e) {
+      console.warn('Не удалось сохранить флаг активной игры:', e);
+    }
+  }
+
+  const ACTIVE_MODE_FLAT = 1;
+  // const ACTIVE_MODE_STREET = 2; // на будущее, когда появится режим Street
+  // const ACTIVE_MODE_RAMP = 3;   // на будущее, когда появится режим Ramp
+
+  // ==== Навигация между экранами ====
+  const logoScreen = document.getElementById('logoScreen');
+  const mainscreenEl = document.getElementById('mainscreen');
+  const flatmodeEl = document.getElementById('flatmode');
+  const changeOverlay = document.getElementById('changeOverlay');
+  const changeScreenImg = document.getElementById('changeScreenImg');
+
+  function showScreen(el) {
+    [mainscreenEl, flatmodeEl].forEach(s => s.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  // ==== Заставка (Intro_screen.png): 15 кадров по 83мс = 1245мс на один проигрыш.
+  // Показываем ровно один цикл, чтобы анимация не зациклилась повторно ==== 
+  const LOGO_DURATION_MS = 1245;
+
+  setTimeout(() => {
+    logoScreen.classList.add('hidden');
+    const activeMode = getActiveMode();
+    if (activeMode === ACTIVE_MODE_FLAT) {
+      showScreen(flatmodeEl);
+    } else {
+      // Street/Ramp пока не реализованы — на всякий случай сбрасываем неизвестный флаг
+      // и открываем Mainscreen, чтобы не застрять на пустом экране.
+      if (activeMode !== 0) setActiveMode(0);
+      showScreen(mainscreenEl);
+    }
+  }, LOGO_DURATION_MS);
+
+  // ==== Анимация перехода между экранами (Change_screen.png): 9 кадров по 83мс = 747мс.
+  // Экран меняется "под прикрытием" ровно в середине анимации, сама анимация проигрывается один раз.
+  const CHANGE_DURATION_MS = 747;
+  const CHANGE_SWAP_AT_MS = 374;
+
+  function transitionToScreen(targetEl) {
+    // Перезапускаем APNG с первого кадра (иначе она просто продолжит бесконечный цикл)
+    changeScreenImg.src = 'images/Change_screen.png?t=' + Date.now();
+    changeOverlay.classList.add('visible');
+
+    setTimeout(() => {
+      showScreen(targetEl);
+    }, CHANGE_SWAP_AT_MS);
+
+    setTimeout(() => {
+      changeOverlay.classList.remove('visible');
+    }, CHANGE_DURATION_MS);
+  }
+
+  // Kнопка Flat на Mainscreen — открывает Flatmode
+  document.getElementById('modeFlat').addEventListener('click', () => {
+    transitionToScreen(flatmodeEl);
+  });
+
+  // Street и Ramp пока неактивны — обработчиков клика намеренно нет
+
+  // ==== Генератор трюков (Flatmode) ====
+  const resultEl = document.getElementById('result');
+  const bubbleEl = document.getElementById('bubble');
+
+  let stances = [];
+  let mainTricks = [];
+  let additions = [];
+  let nameReplacements = new Map(); // "исходная комбинация" -> "замена"
+  let dataLoaded = false;
+
+  // Формат строки в файле: "Название" или "Название,сложность" (сложность — целое число от 1 до 5, по умолчанию 1).
+  // Чем больше сложность, тем РЕЖЕ выпадает трюк — 1 самый частый, 5 самый редкий.
+  // Строка "NULL,вес" — особый случай: число здесь не сложность, а вес НАПРЯМУЮ (шанс оставить часть трюка пустой).
+  function parseWeightedList(text) {
+    return text
+      .split('\n')
+      .map(line => line.trim())
+      .filter(Boolean)
+      .map(line => {
+        const parts = line.split(',');
+        const rawName = parts[0].trim();
+        const numRaw = parts.length > 1 ? parseFloat(parts[1]) : NaN;
+
+        // Число ограничено диапазоном 1–5 и округляется до целого
+        let num = !isNaN(numRaw) ? Math.round(numRaw) : 1;
+        num = Math.min(5, Math.max(1, num));
+
+        // NULL (в любом регистре) — специальное значение "оставить пустым"
+        const isNull = rawName.toUpperCase() === 'NULL';
+        const value = isNull ? null : rawName;
+
+        // Для NULL число — это вес напрямую.
+        // Для обычного трюка число — это сложность, поэтому вес инвертируем:
+        // сложность 1 → вес 5 (часто), сложность 5 → вес 1 (редко)
+        const weight = isNull ? num : (6 - num);
+
+        // Саму сложность тоже сохраняем (пригодится для "лёгкого режима").
+        // У NULL сложности нет (пустая часть трюка ничего не усложняет) — считаем её 0.
+        const difficulty = isNull ? 0 : num;
+
+        return { value, weight, difficulty };
+      });
+  }
+
+  // Формат строки в name_replaces.txt: "Исходная комбинация,Замена"
+  // Разбиваем по ПЕРВОЙ запятой — так замена сама может содержать запятые, если понадобится.
+  function parseReplacements(text) {
+    const map = new Map();
+    text
+      .split('\n')
+      .map(line => line.trim())
+      .filter(Boolean)
+      .forEach(line => {
+        const commaIndex = line.indexOf(',');
+        if (commaIndex === -1) return; // строка без запятой — пропускаем
+        const from = line.slice(0, commaIndex).trim();
+        const to = line.slice(commaIndex + 1).trim();
+        if (from && to) map.set(from, to);
+      });
+    return map;
+  }
+
+  // Взвешенный случайный выбор одного элемента из списка {value, weight, difficulty}
+  // Возвращает весь объект целиком (не только value), чтобы можно было учитывать сложность.
+  // value может быть null, если выпало значение NULL — значит, эта часть трюка остаётся пустой
+  function weightedPick(items) {
+    const total = items.reduce((sum, it) => sum + it.weight, 0);
+    let r = Math.random() * total;
+    for (const it of items) {
+      if (r < it.weight) return it;
+      r -= it.weight;
+    }
+    return items[items.length - 1]; // подстраховка на случай погрешности округления
+  }
+
+  // Загружаем все списки из текстовых файлов рядом со страницей.
+  // Файл name_replaces.txt необязателен — если его нет, замены просто не применяются.
+  async function loadLists() {
+    try {
+      const [stanceRes, mainRes, addRes] = await Promise.all([
+        fetch('data/stances.txt'),
+        fetch('data/main_tricks.txt'),
+        fetch('data/additions.txt'),
+      ]);
+      stances = parseWeightedList(await stanceRes.text());
+      mainTricks = parseWeightedList(await mainRes.text());
+      additions = parseWeightedList(await addRes.text());
+
+      dataLoaded = mainTricks.length > 0; // stances и additions могут быть пустыми — это ок
+    } catch (e) {
+      console.error('Не удалось загрузить списки трюков:', e);
+      dataLoaded = false;
+    }
+
+    try {
+      const replRes = await fetch('data/name_replaces.txt');
+      if (replRes.ok) {
+        nameReplacements = parseReplacements(await replRes.text());
+      }
+    } catch (e) {
+      console.warn('Файл name_replaces.txt не найден — замены названий не применяются.');
+    }
+  }
+
+  const MAX_REROLL_ATTEMPTS = 20; // защита от зацикливания, если правила REROLL противоречивы
+  const MAX_DIFFICULTY_SUM = 5;   // "лёгкий режим": если сумма сложностей выше — REROLL
+
+  function generateTrick(attempt = 0) {
+    const stancePick = stances.length > 0 ? weightedPick(stances) : { value: null, difficulty: 0 };
+    const additionPick = additions.length > 0 ? weightedPick(additions) : { value: null, difficulty: 0 };
+    const mainPick = weightedPick(mainTricks);
+
+    // Порядок: stance -> addition -> основной трюк
+    const combo = [stancePick.value, additionPick.value, mainPick.value].filter(Boolean).join(' ');
+
+    const difficultySum = stancePick.difficulty + additionPick.difficulty + mainPick.difficulty;
+
+    // Если для получившейся комбинации есть замена названия — используем её
+    const finalResult = nameReplacements.get(combo) || combo;
+
+    // REROLL происходит если: 1) явно указан REROLL в name_replaces.txt,
+    // 2) суммарная сложность выше лимита ("лёгкий режим"),
+    // 3) комбинация оказалась полностью пустой (все три части — NULL)
+    const needsReroll = finalResult === 'REROLL' || difficultySum > MAX_DIFFICULTY_SUM || combo === '';
+
+    if (needsReroll) {
+      if (attempt >= MAX_REROLL_ATTEMPTS) {
+        console.warn('Достигнут лимит REROLL-попыток, показываю как есть.');
+        return combo || finalResult;
+      }
+      return generateTrick(attempt + 1);
+    }
+
+    return finalResult;
+  }
+
+  // ==== Фильтр от повторов + сохранение между открытиями (localStorage) ====
+  const HISTORY_SIZE = 15;
+  const MAX_UNIQUE_ATTEMPTS = 30; // защита от зацикливания, если уникальных вариантов почти не осталось
+  const STORAGE_KEY_HISTORY = 'goskate_recentResults';
+  const STORAGE_KEY_LAST = 'goskate_lastResult';
+
+  // Безопасные обёртки: некоторые webview (в т.ч. иногда внутри Telegram) могут
+  // ограничивать доступ к localStorage — тогда просто работаем в режиме "только память".
+  function loadFromStorage(key, fallback) {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw !== null ? JSON.parse(raw) : fallback;
+    } catch (e) {
+      console.warn('localStorage недоступен, используем данные только в памяти:', e);
+      return fallback;
+    }
+  }
+
+  function saveToStorage(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (e) {
+      console.warn('Не удалось сохранить в localStorage:', e);
+    }
+  }
+
+  // Последние 15 результатов — не даём им повториться подряд
+  let recentResults = loadFromStorage(STORAGE_KEY_HISTORY, []);
+
+  // ==== Лог засчитанных/незасчитанных трюков ====
+  const STORAGE_KEY_TRICKLIST = 'goskate_tricklist';
+  const tricklistInner = document.getElementById('tricklistInner');
+  const tricklistEl = document.getElementById('tricklist');
+  const judgeButtonsEl = document.getElementById('judgeButtons');
+  const btn1El = document.getElementById('btn1');
+  const btn2El = document.getElementById('btn2');
+  const landedCountEl = document.getElementById('landedCount');
+  const failedCountEl = document.getElementById('failedCount');
+  const logToggleBtn = document.getElementById('logToggleBtn');
+  const logToggleImg = logToggleBtn.querySelector('img');
+
+  let tricklistEntries = loadFromStorage(STORAGE_KEY_TRICKLIST, []); // [{text, status}], новые в начале
+
+  function renderTricklist() {
+    tricklistInner.innerHTML = '';
+    let landed = 0;
+    let failed = 0;
+
+    tricklistEntries.forEach(entry => {
+      if (entry.status === 'landed') landed++;
+      else failed++;
+
+      const row = document.createElement('div');
+      row.className = 'trick-entry';
+
+      const icon = document.createElement('img');
+      icon.src = entry.status === 'landed' ? 'images/Icon_landed.png' : 'images/Icon_failed.png';
+      icon.alt = entry.status === 'landed' ? 'Засчитано' : 'Не засчитано';
+
+      const span = document.createElement('span');
+      span.textContent = entry.text;
+
+      row.appendChild(icon);
+      row.appendChild(span);
+      tricklistInner.appendChild(row);
+    });
+
+    landedCountEl.textContent = landed;
+    failedCountEl.textContent = failed;
+  }
+
+  function addTricklistEntry(text, status) {
+    tricklistEntries.unshift({ text, status }); // новая запись — наверх списка
+    saveToStorage(STORAGE_KEY_TRICKLIST, tricklistEntries);
+    renderTricklist();
+  }
+
+  renderTricklist();
+
+  // ==== Разворачивание / сворачивание лога ====
+  let logExpanded = false;
+
+  function setLogExpanded(expanded) {
+    logExpanded = expanded;
+    tricklistEl.classList.toggle('expanded', expanded);
+    logToggleImg.src = expanded ? 'images/Button_minimize.png' : 'images/Button_expand.png';
+    logToggleBtn.setAttribute('aria-label', expanded ? 'Свернуть лог' : 'Развернуть лог');
+  }
+
+  logToggleBtn.addEventListener('click', () => {
+    setLogExpanded(!logExpanded);
+  });
+
+  // Показываем последний сгенерированный результат сразу при открытии Flatmode.
+  // Если трюк уже ждёт оценки — сразу показываем кнопки-иконки вместо Roll.
+  const lastResult = loadFromStorage(STORAGE_KEY_LAST, '');
+  if (lastResult) {
+    resultEl.textContent = lastResult;
+    bubbleEl.classList.add('active');
+    btn1El.style.display = 'none';
+    judgeButtonsEl.classList.add('visible');
+  }
+
+  function generateUniqueTrick() {
+    let result;
+    let attempts = 0;
+
+    do {
+      result = generateTrick();
+      attempts++;
+    } while (recentResults.includes(result) && attempts < MAX_UNIQUE_ATTEMPTS);
+
+    recentResults.push(result);
+    if (recentResults.length > HISTORY_SIZE) {
+      recentResults.shift(); // убираем самый старый, окно "едет" вперёд
+    }
+
+    saveToStorage(STORAGE_KEY_HISTORY, recentResults);
+    saveToStorage(STORAGE_KEY_LAST, result);
+
+    return result;
+  }
+
+  // Общая функция генерации нового трюка (используется и кнопкой Roll, и кнопками-иконками)
+  function rollNextTrick() {
+    bubbleEl.classList.remove('active');
+    resultEl.textContent = '';
+
+    if (!dataLoaded) {
+      resultEl.textContent = 'Списки трюков ещё загружаются...';
+      bubbleEl.classList.add('active');
+      return;
+    }
+
+    setTimeout(() => {
+      resultEl.textContent = generateUniqueTrick();
+      bubbleEl.classList.add('active');
+    }, 120);
+  }
+
+  loadLists();
+
+  // Кнопка Roll: первый бросок — прячет Roll, показывает кнопки-иконки
+  btn1El.addEventListener('click', () => {
+    setActiveMode(ACTIVE_MODE_FLAT);
+    btn1El.style.display = 'none';
+    judgeButtonsEl.classList.add('visible');
+    rollNextTrick();
+  });
+
+  // Кнопки "засчитано / не засчитано": записывают текущий трюк в лог и сразу кидают следующий
+  document.getElementById('btnLanded').addEventListener('click', () => {
+    if (resultEl.textContent) addTricklistEntry(resultEl.textContent, 'landed');
+    rollNextTrick();
+  });
+
+  document.getElementById('btnFailed').addEventListener('click', () => {
+    if (resultEl.textContent) addTricklistEntry(resultEl.textContent, 'failed');
+    rollNextTrick();
+  });
+
+  // Кнопка 2: стирает сохранённый трюк, историю последних результатов и лог трюков,
+  // возвращает на Mainscreen (Telegram-приложение НЕ закрывается)
+  btn2El.addEventListener('click', () => {
+    setActiveMode(0);
+    try {
+      localStorage.removeItem(STORAGE_KEY_LAST);
+      localStorage.removeItem(STORAGE_KEY_HISTORY);
+      localStorage.removeItem(STORAGE_KEY_TRICKLIST);
+    } catch (e) {
+      console.warn('Не удалось очистить localStorage:', e);
+    }
+    recentResults = [];
+    tricklistEntries = [];
+    renderTricklist();
+
+    // Прячем пузырь/текст и возвращаем кнопку Start Game на место, сворачиваем лог,
+    // чтобы при следующем заходе в Flatmode экран был полностью чистым
+    bubbleEl.classList.remove('active');
+    resultEl.textContent = '';
+    judgeButtonsEl.classList.remove('visible');
+    btn1El.style.display = '';
+    setLogExpanded(false);
+
+    transitionToScreen(mainscreenEl);
+  });
+</script>
+</body>
+</html>
