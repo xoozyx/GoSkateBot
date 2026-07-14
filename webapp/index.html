@@ -216,6 +216,7 @@
     width: 100%;
     height: 100%;
     display: block;
+    object-fit: contain;
   }
 
   #coach {
@@ -230,6 +231,7 @@
     width: 100%;
     height: 100%;
     display: block;
+    object-fit: contain;
   }
 
   /* ==== Кнопки Flatmode ==== */
@@ -344,6 +346,21 @@
     z-index: 15;
   }
 
+  /* Отступы здесь подобраны по реальной тёмной области внутри Tricklist_background.png
+     (за вычетом рамки) — у свёрнутого и развёрнутого фона они чуть отличаются по высоте. */
+  #tricklistContent {
+    position: absolute;
+    top: 4.82%;
+    bottom: 8.43%;
+    left: 2.53%;
+    right: 2.53%;
+  }
+
+  #tricklist.expanded #tricklistContent {
+    top: 2.07%;
+    bottom: 3.63%;
+  }
+
   #tricklistHeader {
     position: absolute;
     top: 0;
@@ -351,7 +368,7 @@
     width: 100%;
     height: 22%;
     box-sizing: border-box;
-    padding: 0 6%;
+    padding: 0 4%;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -387,8 +404,8 @@
     background: transparent;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
-    width: 12px;
-    height: 14px;
+    width: 19px;
+    height: 22px;
     flex-shrink: 0;
   }
 
@@ -402,9 +419,9 @@
   #tricklistInner {
     position: absolute;
     top: 24%;
-    bottom: 4%;
-    left: 6%;
-    right: 6%;
+    bottom: 2%;
+    left: 3%;
+    right: 3%;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
@@ -491,22 +508,24 @@
         </div>
 
         <div id="tricklist">
-          <div id="tricklistHeader">
-            <div class="trick-stats">
-              <div class="trick-stat">
-                <img src="images/Icon_landed.png" alt="Засчитано">
-                <span id="landedCount">0</span>
+          <div id="tricklistContent">
+            <div id="tricklistHeader">
+              <div class="trick-stats">
+                <div class="trick-stat">
+                  <img src="images/Icon_landed.png" alt="Засчитано">
+                  <span id="landedCount">0</span>
+                </div>
+                <div class="trick-stat">
+                  <img src="images/Icon_failed.png" alt="Не засчитано">
+                  <span id="failedCount">0</span>
+                </div>
               </div>
-              <div class="trick-stat">
-                <img src="images/Icon_failed.png" alt="Не засчитано">
-                <span id="failedCount">0</span>
-              </div>
+              <button id="logToggleBtn" aria-label="Развернуть лог">
+                <img src="images/Button_expand.png" alt="Развернуть">
+              </button>
             </div>
-            <button id="logToggleBtn" aria-label="Развернуть лог">
-              <img src="images/Button_expand.png" alt="Развернуть">
-            </button>
+            <div id="tricklistInner"></div>
           </div>
-          <div id="tricklistInner"></div>
         </div>
 
         <button class="menu-button" id="btn2" aria-label="Назад в меню">
