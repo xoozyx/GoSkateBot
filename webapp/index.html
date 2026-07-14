@@ -551,7 +551,7 @@
   // (Раньше здесь был ещё и авто-reload самого index.html через location.replace,
   // но он мог провоцировать двойной запуск скрипта и ломать переключение экранов —
   // убрали, версии картинок для GitHub Pages достаточно.)
-  const ASSET_VERSION = encodeURIComponent(document.lastModified);
+  const ASSET_VERSION = '20260716a';
 
   // На всякий случай отключаем Service Worker, если он когда-либо был
   // зарегистрирован для этого источника (он мог бы отдавать старые файлы из кэша).
@@ -613,16 +613,27 @@
   // Показываем ровно один цикл, чтобы анимация не зациклилась повторно ==== 
   const LOGO_DURATION_MS = 1245;
 
-setTimeout(() => {
-  logoScreen.classList.add('hidden');
-  const activeMode = getActiveMode();
-  if (activeMode === ACTIVE_MODE_FLAT) {
+  setTimeout(() => {
+    logoScreen.classList.add('hidden');
+    // ==== ВРЕМЕННО ДЛЯ ОТЛАДКИ ====
+    // Открываем Flatmode сразу после заставки, минуя Mainscreen, чтобы проверить,
+    // работает ли сам экран Flatmode в Telegram, если до него дойти без клика
+    // по кнопке Flat. Верните оригинальную логику (закомментирована ниже), когда
+    // отладка закончена.
     showScreen(flatmodeEl);
-  } else {
-    if (activeMode !== 0) setActiveMode(0);
-    showScreen(mainscreenEl);
-  }
-}, LOGO_DURATION_MS);
+    return;
+    /* --- оригинальная логика ---
+    const activeMode = getActiveMode();
+    if (activeMode === ACTIVE_MODE_FLAT) {
+      showScreen(flatmodeEl);
+    } else {
+      // Street/Ramp пока не реализованы — на всякий случай сбрасываем неизвестный флаг
+      // и открываем Mainscreen, чтобы не застрять на пустом экране.
+      if (activeMode !== 0) setActiveMode(0);
+      showScreen(mainscreenEl);
+    }
+    */
+  }, LOGO_DURATION_MS);
 
   // ==== Анимация перехода между экранами (Change_screen.png): 9 кадров по 83мс = 747мс.
   // Экран меняется "под прикрытием" ровно в середине анимации, сама анимация проигрывается один раз.
