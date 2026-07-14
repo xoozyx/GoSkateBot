@@ -334,7 +334,7 @@
     background-image: url('images/Tricklist_background.png');
     background-size: 100% 100%;
     image-rendering: pixelated;
-    z-index: 2;
+    z-index: 4;
     transition: top 0.3s ease, height 0.3s ease;
   }
 
@@ -546,6 +546,35 @@
     tg.expand();
   }
 
+  // ==== Флаг незавершённой игры ====
+  // 0 — игра не начата / завершена (Quit). 1 — Flat, 2 — Street, 3 — Ramp.
+  // Ставится при нажатии Start Game в соответствующем режиме, сбрасывается по Quit.
+  // Используется, чтобы после заставки открывать сразу нужный режим, если игра не была завершена.
+  const STORAGE_KEY_ACTIVE_MODE = 'goskate_activeMode';
+
+  function getActiveMode() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_ACTIVE_MODE);
+      const val = raw !== null ? parseInt(raw, 10) : 0;
+      return Number.isNaN(val) ? 0 : val;
+    } catch (e) {
+      console.warn('localStorage недоступен, используем 0 (нет активной игры):', e);
+      return 0;
+    }
+  }
+
+  function setActiveMode(mode) {
+    try {
+      localStorage.setItem(STORAGE_KEY_ACTIVE_MODE, String(mode));
+    } catch (e) {
+      console.warn('Не удалось сохранить флаг активной игры:', e);
+    }
+  }
+
+  const ACTIVE_MODE_FLAT = 1;
+  // const ACTIVE_MODE_STREET = 2; // на будущее, когда появится режим Street
+  // const ACTIVE_MODE_RAMP = 3;   // на будущее, когда появится режим Ramp
+
   // ==== Навигация между экранами ====
   const logoScreen = document.getElementById('logoScreen');
   const mainscreenEl = document.getElementById('mainscreen');
@@ -564,7 +593,15 @@
 
   setTimeout(() => {
     logoScreen.classList.add('hidden');
-    showScreen(mainscreenEl);
+    const activeMode = getActiveMode();
+    if (activeMode === ACTIVE_MODE_FLAT) {
+      showScreen(flatmodeEl);
+    } else {
+      // Street/Ramp пока не реализованы — на всякий случай сбрасываем неизвестный флаг
+      // и открываем Mainscreen, чтобы не застрять на пустом экране.
+      if (activeMode !== 0) setActiveMode(0);
+      showScreen(mainscreenEl);
+    }
   }, LOGO_DURATION_MS);
 
   // ==== Анимация перехода между экранами (Change_screen.png): 9 кадров по 83мс = 747мс.
@@ -873,6 +910,7 @@
 
   // Кнопка Roll: первый бросок — прячет Roll, показывает кнопки-иконки
   btn1El.addEventListener('click', () => {
+    setActiveMode(ACTIVE_MODE_FLAT);
     btn1El.style.display = 'none';
     judgeButtonsEl.classList.add('visible');
     rollNextTrick();
@@ -892,6 +930,7 @@
   // Кнопка 2: стирает сохранённый трюк, историю последних результатов и лог трюков,
   // возвращает на Mainscreen (Telegram-приложение НЕ закрывается)
   btn2El.addEventListener('click', () => {
+    setActiveMode(0);
     try {
       localStorage.removeItem(STORAGE_KEY_LAST);
       localStorage.removeItem(STORAGE_KEY_HISTORY);
