@@ -544,30 +544,14 @@
 
 <script>
   // ==== Борьба с кэшированием внутри Telegram WebView ====
-  // 1) У всех картинок (в HTML-разметке и в CSS background-image) в самом
-  //    index.html прописана версия в query-параметре — ?v=ASSET_VERSION.
-  //    Меняйте ASSET_VERSION при каждом обновлении картинок, и WebView будет
-  //    вынужден запросить их заново, т.к. для него это буквально другой URL.
-  // 2) Дополнительно, если index.html открыт внутри Telegram и это первая
-  //    загрузка за сессию, один раз перезагружаем страницу с меткой времени
-  //    в URL — на случай, если сам index.html тоже закэширован.
+  // У всех картинок (в HTML-разметке и в CSS background-image) в самом
+  // index.html прописана версия в query-параметре — ?v=ASSET_VERSION.
+  // Меняйте ASSET_VERSION при каждом обновлении картинок, и WebView будет
+  // вынужден запросить их заново, т.к. для него это буквально другой URL.
+  // (Раньше здесь был ещё и авто-reload самого index.html через location.replace,
+  // но он мог провоцировать двойной запуск скрипта и ломать переключение экранов —
+  // убрали, версии картинок для GitHub Pages достаточно.)
   const ASSET_VERSION = '20260716a';
-
-  (function bustTelegramCache() {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const cacheParam = params.get('_cb');
-      const isTelegram = !!(window.Telegram && window.Telegram.WebApp);
-      const alreadyBusted = sessionStorage.getItem('goskate_cacheBusted') === '1';
-      if (isTelegram && !cacheParam && !alreadyBusted) {
-        sessionStorage.setItem('goskate_cacheBusted', '1');
-        params.set('_cb', Date.now().toString());
-        window.location.replace(window.location.pathname + '?' + params.toString());
-      }
-    } catch (e) {
-      console.warn('Cache-busting reload не выполнен:', e);
-    }
-  })();
 
   // На всякий случай отключаем Service Worker, если он когда-либо был
   // зарегистрирован для этого источника (он мог бы отдавать старые файлы из кэша).
