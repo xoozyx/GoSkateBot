@@ -3,3 +3,7 @@ Kickflip,3
 Heelflip,3
 Pop Shove-It,1
 FS Pop Shove-It,1
+Varial Flip,4
+Varial Heelflip,5
+Hard Flip,6
+Inward Heelflip,6

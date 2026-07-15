@@ -16,5 +16,22 @@ Nollie FS 360 FS Pop Shove-It,Nollie FS Bigger Spin
 Nollie BS 360 Pop Shove-It,Nollie BS Bigger Spin
 FS 180 Pop Shove-It,Pop Shove-It Sex Change
 BS 180 FS Pop Shove-It,FS Pop Shove-It Sex Change
+FS 180 Kickflip,Frontside Flip
+Nollie FS 180 Kickflip,Nollie Frontside Flip
+Switch FS 180 Kickflip,Switch Frontside Flip
+Fakie FS 180 Kickflip,Fakie Frontside Flip
+BS 180 Kickflip,Backside Flip
+Nollie BS 180 Kickflip,Nollie Backside Flip
+Switch BS 180 Kickflip,Switch Backside Flip
+Fakie BS 180 Kickflip,Half-Cab Flip
+FS 360 Kickflip,360 Frontside Flip
+Nollie FS 360 Kickflip,Nollie 360 Frontside Flip
+Switch FS 360 Kickflip,Switch 360 Frontside Flip
+Fakie FS 360 Kickflip,Fakie 360 Frontside Flip
+BS 360 Kickflip,360 Backside Flip
+Nollie BS 360 Kickflip,Nollie 360 Backside Flip
+Switch BS 360 Kickflip,Switch 360 Backside Flip
+Fakie BS 360 Kickflip,Full-Cab Flip
+Switch,REROLL
 FS 360 Pop Shove-It,REROLL
 BS 360 FS Pop Shove-It,REROLL
