@@ -36,6 +36,17 @@
     overflow: hidden;
   }
 
+  /* ==== Zoom-режим для Flatmode: приближаем игровой экран устройства,
+     обрезая D-pad/Start/A/B снизу и часть рамки по бокам — см. превью от пользователя.
+     Возвращается к обычному виду при выходе на Mainscreen. ==== */
+  #app.zoomed .device {
+    transform: scale(1.35) translateY(11%);
+  }
+
+  .device {
+    transition: transform 0.5s ease;
+  }
+
   /* ==== Экран загрузки с логотипом ==== */
   #logoScreen {
     position: absolute;
@@ -624,9 +635,12 @@
   const changeOverlay = document.getElementById('changeOverlay');
   const changeScreenImg = document.getElementById('changeScreenImg');
 
+  const appEl = document.getElementById('app');
+
   function showScreen(el) {
     [mainscreenEl, flatmodeEl].forEach(s => s.classList.remove('active'));
     el.classList.add('active');
+    appEl.classList.toggle('zoomed', el === flatmodeEl);
   }
 
   // ==== Заставка (Intro_screen.png): 15 кадров по 83мс = 1245мс на один проигрыш.
