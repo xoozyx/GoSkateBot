@@ -423,6 +423,23 @@
     image-rendering: pixelated;
   }
 
+  #skateLetters {
+    position: absolute;
+    top: 4%;
+    right: calc(3% + 12% + 4%);
+    width: 46%;
+    aspect-ratio: 65 / 17;
+    z-index: 6;
+    pointer-events: none;
+  }
+
+  #skateLetters img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+  }
+
   #tricklistInner {
     position: absolute;
     top: 24%;
@@ -528,6 +545,9 @@
                 </div>
               </div>
             </div>
+            <div id="skateLetters">
+              <img id="skateLettersImg" src="images/Letters_null.png?v=20260716a" alt="SKATE">
+            </div>
             <button id="logToggleBtn" aria-label="Развернуть лог">
               <img src="images/Button_expand.png?v=20260716a" alt="Развернуть">
             </button>
@@ -613,16 +633,18 @@
   // Показываем ровно один цикл, чтобы анимация не зациклилась повторно ==== 
   const LOGO_DURATION_MS = 1245;
 
-setTimeout(() => {
-  logoScreen.classList.add('hidden');
-  const activeMode = getActiveMode();
-  if (activeMode === ACTIVE_MODE_FLAT) {
-    showScreen(flatmodeEl);
-  } else {
-    if (activeMode !== 0) setActiveMode(0);
-    showScreen(mainscreenEl);
-  }
-}, LOGO_DURATION_MS);
+  setTimeout(() => {
+    logoScreen.classList.add('hidden');
+    const activeMode = getActiveMode();
+    if (activeMode === ACTIVE_MODE_FLAT) {
+      showScreen(flatmodeEl);
+    } else {
+      // Street/Ramp пока не реализованы — на всякий случай сбрасываем неизвестный флаг
+      // и открываем Mainscreen, чтобы не застрять на пустом экране.
+      if (activeMode !== 0) setActiveMode(0);
+      showScreen(mainscreenEl);
+    }
+  }, LOGO_DURATION_MS);
 
   // ==== Анимация перехода между экранами (Change_screen.png): 9 кадров по 83мс = 747мс.
   // Экран меняется "под прикрытием" ровно в середине анимации, сама анимация проигрывается один раз.
@@ -829,6 +851,42 @@ setTimeout(() => {
 
   let tricklistEntries = loadFromStorage(STORAGE_KEY_TRICKLIST, []); // [{text, status}], новые в начале
 
+  const skateLettersImg = document.getElementById('skateLettersImg');
+
+  // Пороги по количеству "Не засчитано" → какую картинку с буквами показывать.
+  // На 15-й ошибке — игра окончена.
+  const SKATE_STAGES = [
+    { threshold: 0, image: 'Letters_null.png' },
+    { threshold: 3, image: 'Letters_s.png' },
+    { threshold: 6, image: 'Letters_sk.png' },
+    { threshold: 9, image: 'Letters_ska.png' },
+    { threshold: 12, image: 'Letters_skat.png' },
+    { threshold: 15, image: 'Letters_skate.png' },
+  ];
+  const GAME_OVER_FAILS = 15;
+  let isGameOver = false;
+
+  function updateSkateLetters(failedCount) {
+    let stage = SKATE_STAGES[0];
+    for (const s of SKATE_STAGES) {
+      if (failedCount >= s.threshold) stage = s;
+    }
+    skateLettersImg.src = 'images/' + stage.image + '?v=' + ASSET_VERSION;
+  }
+
+  function triggerGameOver() {
+    if (isGameOver) return;
+    isGameOver = true;
+    bubbleEl.classList.remove('active');
+    resultEl.textContent = '';
+    setTimeout(() => {
+      resultEl.textContent = 'Game over!';
+      bubbleEl.classList.add('active');
+    }, 120);
+    judgeButtonsEl.classList.remove('visible');
+    btn1El.style.display = 'none';
+  }
+
   function renderTricklist() {
     tricklistInner.innerHTML = '';
     let landed = 0;
@@ -855,6 +913,11 @@ setTimeout(() => {
 
     landedCountEl.textContent = landed;
     failedCountEl.textContent = failed;
+    updateSkateLetters(failed);
+
+    if (failed >= GAME_OVER_FAILS) {
+      triggerGameOver();
+    }
   }
 
   function addTricklistEntry(text, status) {
@@ -881,12 +944,17 @@ setTimeout(() => {
 
   // Показываем последний сгенерированный результат сразу при открытии Flatmode.
   // Если трюк уже ждёт оценки — сразу показываем кнопки-иконки вместо Roll.
-  const lastResult = loadFromStorage(STORAGE_KEY_LAST, '');
-  if (lastResult) {
-    resultEl.textContent = lastResult;
-    bubbleEl.classList.add('active');
-    btn1El.style.display = 'none';
-    judgeButtonsEl.classList.add('visible');
+  // Если игра уже была завершена (15 ошибок) — вместо этого сразу показываем Game over.
+  if (isGameOver) {
+    triggerGameOver();
+  } else {
+    const lastResult = loadFromStorage(STORAGE_KEY_LAST, '');
+    if (lastResult) {
+      resultEl.textContent = lastResult;
+      bubbleEl.classList.add('active');
+      btn1El.style.display = 'none';
+      judgeButtonsEl.classList.add('visible');
+    }
   }
 
   function generateUniqueTrick() {
@@ -911,6 +979,7 @@ setTimeout(() => {
 
   // Общая функция генерации нового трюка (используется и кнопкой Roll, и кнопками-иконками)
   function rollNextTrick() {
+    if (isGameOver) return;
     bubbleEl.classList.remove('active');
     resultEl.textContent = '';
 
@@ -960,6 +1029,7 @@ setTimeout(() => {
     }
     recentResults = [];
     tricklistEntries = [];
+    isGameOver = false;
     renderTricklist();
 
     // Прячем пузырь/текст и возвращаем кнопку Start Game на место, сворачиваем лог,
