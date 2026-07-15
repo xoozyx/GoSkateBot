@@ -779,7 +779,7 @@
   const MAX_REROLL_ATTEMPTS = 20; // защита от зацикливания, если правила REROLL противоречивы
   const MAX_DIFFICULTY_SUM = 5;   // "лёгкий режим": если сумма сложностей выше — REROLL
 
-  function generateTrick(attempt = 0) {
+  function generateTrick(attempt = 0, bestFallback = null) {
     const stancePick = stances.length > 0 ? weightedPick(stances) : { value: null, difficulty: 0 };
     const additionPick = additions.length > 0 ? weightedPick(additions) : { value: null, difficulty: 0 };
     const mainPick = weightedPick(mainTricks);
@@ -795,14 +795,31 @@
     // REROLL происходит если: 1) явно указан REROLL в name_replaces.txt,
     // 2) суммарная сложность выше лимита ("лёгкий режим"),
     // 3) комбинация оказалась полностью пустой (все три части — NULL)
-    const needsReroll = finalResult === 'REROLL' || difficultySum > MAX_DIFFICULTY_SUM || combo === '';
+    const exceedsDifficulty = difficultySum > MAX_DIFFICULTY_SUM;
+    const needsReroll = finalResult === 'REROLL' || exceedsDifficulty || combo === '';
+
+    // Запоминаем лучший из виденных вариантов на случай, если так и не найдём
+    // подходящий за MAX_REROLL_ATTEMPTS попыток — но ТОЛЬКО если он не превышает
+    // лимит сложности и не пустой; явный REROLL никогда не годится как fallback.
+    let nextBestFallback = bestFallback;
+    if (finalResult !== 'REROLL' && combo !== '' && !exceedsDifficulty) {
+      if (!nextBestFallback || difficultySum < nextBestFallback.difficultySum) {
+        nextBestFallback = { finalResult, difficultySum };
+      }
+    }
 
     if (needsReroll) {
       if (attempt >= MAX_REROLL_ATTEMPTS) {
-        console.warn('Достигнут лимит REROLL-попыток, показываю как есть.');
-        return combo || finalResult;
+        if (nextBestFallback) {
+          console.warn('Достигнут лимит REROLL-попыток, показываю лучший найденный вариант (сложность ' + nextBestFallback.difficultySum + ').');
+          return nextBestFallback.finalResult;
+        }
+        // Ни одного варианта в пределах лимита сложности не нашлось вовсе —
+        // возвращаем пустую строку вместо трюка, который нарушает MAX_DIFFICULTY_SUM.
+        console.warn('Достигнут лимит REROLL-попыток, подходящих по сложности вариантов не найдено.');
+        return '';
       }
-      return generateTrick(attempt + 1);
+      return generateTrick(attempt + 1, nextBestFallback);
     }
 
     return finalResult;
