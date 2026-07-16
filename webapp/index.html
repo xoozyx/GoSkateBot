@@ -350,6 +350,12 @@
     image-rendering: pixelated;
     z-index: 4;
     transition: top 0.3s ease, height 0.3s ease;
+    /* Контейнер для cqw-юнитов — так шапка (счётчики, буквы SKATE, кнопка
+       сворачивания) может быть привязана к ШИРИНЕ панели и оставаться на
+       одном и том же месте и в свёрнутом, и в развёрнутом виде, где сама
+       высота #tricklist сильно отличается (26.73% vs 63% высоты устройства). */
+    container-type: size;
+    container-name: tricklistPanel;
   }
 
   /* Развёрнутое состояние — панель растягивается вверх, накрывая пузырь/Coach/Flatground/Quit */
@@ -360,27 +366,32 @@
     z-index: 15;
   }
 
-  /* Отступы здесь подобраны по реальной тёмной области внутри Tricklist_background.png
-     (за вычетом рамки) — у свёрнутого и развёрнутого фона они чуть отличаются по высоте. */
+  /* top подобран так, чтобы текст лога начинался чуть ниже шапки (счётчики/буквы SKATE),
+     с небольшим зазором (~4px) — отдельно посчитан для свёрнутого и развёрнутого состояний,
+     т.к. высота #tricklist сильно отличается между ними. */
   #tricklistContent {
     position: absolute;
-    top: 4.82%;
+    top: 22.67%;
     bottom: 8.43%;
     left: 2.53%;
     right: 2.53%;
   }
 
   #tricklist.expanded #tricklistContent {
-    top: 2.07%;
+    top: 9.61%;
     bottom: 3.63%;
   }
 
+  /* Шапка (счётчики + буквы SKATE + кнопка сворачивания) использует cqw
+     (% от ширины #tricklist) для вертикального позиционирования — благодаря
+     этому она стоит на одном и том же месте независимо от того, свёрнута
+     панель или развёрнута (в отличие от %, которые всегда считаются от
+     ТЕКУЩЕЙ высоты панели и поэтому "плавают" между режимами). */
   #tricklistHeader {
     position: absolute;
-    top: 0;
+    top: 4.56cqw;
     left: 0;
     width: 100%;
-    height: 22%;
     box-sizing: border-box;
     padding: 0 4%;
     display: flex;
@@ -414,14 +425,14 @@
 
   #logToggleBtn {
     position: absolute;
-    top: 4%;
+    top: 3.4cqw;
     right: 3%;
     border: none;
     padding: 0;
     background: transparent;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
-    width: 12%;
+    width: 9.1%;
     aspect-ratio: 12 / 14;
     flex-shrink: 0;
     z-index: 6;
@@ -436,9 +447,9 @@
 
   #skateLetters {
     position: absolute;
-    top: 4%;
-    right: calc(3% + 12% + 4%);
-    width: 46%;
+    top: 3.4cqw;
+    right: calc(3% + 9.1% + 3%);
+    width: 35%;
     aspect-ratio: 65 / 17;
     z-index: 6;
     pointer-events: none;
@@ -453,8 +464,7 @@
 
   #tricklistInner {
     position: absolute;
-    top: 24%;
-    bottom: 2%;
+    inset: 0;
     left: 3%;
     right: 3%;
     overflow-y: auto;
@@ -486,6 +496,9 @@
     font-size: 7px;
     line-height: 1.35;
     color: #d8e8d0;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    min-width: 0;
   }
 </style>
 </head>
@@ -543,25 +556,25 @@
         </div>
 
         <div id="tricklist">
-          <div id="tricklistContent">
-            <div id="tricklistHeader">
-              <div class="trick-stats">
-                <div class="trick-stat">
-                  <img src="images/Icon_landed.png?v=20260716a" alt="Засчитано">
-                  <span id="landedCount">0</span>
-                </div>
-                <div class="trick-stat">
-                  <img src="images/Icon_failed.png?v=20260716a" alt="Не засчитано">
-                  <span id="failedCount">0</span>
-                </div>
+          <div id="tricklistHeader">
+            <div class="trick-stats">
+              <div class="trick-stat">
+                <img src="images/Icon_landed.png?v=20260716a" alt="Засчитано">
+                <span id="landedCount">0</span>
+              </div>
+              <div class="trick-stat">
+                <img src="images/Icon_failed.png?v=20260716a" alt="Не засчитано">
+                <span id="failedCount">0</span>
               </div>
             </div>
-            <div id="skateLetters">
-              <img id="skateLettersImg" src="images/Letters_null.png?v=20260716a" alt="SKATE">
-            </div>
-            <button id="logToggleBtn" aria-label="Развернуть лог">
-              <img src="images/Button_expand.png?v=20260716a" alt="Развернуть">
-            </button>
+          </div>
+          <div id="skateLetters">
+            <img id="skateLettersImg" src="images/Letters_null.png?v=20260716a" alt="SKATE">
+          </div>
+          <button id="logToggleBtn" aria-label="Развернуть лог">
+            <img src="images/Button_expand.png?v=20260716a" alt="Развернуть">
+          </button>
+          <div id="tricklistContent">
             <div id="tricklistInner"></div>
           </div>
         </div>
@@ -688,6 +701,23 @@
 
   // ==== Генератор трюков (Flatmode) ====
   const resultEl = document.getElementById('result');
+
+  // Базовый размер шрифта в пузыре (px) — должен совпадать со значением font-size у #result в CSS.
+  const RESULT_FONT_BASE = 11;
+  // Пороги по длине текста → во сколько раз уменьшаем шрифт. Подобраны так, чтобы
+  // длинные названия трюков (stance + addition + основной трюк) не вылезали за пузырь.
+  const RESULT_FONT_STEPS = [
+    { maxLength: 18, scale: 1 },
+    { maxLength: 26, scale: 0.85 },
+    { maxLength: 34, scale: 0.72 },
+    { maxLength: Infinity, scale: 0.6 },
+  ];
+
+  function setResultText(text) {
+    resultEl.textContent = text;
+    const step = RESULT_FONT_STEPS.find(s => text.length <= s.maxLength);
+    resultEl.style.fontSize = (RESULT_FONT_BASE * step.scale) + 'px';
+  }
   const bubbleEl = document.getElementById('bubble');
 
   let stances = [];
@@ -790,7 +820,7 @@
     }
   }
 
-  const MAX_REROLL_ATTEMPTS = 20; // защита от зацикливания, если правила REROLL противоречивы
+  const MAX_REROLL_ATTEMPTS = 60; // защита от зацикливания, если правила REROLL противоречивы
   const MAX_DIFFICULTY_SUM = 5;   // "лёгкий режим": если сумма сложностей выше — REROLL
 
   function generateTrick(attempt = 0, bestFallback = null) {
@@ -911,7 +941,7 @@
     bubbleEl.classList.remove('active');
     resultEl.textContent = '';
     setTimeout(() => {
-      resultEl.textContent = 'Game over!';
+      setResultText('Game over!');
       bubbleEl.classList.add('active');
     }, 120);
     judgeButtonsEl.classList.remove('visible');
@@ -981,7 +1011,7 @@
   } else {
     const lastResult = loadFromStorage(STORAGE_KEY_LAST, '');
     if (lastResult) {
-      resultEl.textContent = lastResult;
+      setResultText(lastResult);
       bubbleEl.classList.add('active');
       btn1El.style.display = 'none';
       judgeButtonsEl.classList.add('visible');
@@ -995,7 +1025,18 @@
     do {
       result = generateTrick();
       attempts++;
-    } while (recentResults.includes(result) && attempts < MAX_UNIQUE_ATTEMPTS);
+      // Пустой результат никогда не должен показываться пользователю — это
+      // означает, что generateTrick() исчерпал попытки подобрать трюк по
+      // правилам (см. MAX_REROLL_ATTEMPTS внутри неё). Пробуем ещё раз, а не
+      // просто "как есть" — пустой трюк не более уникален, чем любой другой.
+    } while ((result === '' || recentResults.includes(result)) && attempts < MAX_UNIQUE_ATTEMPTS);
+
+    if (result === '') {
+      // Совсем крайний случай: за все попытки не нашлось ни одного трюка.
+      // Показываем что-то осмысленное вместо пустого пузыря.
+      console.warn('generateUniqueTrick: не удалось подобрать трюк, показываю запасной вариант.');
+      result = 'Trick';
+    }
 
     recentResults.push(result);
     if (recentResults.length > HISTORY_SIZE) {
@@ -1015,13 +1056,13 @@
     resultEl.textContent = '';
 
     if (!dataLoaded) {
-      resultEl.textContent = 'Списки трюков ещё загружаются...';
+      setResultText('Списки трюков ещё загружаются...');
       bubbleEl.classList.add('active');
       return;
     }
 
     setTimeout(() => {
-      resultEl.textContent = generateUniqueTrick();
+      setResultText(generateUniqueTrick());
       bubbleEl.classList.add('active');
     }, 120);
   }
