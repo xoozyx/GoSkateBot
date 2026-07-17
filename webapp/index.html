@@ -154,6 +154,22 @@
     cursor: default;
   }
 
+  /* "SELECT MODE" — декоративная анимация на весь канвас, под кнопками выбора режима. */
+  #selectModeLabel {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    image-rendering: pixelated;
+    z-index: 0;
+  }
+
+  #selectModeLabel img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+  }
+
   /* Декоративный слой на весь канвас устройства (208x306, прозрачный фон) —
      арт уже спозиционирован художником внутри PNG, поэтому просто накрываем
      им весь .device. Сам по себе некликабелен — иначе прозрачные области
@@ -174,12 +190,6 @@
     image-rendering: pixelated;
   }
 
-  /* Кнопка идёт перед визуальным слоем в разметке (порядок в DOM не влияет
-     на z-index, который задан явно) — благодаря этому при нажатии на
-     невидимую кликабельную область можно подсветить видимую картинку рядом
-     через сиблинг-селектор, без лишнего JS. Не scale (сжался бы весь канвас
-     208x306 целиком, а не только видимая кнопка) — вместо этого лёгкое
-     затемнение, как обратная связь на нажатие. */
   /* Кнопка идёт перед визуальным слоем в разметке (порядок в DOM не влияет
      на z-index, который задан явно) — благодаря этому при нажатии на
      невидимую кликабельную область можно подсветить видимую картинку рядом
@@ -633,6 +643,9 @@
     <!-- ==== Mainscreen: выбор режима игры ==== -->
     <div id="mainscreen" class="screen">
       <div class="device">
+        <div id="selectModeLabel">
+          <img src="images/Animation_select_mode.png?v=20260716a" alt="">
+        </div>
         <button class="mode-button enabled fullcanvas-hitarea" id="modeFlat" aria-label="Flat"></button>
         <div class="mode-button-visual" id="modeFlatVisual">
           <img src="images/Button_mainmenu_flat.png?v=20260716a" alt="">
@@ -923,9 +936,9 @@
   async function loadLists() {
     try {
       const [stanceRes, mainRes, addRes] = await Promise.all([
-        fetch('data/stances.txt'),
-        fetch('data/main_tricks.txt'),
-        fetch('data/additions.txt'),
+        fetch('data/flatmode/stances.txt'),
+        fetch('data/flatmode/main_tricks.txt'),
+        fetch('data/flatmode/additions.txt'),
       ]);
       stances = parseWeightedList(await stanceRes.text());
       mainTricks = parseWeightedList(await mainRes.text());
@@ -938,7 +951,7 @@
     }
 
     try {
-      const replRes = await fetch('data/name_replaces.txt');
+      const replRes = await fetch('data/flatmode/name_replaces.txt');
       if (replRes.ok) {
         nameReplacements = parseReplacements(await replRes.text());
       }
