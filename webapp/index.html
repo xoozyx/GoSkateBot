@@ -279,7 +279,7 @@
   }
 
   #flatground {
-    z-index: 1;
+    z-index: 6;
   }
 
   #flatground img {
@@ -453,18 +453,22 @@
      свёрнутого и развёрнутого состояний. */
   #tricklistContent {
     position: absolute;
-    top: 52.58%;
-    bottom: 30.07%;
-    left: 12.02%;
+    top: 52%;
+    bottom: 32%;
+    left: 16%;
     right: 12.5%;
+    padding-left: 2%;
+    box-sizing: border-box;
     overflow: hidden;
   }
 
   #tricklist.expanded #tricklistContent {
-    top: 16.63%;
-    bottom: 30.07%;
-    left: 12.02%;
+    top: 16%;
+    bottom: 32%;
+    left: 16%;
     right: 12.5%;
+    padding-left: 2%;
+    box-sizing: border-box;
     overflow: hidden;
   }
 
@@ -476,10 +480,10 @@
   #tricklistHeader {
     position: absolute;
     top: 46.08%;
-    left: 0;
-    width: 100%;
+    left: 12.02%;
+    right: 12.5%;
     box-sizing: border-box;
-    padding: 0 4%;
+    padding: 0 3%;
     display: flex;
     align-items: center;
     z-index: 5;
@@ -537,18 +541,16 @@
     top: 10.13%;
   }
 
-  /* Декоративный слой на весь канвас — арт уже спозиционирован художником
-     под свёрнутое состояние панели, сдвигаем на ту же дельту для развёрнутого. */
+  /* Декоративный слой на весь канвас — ВАЖНО: Button_expand.png нарисован
+     художником для СВЁРНУТОГО состояния (~46% сверху), а Button_minimize.png —
+     уже для РАЗВЁРНУТОГО состояния (~10% сверху), т.е. у каждой картинки
+     положение своё и уже правильное само по себе. Никакого сдвига через
+     transform не нужно — иначе Button_minimize уезжает за пределы экрана. */
   #logToggleVisual {
     position: absolute;
     inset: 0;
     pointer-events: none;
     z-index: 6;
-    transition: transform 0.3s ease;
-  }
-
-  #tricklist.expanded #logToggleVisual {
-    transform: translateY(-35.95%);
   }
 
   #logToggleVisual img {
@@ -1145,11 +1147,15 @@
     triggerGameOver();
   } else {
     const lastResult = loadFromStorage(STORAGE_KEY_LAST, '');
+    console.log('[GoSkate debug] restore check — isGameOver:', isGameOver, 'lastResult:', JSON.stringify(lastResult));
     if (lastResult) {
       setResultText(lastResult);
       bubbleEl.classList.add('active');
       setBtn1Visible(false);
       judgeButtonsEl.classList.add('visible');
+      console.log('[GoSkate debug] restored bubble/result, hid btn1');
+    } else {
+      console.log('[GoSkate debug] no lastResult found — leaving btn1 visible');
     }
   }
 
