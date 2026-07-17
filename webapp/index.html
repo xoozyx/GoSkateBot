@@ -154,43 +154,86 @@
     cursor: default;
   }
 
-  #modeFlat {
-    left: 23.1%;
-    top: 20.9%;
-    width: 38.5%;
-    height: 10.5%;
+  /* Декоративный слой на весь канвас устройства (208x306, прозрачный фон) —
+     арт уже спозиционирован художником внутри PNG, поэтому просто накрываем
+     им весь .device. Сам по себе некликабелен — иначе прозрачные области
+     перекрывали бы клики по кнопкам Ramp/Street под ним. */
+  .mode-button-visual {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    image-rendering: pixelated;
+    z-index: 1;
+    transition: opacity 0.08s ease;
   }
 
-  #modeStreet {
-    left: 23.1%;
-    top: 35%;
+  .mode-button-visual img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+  }
+
+  /* Кнопка идёт перед визуальным слоем в разметке (порядок в DOM не влияет
+     на z-index, который задан явно) — благодаря этому при нажатии на
+     невидимую кликабельную область можно подсветить видимую картинку рядом
+     через сиблинг-селектор, без лишнего JS. Не scale (сжался бы весь канвас
+     208x306 целиком, а не только видимая кнопка) — вместо этого лёгкое
+     затемнение, как обратная связь на нажатие. */
+  /* Кнопка идёт перед визуальным слоем в разметке (порядок в DOM не влияет
+     на z-index, который задан явно) — благодаря этому при нажатии на
+     невидимую кликабельную область можно подсветить видимую картинку рядом
+     через сиблинг-селектор, без лишнего JS. Не scale (сжался бы весь канвас
+     208x306 целиком, а не только видимая кнопка) — вместо этого лёгкое
+     затемнение, как обратная связь на нажатие. */
+  .fullcanvas-hitarea:active ~ .mode-button-visual {
+    opacity: 0.8;
+  }
+
+  /* Реальная кликабельная область для fullcanvas-кнопки — размер и позиция
+     подобраны по фактическим непрозрачным пикселям в PNG (см. bbox альфа-канала),
+     а не по всему канвасу, иначе кнопка перекрывала бы клики по остальным. */
+  .fullcanvas-hitarea {
+    z-index: 2;
+  }
+
+  #modeFlat {
+    left: 30.8%;
+    top: 16%;
     width: 38.5%;
-    height: 12.1%;
+    height: 16%;
   }
 
   #modeRamp {
-    left: 23.1%;
-    top: 52.3%;
+    left: 30.8%;
+    top: 35%;
     width: 38.5%;
-    height: 10.5%;
+    height: 12.75%;
+  }
+
+  #modeStreet {
+    left: 30.8%;
+    top: 50.65%;
+    width: 38.5%;
+    height: 12.1%;
   }
 
   /* ==== Речевой пузырь с результатом (Flatmode) ==== */
   #bubble {
     position: absolute;
-    left: 22.1%;
-    top: 11.8%;
-    width: 54.8%;
-    height: 10.8%;
+    inset: 0;
     box-sizing: border-box;
-    background-image: url('images/Text_bubble.png?v=20260716a');
-    background-size: 100% 100%;
-    background-repeat: no-repeat;
-    image-rendering: pixelated;
     opacity: 0;
     transition: opacity 0.25s ease;
     pointer-events: none;
     z-index: 5;
+  }
+
+  #bubble img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    image-rendering: pixelated;
   }
 
   #bubble.active {
@@ -199,30 +242,43 @@
 
   #result {
     position: absolute;
-    left: 8%;
-    right: 8%;
-    top: 38%; /* центр чёрной "подложки" пузыря, без учёта хвостика снизу */
-    transform: translateY(-50%);
+    left: 22.1%;
+    right: 22.6%;
+    top: 9.8%;
+    height: 10.8%;
+    box-sizing: border-box;
+    padding: 0 2%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
     text-align: center;
     font-family: 'Press Start 2P', monospace;
     font-size: 11px;
-    line-height: 1.4;
+    line-height: 1.3;
     color: #ffffff;
     word-wrap: break-word;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  #bubble.active ~ #result {
+    opacity: 1;
   }
 
   /* ==== Декоративные спрайты (стоят позади кнопок) ==== */
+  /* Теперь оба — полноразмерные PNG 208x306 с прозрачным фоном, арт уже
+     спозиционирован художником внутри самого файла. */
   #flatground, #coach {
     position: absolute;
+    inset: 0;
     pointer-events: none;
     image-rendering: pixelated;
   }
 
   #flatground {
-    left: 38.5%;
-    top: 21.9%;
-    width: 39.3%;
-    height: 10.7%;
     z-index: 1;
   }
 
@@ -230,14 +286,9 @@
     width: 100%;
     height: 100%;
     display: block;
-    object-fit: contain;
   }
 
   #coach {
-    left: 22.1%;
-    top: 21.9%;
-    width: 11.5%;
-    height: 5.6%;
     z-index: 2;
   }
 
@@ -245,48 +296,58 @@
     width: 100%;
     height: 100%;
     display: block;
-    object-fit: contain;
   }
 
   /* ==== Кнопки Flatmode ==== */
-  .menu-button {
+  /* Теперь это полноразмерные PNG 208x306 с прозрачным фоном — арт уже
+     спозиционирован художником. Реальная кликабельная область (fullcanvas-hitarea)
+     ограничена фактическими непрозрачными пикселями, декоративный слой
+     (menu-button-visual/judge-button-visual) занимает весь канвас и не кликается. */
+  .menu-button-visual {
     position: absolute;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    background: transparent;
-    -webkit-tap-highlight-color: transparent;
-    transition: transform 0.08s ease;
+    inset: 0;
+    pointer-events: none;
+    image-rendering: pixelated;
+    transition: opacity 0.08s ease;
     z-index: 3;
   }
 
-  .menu-button:active {
-    transform: scale(0.93);
-  }
-
-  .menu-button img {
+  .menu-button-visual img {
     display: block;
     width: 100%;
     height: 100%;
     image-rendering: pixelated;
   }
 
+  .menu-button.fullcanvas-hitarea {
+    position: absolute;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    background: transparent;
+    -webkit-tap-highlight-color: transparent;
+    z-index: 4;
+  }
+
+  .menu-button.fullcanvas-hitarea:active ~ .menu-button-visual {
+    opacity: 0.8;
+  }
+
   #btn1 {
-    left: 26.9%;
-    top: 34.3%;
-    width: 47%;
-    height: 8.43%;
+    left: 26.92%;
+    top: 33.99%;
+    width: 47.12%;
+    height: 8.5%;
   }
 
   #btn2 {
-    left: 78.4%;
-    top: 8.5%;
-    width: 9.13%;
-    height: 8.82%;
-    z-index: 6;
+    left: 78.85%;
+    top: 8.82%;
+    width: 8.17%;
+    height: 8.17%;
   }
 
-  #btn2.hidden {
+  #btn2Visual.hidden, #btn2.hidden {
     display: none;
   }
 
@@ -305,91 +366,116 @@
     pointer-events: auto;
   }
 
-  .judge-button {
+  .judge-button.fullcanvas-hitarea {
     position: absolute;
-    top: 34.31%;
-    width: 21.54%;
-    height: 8.43%;
     border: none;
     padding: 0;
     background: transparent;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
-    transition: transform 0.08s ease;
+    z-index: 4;
   }
 
-  #btnLanded {
-    left: 22.6%;
+  .judge-button-visual {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    image-rendering: pixelated;
+    transition: opacity 0.08s ease;
+    z-index: 3;
   }
 
-  #btnFailed {
-    left: 55.77%;
-  }
-
-  .judge-button:active {
-    transform: scale(0.93);
-  }
-
-  .judge-button img {
+  .judge-button-visual img {
     display: block;
     width: 100%;
     height: 100%;
     image-rendering: pixelated;
   }
 
-  /* Прокручиваемый лог трюков — свёрнутое состояние */
+  #btnLanded {
+    left: 22.6%;
+    top: 33.99%;
+    width: 21.63%;
+    height: 8.5%;
+  }
+
+  #btnFailed {
+    left: 55.77%;
+    top: 33.99%;
+    width: 21.63%;
+    height: 8.5%;
+  }
+
+  .judge-button.fullcanvas-hitarea:active ~ .judge-button-visual {
+    opacity: 0.8;
+  }
+
+  /* Прокручиваемый лог трюков — теперь фон на весь канвас 208x306 (сама панель
+     нарисована художником внутри PNG, прозрачность вокруг неё). Свёрнутое и
+     развёрнутое состояния — это два разных полноразмерных PNG; сам #tricklist
+     больше не двигается и не меняет размер. Кроссфейд между ними — через
+     ::before с отдельной картинкой развёрнутого состояния и переходом opacity,
+     чтобы переключение не выглядело резким "миганием". */
   #tricklist {
     position: absolute;
-    left: 12.02%;
-    top: 44.44%;
-    width: 75.87%;
-    height: 26.73%;
-    box-sizing: border-box;
+    inset: 0;
     background-image: url('images/Tricklist_background.png?v=20260716a');
     background-size: 100% 100%;
     image-rendering: pixelated;
     z-index: 4;
-    transition: top 0.3s ease, height 0.3s ease;
-    /* Контейнер для cqw-юнитов — так шапка (счётчики, буквы SKATE, кнопка
-       сворачивания) может быть привязана к ШИРИНЕ панели и оставаться на
-       одном и том же месте и в свёрнутом, и в развёрнутом виде, где сама
-       высота #tricklist сильно отличается (26.73% vs 63% высоты устройства). */
-    container-type: size;
-    container-name: tricklistPanel;
+    /* Сама панель — просто фон на весь экран, не должна перехватывать клики
+       по остальным элементам (Start Game и т.д.) там, где она прозрачна. */
+    pointer-events: none;
   }
 
-  /* Развёрнутое состояние — панель растягивается вверх, накрывая пузырь/Coach/Flatground/Quit */
-  #tricklist.expanded {
-    top: 8.17%;
-    height: 63%;
+  #tricklist::before {
+    content: '';
+    position: absolute;
+    inset: 0;
     background-image: url('images/Tricklist_background_expanded.png?v=20260716a');
+    background-size: 100% 100%;
+    image-rendering: pixelated;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  #tricklist.expanded::before {
+    opacity: 1;
+  }
+
+  #tricklist.expanded {
     z-index: 15;
   }
 
-  /* top подобран так, чтобы текст лога начинался чуть ниже шапки (счётчики/буквы SKATE),
-     с небольшим зазором (~4px) — отдельно посчитан для свёрнутого и развёрнутого состояний,
-     т.к. высота #tricklist сильно отличается между ними. */
+  /* top/bottom/left/right подобраны по фактической тёмной области ВНУТРИ каждого
+     полноразмерного PNG (см. bbox альфа-канала), плюс отступ сверху под шапку
+     (счётчики/буквы SKATE), чтобы текст лога не наезжал на неё — отдельно для
+     свёрнутого и развёрнутого состояний. */
   #tricklistContent {
     position: absolute;
-    top: 22.67%;
-    bottom: 8.43%;
-    left: 2.53%;
-    right: 2.53%;
+    top: 52.58%;
+    bottom: 30.07%;
+    left: 12.02%;
+    right: 12.5%;
+    overflow: hidden;
   }
 
   #tricklist.expanded #tricklistContent {
-    top: 9.61%;
-    bottom: 3.63%;
+    top: 16.63%;
+    bottom: 30.07%;
+    left: 12.02%;
+    right: 12.5%;
+    overflow: hidden;
   }
 
-  /* Шапка (счётчики + буквы SKATE + кнопка сворачивания) использует cqw
-     (% от ширины #tricklist) для вертикального позиционирования — благодаря
-     этому она стоит на одном и том же месте независимо от того, свёрнута
-     панель или развёрнута (в отличие от %, которые всегда считаются от
-     ТЕКУЩЕЙ высоты панели и поэтому "плавают" между режимами). */
+  /* Панель #tricklist теперь всегда занимает весь канвas (inset:0) — картинка
+     разного вида для свёрнутого/развёрнутого состояния просто подменяется, сама
+     панель больше не меняет размер. Поэтому обычные % (без cqw-костыля) корректно
+     работают и остаются на месте независимо от состояния — нужно только сдвинуть
+     шапку между состояниями, как и буквы SKATE / кнопку сворачивания. */
   #tricklistHeader {
     position: absolute;
-    top: 4.56cqw;
+    top: 46.08%;
     left: 0;
     width: 100%;
     box-sizing: border-box;
@@ -397,6 +483,11 @@
     display: flex;
     align-items: center;
     z-index: 5;
+    transition: top 0.3s ease;
+  }
+
+  #tricklist.expanded #tricklistHeader {
+    top: 10.13%;
   }
 
   .trick-stats {
@@ -423,22 +514,44 @@
     color: #d8e8d0;
   }
 
+  /* Реальная кликабельная область — по фактическим непрозрачным пикселям в PNG,
+     иначе полноразмерная прозрачная кнопка перекрывала бы клики по всему остальному
+     на экране Flatmode (Coach, Flatground, кнопки Roll/Landed/Failed и т.д.) */
   #logToggleBtn {
     position: absolute;
-    top: 3.4cqw;
-    right: 3%;
+    left: 80.29%;
+    top: 46.08%;
+    width: 4.81%;
+    height: 3.92%;
     border: none;
     padding: 0;
     background: transparent;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
-    width: 9.1%;
-    aspect-ratio: 12 / 14;
-    flex-shrink: 0;
     z-index: 6;
+    transition: top 0.3s ease;
+    pointer-events: auto;
   }
 
-  #logToggleBtn img {
+  #tricklist.expanded #logToggleBtn {
+    top: 10.13%;
+  }
+
+  /* Декоративный слой на весь канвас — арт уже спозиционирован художником
+     под свёрнутое состояние панели, сдвигаем на ту же дельту для развёрнутого. */
+  #logToggleVisual {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 6;
+    transition: transform 0.3s ease;
+  }
+
+  #tricklist.expanded #logToggleVisual {
+    transform: translateY(-35.95%);
+  }
+
+  #logToggleVisual img {
     display: block;
     width: 100%;
     height: 100%;
@@ -447,12 +560,14 @@
 
   #skateLetters {
     position: absolute;
-    top: 3.4cqw;
-    right: calc(3% + 9.1% + 3%);
-    width: 35%;
-    aspect-ratio: 65 / 17;
+    inset: 0;
     z-index: 6;
     pointer-events: none;
+    transition: transform 0.3s ease;
+  }
+
+  #tricklist.expanded #skateLetters {
+    transform: translateY(-35.95%);
   }
 
   #skateLetters img {
@@ -465,12 +580,11 @@
   #tricklistInner {
     position: absolute;
     inset: 0;
-    left: 3%;
-    right: 3%;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 3px;
+    pointer-events: auto;
   }
 
   #tricklistInner::-webkit-scrollbar {
@@ -481,7 +595,9 @@
     display: flex;
     align-items: center;
     gap: 5px;
-    flex-shrink: 0;
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
   }
 
   .trick-entry img {
@@ -515,15 +631,18 @@
     <!-- ==== Mainscreen: выбор режима игры ==== -->
     <div id="mainscreen" class="screen">
       <div class="device">
-        <button class="mode-button enabled" id="modeFlat" aria-label="Flat">
-          <img src="images/Button_mainmenu_flat.png?v=20260716a" alt="Flat">
-        </button>
-        <button class="mode-button disabled" id="modeStreet" aria-label="Street" disabled>
-          <img src="images/Button_mainmenu_street.png?v=20260716a" alt="Street">
-        </button>
-        <button class="mode-button disabled" id="modeRamp" aria-label="Ramp" disabled>
-          <img src="images/Button_mainmenu_ramp.png?v=20260716a" alt="Ramp">
-        </button>
+        <button class="mode-button enabled fullcanvas-hitarea" id="modeFlat" aria-label="Flat"></button>
+        <div class="mode-button-visual" id="modeFlatVisual">
+          <img src="images/Button_mainmenu_flat.png?v=20260716a" alt="">
+        </div>
+        <button class="mode-button disabled fullcanvas-hitarea" id="modeRamp" aria-label="Ramp" disabled></button>
+        <div class="mode-button-visual" id="modeRampVisual">
+          <img src="images/Button_mainmenu_ramp.png?v=20260716a" alt="">
+        </div>
+        <button class="mode-button disabled fullcanvas-hitarea" id="modeStreet" aria-label="Street" disabled></button>
+        <div class="mode-button-visual" id="modeStreetVisual">
+          <img src="images/Button_mainmenu_street.png?v=20260716a" alt="">
+        </div>
       </div>
     </div>
 
@@ -531,28 +650,32 @@
     <div id="flatmode" class="screen">
       <div class="device">
         <div id="flatground">
-          <img src="images/Flatground.png?v=20260716a" alt="">
+          <img src="images/Animation_flatmode.png?v=20260716a" alt="">
         </div>
 
         <div id="coach">
-          <img src="images/Coach.png?v=20260716a" alt="">
+          <img src="images/Animation_coach.png?v=20260716a" alt="">
         </div>
 
         <div id="bubble">
-          <div id="result"></div>
+          <img src="images/Text_bubble.png?v=20260716a" alt="">
+        </div>
+        <div id="result"></div>
+
+        <button class="menu-button fullcanvas-hitarea" id="btn1" aria-label="Начать"></button>
+        <div class="menu-button-visual" id="btn1Visual">
+          <img src="images/Button_startgame.png?v=20260716a" alt="">
         </div>
 
-        <button class="menu-button" id="btn1" aria-label="Начать">
-          <img src="images/Button_startgame.png?v=20260716a" alt="Начать">
-        </button>
-
         <div id="judgeButtons">
-          <button class="judge-button" id="btnLanded" aria-label="Засчитано">
-            <img src="images/Button_landed.png?v=20260716a" alt="Засчитано">
-          </button>
-          <button class="judge-button" id="btnFailed" aria-label="Не засчитано">
-            <img src="images/Button_failed.png?v=20260716a" alt="Не засчитано">
-          </button>
+          <button class="judge-button fullcanvas-hitarea" id="btnLanded" aria-label="Засчитано"></button>
+          <div class="judge-button-visual" id="btnLandedVisual">
+            <img src="images/Button_landed.png?v=20260716a" alt="">
+          </div>
+          <button class="judge-button fullcanvas-hitarea" id="btnFailed" aria-label="Не засчитано"></button>
+          <div class="judge-button-visual" id="btnFailedVisual">
+            <img src="images/Button_failed.png?v=20260716a" alt="">
+          </div>
         </div>
 
         <div id="tricklist">
@@ -571,17 +694,19 @@
           <div id="skateLetters">
             <img id="skateLettersImg" src="images/Letters_null.png?v=20260716a" alt="SKATE">
           </div>
-          <button id="logToggleBtn" aria-label="Развернуть лог">
-            <img src="images/Button_expand.png?v=20260716a" alt="Развернуть">
-          </button>
+          <button id="logToggleBtn" aria-label="Развернуть лог"></button>
+          <div id="logToggleVisual">
+            <img id="logToggleImg" src="images/Button_expand.png?v=20260716a" alt="">
+          </div>
           <div id="tricklistContent">
             <div id="tricklistInner"></div>
           </div>
         </div>
 
-        <button class="menu-button" id="btn2" aria-label="Назад в меню">
-          <img src="images/Button_quit.png?v=20260716a" alt="Назад в меню">
-        </button>
+        <button class="menu-button fullcanvas-hitarea" id="btn2" aria-label="Назад в меню"></button>
+        <div class="menu-button-visual" id="btn2Visual">
+          <img src="images/Button_quit.png?v=20260716a" alt="">
+        </div>
       </div>
     </div>
   </div>
@@ -707,10 +832,10 @@
   // Пороги по длине текста → во сколько раз уменьшаем шрифт. Подобраны так, чтобы
   // длинные названия трюков (stance + addition + основной трюк) не вылезали за пузырь.
   const RESULT_FONT_STEPS = [
-    { maxLength: 18, scale: 1 },
-    { maxLength: 26, scale: 0.85 },
-    { maxLength: 34, scale: 0.72 },
-    { maxLength: Infinity, scale: 0.6 },
+    { maxLength: 16, scale: 1 },
+    { maxLength: 24, scale: 0.82 },
+    { maxLength: 32, scale: 0.68 },
+    { maxLength: Infinity, scale: 0.56 },
   ];
 
   function setResultText(text) {
@@ -904,11 +1029,21 @@
   const tricklistEl = document.getElementById('tricklist');
   const judgeButtonsEl = document.getElementById('judgeButtons');
   const btn1El = document.getElementById('btn1');
+  const btn1VisualEl = document.getElementById('btn1Visual');
   const btn2El = document.getElementById('btn2');
   const landedCountEl = document.getElementById('landedCount');
   const failedCountEl = document.getElementById('failedCount');
   const logToggleBtn = document.getElementById('logToggleBtn');
-  const logToggleImg = logToggleBtn.querySelector('img');
+  const logToggleImg = document.getElementById('logToggleImg');
+
+  // btn1 теперь состоит из двух слоёв — невидимой кликабельной кнопки (btn1El)
+  // и декоративной картинки поверх/под ней (btn1VisualEl). Скрывать/показывать
+  // нужно оба сразу, иначе картинка Roll останется висеть после "скрытия".
+  function setBtn1Visible(visible) {
+    const display = visible ? '' : 'none';
+    btn1El.style.display = display;
+    btn1VisualEl.style.display = display;
+  }
 
   let tricklistEntries = loadFromStorage(STORAGE_KEY_TRICKLIST, []); // [{text, status}], новые в начале
 
@@ -945,7 +1080,7 @@
       bubbleEl.classList.add('active');
     }, 120);
     judgeButtonsEl.classList.remove('visible');
-    btn1El.style.display = 'none';
+    setBtn1Visible(false);
   }
 
   function renderTricklist() {
@@ -1013,7 +1148,7 @@
     if (lastResult) {
       setResultText(lastResult);
       bubbleEl.classList.add('active');
-      btn1El.style.display = 'none';
+      setBtn1Visible(false);
       judgeButtonsEl.classList.add('visible');
     }
   }
@@ -1072,7 +1207,7 @@
   // Кнопка Roll: первый бросок — прячет Roll, показывает кнопки-иконки
   btn1El.addEventListener('click', () => {
     setActiveMode(ACTIVE_MODE_FLAT);
-    btn1El.style.display = 'none';
+    setBtn1Visible(false);
     judgeButtonsEl.classList.add('visible');
     rollNextTrick();
   });
@@ -1109,7 +1244,7 @@
     bubbleEl.classList.remove('active');
     resultEl.textContent = '';
     judgeButtonsEl.classList.remove('visible');
-    btn1El.style.display = '';
+    setBtn1Visible(true);
     setLogExpanded(false);
 
     transitionToScreen(mainscreenEl);
