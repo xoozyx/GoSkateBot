@@ -1,5 +1,0 @@
-NULL,1
-Kickflip,3
-Heelflip,3
-Pop Shove-It,1
-FS Pop Shove-It,1
