@@ -1,0 +1,12 @@
+NULL,1
+Rock,1
+Nose stall,3
+Tail stall,2
+Axle,2
+Feeble,2
+Smith,3
+5'O,2
+Nose pick,4
+Slasher,3
+Crook,4
+Blunt,5

@@ -207,6 +207,11 @@
     z-index: 2;
   }
 
+  /* Используется, чтобы прятать Ramp/Street, пока открыт выбор сложности Flat. */
+  .mode-picker-hidden {
+    display: none !important;
+  }
+
   #modeFlat {
     left: 30.8%;
     top: 16%;
@@ -226,6 +231,30 @@
     top: 50.65%;
     width: 38.5%;
     height: 12.1%;
+  }
+
+  /* Выбор сложности для Flat — показывается вместо Ramp/Street после нажатия
+     Flat, занимает ту же область, где раньше была кнопка Flat. */
+  #flatDifficultyPicker {
+    display: none;
+  }
+
+  #flatDifficultyPicker.visible {
+    display: block;
+  }
+
+  #modeFlatEasy {
+    left: 30.29%;
+    top: 32.03%;
+    width: 19.23%;
+    height: 8.17%;
+  }
+
+  #modeFlatHard {
+    left: 50.96%;
+    top: 32.03%;
+    width: 19.23%;
+    height: 8.17%;
   }
 
   /* ==== Речевой пузырь с результатом (Flatmode) ==== */
@@ -350,6 +379,16 @@
     height: 8.5%;
   }
 
+  /* Quit и кнопки подтверждения выхода должны быть выше пузыря с текстом и
+     анимации Flatground (у них z-index 5 и 6 соответственно) — иначе они
+     скрываются за скейтером/пузырём. Задаём z-index только этим кнопкам,
+     не трогая общий .menu-button (Start Game этого не требует). */
+  #btn2, #btn2Visual,
+  #btnQuitConfirm, #btnQuitConfirmVisual,
+  #btnQuitBack, #btnQuitBackVisual {
+    z-index: 7;
+  }
+
   #btn2 {
     left: 78.85%;
     top: 8.82%;
@@ -359,6 +398,32 @@
 
   #btn2Visual.hidden, #btn2.hidden {
     display: none;
+  }
+
+  /* Подтверждение выхода — появляется вместо кнопки Quit, две кнопки
+     (QUIT / BACK) занимают ту же строку в верхнем правом углу. */
+  #quitConfirm {
+    position: absolute;
+    inset: 0;
+    display: none;
+  }
+
+  #quitConfirm.visible {
+    display: block;
+  }
+
+  #btnQuitConfirm {
+    left: 47.6%;
+    top: 8.82%;
+    width: 19.23%;
+    height: 8.17%;
+  }
+
+  #btnQuitBack {
+    left: 67.79%;
+    top: 8.82%;
+    width: 19.23%;
+    height: 8.17%;
   }
 
   /* Кнопки-иконки "засчитано / не засчитано" — появляются на месте Start Game после броска */
@@ -570,6 +635,27 @@
     image-rendering: pixelated;
   }
 
+  /* Бейдж сложности (Easy/Hard) в шапке лога — та же логика сдвига между
+     свёрнутым/развёрнутым состоянием, что и у букв SKATE. */
+  #difficultyBadge {
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    pointer-events: none;
+    transition: transform 0.3s ease;
+  }
+
+  #tricklist.expanded #difficultyBadge {
+    transform: translateY(-35.95%);
+  }
+
+  #difficultyBadge img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+  }
+
   #skateLetters {
     position: absolute;
     inset: 0;
@@ -658,6 +744,17 @@
         <div class="mode-button-visual" id="modeStreetVisual">
           <img src="images/Button_mainmenu_street.png?v=20260716a" alt="">
         </div>
+
+        <div id="flatDifficultyPicker">
+          <button class="mode-button enabled fullcanvas-hitarea" id="modeFlatEasy" aria-label="Easy"></button>
+          <div class="mode-button-visual" id="modeFlatEasyVisual">
+            <img src="images/Button_mainmenu_flat_easy.png?v=20260716a" alt="">
+          </div>
+          <button class="mode-button enabled fullcanvas-hitarea" id="modeFlatHard" aria-label="Hard"></button>
+          <div class="mode-button-visual" id="modeFlatHardVisual">
+            <img src="images/Button_mainmenu_flat_hard.png?v=20260716a" alt="">
+          </div>
+        </div>
       </div>
     </div>
 
@@ -706,6 +803,9 @@
               </div>
             </div>
           </div>
+          <div id="difficultyBadge">
+            <img id="difficultyBadgeImg" src="images/Difficulty_easy.png?v=20260716a" alt="">
+          </div>
           <div id="skateLetters">
             <img id="skateLettersImg" src="images/Letters_null.png?v=20260716a" alt="SKATE">
           </div>
@@ -721,6 +821,17 @@
         <button class="menu-button fullcanvas-hitarea" id="btn2" aria-label="Назад в меню"></button>
         <div class="menu-button-visual" id="btn2Visual">
           <img src="images/Button_quit.png?v=20260716a" alt="">
+        </div>
+
+        <div id="quitConfirm">
+          <button class="menu-button fullcanvas-hitarea" id="btnQuitConfirm" aria-label="Выйти в меню"></button>
+          <div class="menu-button-visual" id="btnQuitConfirmVisual">
+            <img src="images/Button_quit_quit.png?v=20260716a" alt="">
+          </div>
+          <button class="menu-button fullcanvas-hitarea" id="btnQuitBack" aria-label="Отмена"></button>
+          <div class="menu-button-visual" id="btnQuitBackVisual">
+            <img src="images/Button_quit_back.png?v=20260716a" alt="">
+          </div>
         </div>
       </div>
     </div>
@@ -781,6 +892,30 @@
   // const ACTIVE_MODE_STREET = 2; // на будущее, когда появится режим Street
   // const ACTIVE_MODE_RAMP = 3;   // на будущее, когда появится режим Ramp
 
+  // ==== Сложность для Flat: 'easy' или 'hard' ====
+  // Ставится при нажатии Easy/Hard на Mainscreen, сохраняется вместе с
+  // активной игрой, чтобы при возврате в незавершённую игру применялись те же правила.
+  const STORAGE_KEY_FLAT_DIFFICULTY = 'goskate_flatDifficulty';
+  const DIFFICULTY_EASY = 'easy';
+  const DIFFICULTY_HARD = 'hard';
+
+  function getFlatDifficulty() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_FLAT_DIFFICULTY);
+      return raw === DIFFICULTY_HARD ? DIFFICULTY_HARD : DIFFICULTY_EASY;
+    } catch (e) {
+      return DIFFICULTY_EASY;
+    }
+  }
+
+  function setFlatDifficulty(difficulty) {
+    try {
+      localStorage.setItem(STORAGE_KEY_FLAT_DIFFICULTY, difficulty);
+    } catch (e) {
+      console.warn('Не удалось сохранить сложность Flat:', e);
+    }
+  }
+
   // ==== Навигация между экранами ====
   const logoScreen = document.getElementById('logoScreen');
   const mainscreenEl = document.getElementById('mainscreen');
@@ -832,9 +967,39 @@
     }, CHANGE_DURATION_MS);
   }
 
-  // Kнопка Flat на Mainscreen — открывает Flatmode
+  // Kнопка Flat на Mainscreen — открывает/закрывает выбор сложности (Easy/Hard)
+  // вместо немедленного перехода в Flatmode; Ramp/Street прячутся, пока выбор открыт.
+  const flatDifficultyPickerEl = document.getElementById('flatDifficultyPicker');
+  const modeRampEl = document.getElementById('modeRamp');
+  const modeRampVisualEl = document.getElementById('modeRampVisual');
+  const modeStreetEl = document.getElementById('modeStreet');
+  const modeStreetVisualEl = document.getElementById('modeStreetVisual');
+
+  function setFlatDifficultyPickerVisible(visible) {
+    flatDifficultyPickerEl.classList.toggle('visible', visible);
+    [modeRampEl, modeRampVisualEl, modeStreetEl, modeStreetVisualEl].forEach((el) => {
+      el.classList.toggle('mode-picker-hidden', visible);
+    });
+  }
+
   document.getElementById('modeFlat').addEventListener('click', () => {
+    const isOpen = flatDifficultyPickerEl.classList.contains('visible');
+    setFlatDifficultyPickerVisible(!isOpen);
+  });
+
+  function startFlatWithDifficulty(difficulty) {
+    setFlatDifficulty(difficulty);
+    updateDifficultyBadge();
+    setFlatDifficultyPickerVisible(false);
     transitionToScreen(flatmodeEl);
+  }
+
+  document.getElementById('modeFlatEasy').addEventListener('click', () => {
+    startFlatWithDifficulty(DIFFICULTY_EASY);
+  });
+
+  document.getElementById('modeFlatHard').addEventListener('click', () => {
+    startFlatWithDifficulty(DIFFICULTY_HARD);
   });
 
   // Street и Ramp пока неактивны — обработчиков клика намеренно нет
@@ -961,7 +1126,7 @@
   }
 
   const MAX_REROLL_ATTEMPTS = 60; // защита от зацикливания, если правила REROLL противоречивы
-  const MAX_DIFFICULTY_SUM = 5;   // "лёгкий режим": если сумма сложностей выше — REROLL
+  const MAX_DIFFICULTY_SUM = 5;   // "лёгкий режим" (Easy): если сумма сложностей выше — REROLL. В Hard лимита нет.
 
   function generateTrick(attempt = 0, bestFallback = null) {
     const stancePick = stances.length > 0 ? weightedPick(stances) : { value: null, difficulty: 0 };
@@ -977,9 +1142,9 @@
     const finalResult = nameReplacements.get(combo) || combo;
 
     // REROLL происходит если: 1) явно указан REROLL в name_replaces.txt,
-    // 2) суммарная сложность выше лимита ("лёгкий режим"),
+    // 2) суммарная сложность выше лимита (только в Easy — в Hard лимита сложности нет),
     // 3) комбинация оказалась полностью пустой (все три части — NULL)
-    const exceedsDifficulty = difficultySum > MAX_DIFFICULTY_SUM;
+    const exceedsDifficulty = getFlatDifficulty() === DIFFICULTY_EASY && difficultySum > MAX_DIFFICULTY_SUM;
     const needsReroll = finalResult === 'REROLL' || exceedsDifficulty || combo === '';
 
     // Запоминаем лучший из виденных вариантов на случай, если так и не найдём
@@ -1046,6 +1211,7 @@
   const btn1El = document.getElementById('btn1');
   const btn1VisualEl = document.getElementById('btn1Visual');
   const btn2El = document.getElementById('btn2');
+  const btn2VisualEl = document.getElementById('btn2Visual');
   const landedCountEl = document.getElementById('landedCount');
   const failedCountEl = document.getElementById('failedCount');
   const logToggleBtn = document.getElementById('logToggleBtn');
@@ -1063,10 +1229,17 @@
   let tricklistEntries = loadFromStorage(STORAGE_KEY_TRICKLIST, []); // [{text, status}], новые в начале
 
   const skateLettersImg = document.getElementById('skateLettersImg');
+  const difficultyBadgeImg = document.getElementById('difficultyBadgeImg');
+
+  function updateDifficultyBadge() {
+    const image = getFlatDifficulty() === DIFFICULTY_HARD ? 'Difficulty_hard.png' : 'Difficulty_easy.png';
+    difficultyBadgeImg.src = 'images/' + image + '?v=' + ASSET_VERSION;
+  }
 
   // Пороги по количеству "Не засчитано" → какую картинку с буквами показывать.
-  // На 15-й ошибке — игра окончена.
-  const SKATE_STAGES = [
+  // Easy: буква каждые 3 ошибки, game over на 15-й.
+  // Hard: буква на КАЖДОЙ ошибке, game over уже на 5-й (без лимита сложности трюков).
+  const SKATE_STAGES_EASY = [
     { threshold: 0, image: 'Letters_null.png' },
     { threshold: 3, image: 'Letters_s.png' },
     { threshold: 6, image: 'Letters_sk.png' },
@@ -1074,12 +1247,30 @@
     { threshold: 12, image: 'Letters_skat.png' },
     { threshold: 15, image: 'Letters_skate.png' },
   ];
-  const GAME_OVER_FAILS = 15;
+  const SKATE_STAGES_HARD = [
+    { threshold: 0, image: 'Letters_null.png' },
+    { threshold: 1, image: 'Letters_s.png' },
+    { threshold: 2, image: 'Letters_sk.png' },
+    { threshold: 3, image: 'Letters_ska.png' },
+    { threshold: 4, image: 'Letters_skat.png' },
+    { threshold: 5, image: 'Letters_skate.png' },
+  ];
+  const GAME_OVER_FAILS_EASY = 15;
+  const GAME_OVER_FAILS_HARD = 5;
   let isGameOver = false;
 
+  function getSkateStages() {
+    return getFlatDifficulty() === DIFFICULTY_HARD ? SKATE_STAGES_HARD : SKATE_STAGES_EASY;
+  }
+
+  function getGameOverFails() {
+    return getFlatDifficulty() === DIFFICULTY_HARD ? GAME_OVER_FAILS_HARD : GAME_OVER_FAILS_EASY;
+  }
+
   function updateSkateLetters(failedCount) {
-    let stage = SKATE_STAGES[0];
-    for (const s of SKATE_STAGES) {
+    const stages = getSkateStages();
+    let stage = stages[0];
+    for (const s of stages) {
       if (failedCount >= s.threshold) stage = s;
     }
     skateLettersImg.src = 'images/' + stage.image + '?v=' + ASSET_VERSION;
@@ -1125,8 +1316,9 @@
     landedCountEl.textContent = landed;
     failedCountEl.textContent = failed;
     updateSkateLetters(failed);
+    updateDifficultyBadge();
 
-    if (failed >= GAME_OVER_FAILS) {
+    if (failed >= getGameOverFails()) {
       triggerGameOver();
     }
   }
@@ -1242,9 +1434,24 @@
     rollNextTrick();
   });
 
-  // Кнопка 2: стирает сохранённый трюк, историю последних результатов и лог трюков,
+  // Кнопка 2: показывает подтверждение вместо немедленного выхода
+  const quitConfirmEl = document.getElementById('quitConfirm');
+
+  function showQuitConfirm() {
+    btn2El.classList.add('hidden');
+    btn2VisualEl.classList.add('hidden');
+    quitConfirmEl.classList.add('visible');
+  }
+
+  function hideQuitConfirm() {
+    quitConfirmEl.classList.remove('visible');
+    btn2El.classList.remove('hidden');
+    btn2VisualEl.classList.remove('hidden');
+  }
+
+  // Стирает сохранённый трюк, историю последних результатов и лог трюков,
   // возвращает на Mainscreen (Telegram-приложение НЕ закрывается)
-  btn2El.addEventListener('click', () => {
+  function doQuit() {
     setActiveMode(0);
     try {
       localStorage.removeItem(STORAGE_KEY_LAST);
@@ -1265,8 +1472,21 @@
     judgeButtonsEl.classList.remove('visible');
     setBtn1Visible(true);
     setLogExpanded(false);
+    hideQuitConfirm();
 
     transitionToScreen(mainscreenEl);
+  }
+
+  btn2El.addEventListener('click', () => {
+    showQuitConfirm();
+  });
+
+  document.getElementById('btnQuitConfirm').addEventListener('click', () => {
+    doQuit();
+  });
+
+  document.getElementById('btnQuitBack').addEventListener('click', () => {
+    hideQuitConfirm();
   });
 </script>
 </body>
