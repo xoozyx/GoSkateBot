@@ -207,9 +207,35 @@
     z-index: 2;
   }
 
-  /* Используется, чтобы прятать Ramp/Street, пока открыт выбор сложности Flat. */
+  /* Используется, чтобы отключить клики по Ramp/Street, пока открыт выбор
+     сложности Flat (и наоборот) — сами кнопки остаются на месте и видны,
+     просто притемнены тенью (.difficulty-picker-shadow) поверх них. */
   .mode-picker-hidden {
-    display: none !important;
+    pointer-events: none !important;
+  }
+
+  /* Кнопка, которая открыла выбор сложности, поднимается выше тени — остаётся
+     полностью видна, в отличие от двух других (Ramp/Street), которые тень затемняет. */
+  .above-picker-shadow {
+    z-index: 3;
+  }
+
+  /* Тень поверх недоступных сейчас кнопок режима (например Ramp/Street, пока
+     открыт выбор сложности Flat) — сама не даёт тени двигаться/растягиваться,
+     просто полноразмерный PNG поверх них, но под Easy/Hard. */
+  .difficulty-picker-shadow {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    image-rendering: pixelated;
+    z-index: 1;
+  }
+
+  .difficulty-picker-shadow img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
   }
 
   #modeFlat {
@@ -253,6 +279,30 @@
   #modeFlatHard {
     left: 50.96%;
     top: 32.03%;
+    width: 19.23%;
+    height: 8.17%;
+  }
+
+  /* Выбор сложности для Ramp — показывается вместо Flat/Street после нажатия
+     Ramp, сразу под кнопкой Ramp. */
+  #rampDifficultyPicker {
+    display: none;
+  }
+
+  #rampDifficultyPicker.visible {
+    display: block;
+  }
+
+  #modeRampEasy {
+    left: 30.29%;
+    top: 47.71%;
+    width: 19.23%;
+    height: 8.17%;
+  }
+
+  #modeRampHard {
+    left: 50.96%;
+    top: 47.71%;
     width: 19.23%;
     height: 8.17%;
   }
@@ -736,7 +786,7 @@
         <div class="mode-button-visual" id="modeFlatVisual">
           <img src="images/Button_mainmenu_flat.png?v=20260716a" alt="">
         </div>
-        <button class="mode-button disabled fullcanvas-hitarea" id="modeRamp" aria-label="Ramp" disabled></button>
+        <button class="mode-button enabled fullcanvas-hitarea" id="modeRamp" aria-label="Ramp"></button>
         <div class="mode-button-visual" id="modeRampVisual">
           <img src="images/Button_mainmenu_ramp.png?v=20260716a" alt="">
         </div>
@@ -746,6 +796,9 @@
         </div>
 
         <div id="flatDifficultyPicker">
+          <div class="difficulty-picker-shadow">
+            <img src="images/Shadow_screen.png?v=20260716a" alt="">
+          </div>
           <button class="mode-button enabled fullcanvas-hitarea" id="modeFlatEasy" aria-label="Easy"></button>
           <div class="mode-button-visual" id="modeFlatEasyVisual">
             <img src="images/Button_mainmenu_flat_easy.png?v=20260716a" alt="">
@@ -753,6 +806,20 @@
           <button class="mode-button enabled fullcanvas-hitarea" id="modeFlatHard" aria-label="Hard"></button>
           <div class="mode-button-visual" id="modeFlatHardVisual">
             <img src="images/Button_mainmenu_flat_hard.png?v=20260716a" alt="">
+          </div>
+        </div>
+
+        <div id="rampDifficultyPicker">
+          <div class="difficulty-picker-shadow">
+            <img src="images/Shadow_screen.png?v=20260716a" alt="">
+          </div>
+          <button class="mode-button enabled fullcanvas-hitarea" id="modeRampEasy" aria-label="Easy"></button>
+          <div class="mode-button-visual" id="modeRampEasyVisual">
+            <img src="images/Button_mainmenu_ramp_easy.png?v=20260716a" alt="">
+          </div>
+          <button class="mode-button enabled fullcanvas-hitarea" id="modeRampHard" aria-label="Hard"></button>
+          <div class="mode-button-visual" id="modeRampHardVisual">
+            <img src="images/Button_mainmenu_ramp_hard.png?v=20260716a" alt="">
           </div>
         </div>
       </div>
@@ -890,30 +957,78 @@
 
   const ACTIVE_MODE_FLAT = 1;
   // const ACTIVE_MODE_STREET = 2; // на будущее, когда появится режим Street
-  // const ACTIVE_MODE_RAMP = 3;   // на будущее, когда появится режим Ramp
+  const ACTIVE_MODE_RAMP = 3;
 
-  // ==== Сложность для Flat: 'easy' или 'hard' ====
-  // Ставится при нажатии Easy/Hard на Mainscreen, сохраняется вместе с
-  // активной игрой, чтобы при возврате в незавершённую игру применялись те же правила.
-  const STORAGE_KEY_FLAT_DIFFICULTY = 'goskate_flatDifficulty';
+  // ==== Текущий игровой режим ('flat' или 'ramp') — определяет, какие данные
+  // грузить (data/flatmode или data/rampmode), какую анимацию показывать и
+  // какой способ генерации трюков использовать. ====
+  const GAME_MODE_FLAT = 'flat';
+  const GAME_MODE_RAMP = 'ramp';
+  let currentGameMode = GAME_MODE_FLAT;
+
+  const GAME_MODE_CONFIG = {
+    [GAME_MODE_FLAT]: {
+      activeMode: ACTIVE_MODE_FLAT,
+      dataDir: 'data/flatmode',
+      groundImage: 'images/Animation_flatmode.png',
+      // Порядок сборки трюка: stance -> addition -> основной трюк
+      combination: 'stance-addition-main',
+    },
+    [GAME_MODE_RAMP]: {
+      activeMode: ACTIVE_MODE_RAMP,
+      dataDir: 'data/rampmode',
+      groundImage: 'images/Animation_ramp.png',
+      // Порядок сборки трюка: stance -> In -> основной трюк -> Out
+      combination: 'stance-in-main-out',
+    },
+  };
+
+  function getGameModeByActiveMode(activeMode) {
+    if (activeMode === ACTIVE_MODE_RAMP) return GAME_MODE_RAMP;
+    if (activeMode === ACTIVE_MODE_FLAT) return GAME_MODE_FLAT;
+    return null;
+  }
+
+  // Определяем режим СРАЗУ, синхронно, а не только в setTimeout заставки —
+  // иначе renderTricklist() (который вызывается сразу при загрузке скрипта,
+  // до того как заставка успеет отработать) применит правила Flat даже если
+  // на самом деле возобновляется игра в Ramp.
+  {
+    const resumedMode = getGameModeByActiveMode(getActiveMode());
+    if (resumedMode) currentGameMode = resumedMode;
+  }
+
+  // ==== Сложность (Easy/Hard) — своя для каждого режима, сохраняется вместе
+  // с активной игрой, чтобы при возврате в незавершённую игру применялись те же правила. ====
+  const STORAGE_KEY_DIFFICULTY_PREFIX = 'goskate_difficulty_';
   const DIFFICULTY_EASY = 'easy';
   const DIFFICULTY_HARD = 'hard';
 
-  function getFlatDifficulty() {
+  function getDifficulty(mode) {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY_FLAT_DIFFICULTY);
+      const raw = localStorage.getItem(STORAGE_KEY_DIFFICULTY_PREFIX + mode);
       return raw === DIFFICULTY_HARD ? DIFFICULTY_HARD : DIFFICULTY_EASY;
     } catch (e) {
       return DIFFICULTY_EASY;
     }
   }
 
-  function setFlatDifficulty(difficulty) {
+  function setDifficulty(mode, difficulty) {
     try {
-      localStorage.setItem(STORAGE_KEY_FLAT_DIFFICULTY, difficulty);
+      localStorage.setItem(STORAGE_KEY_DIFFICULTY_PREFIX + mode, difficulty);
     } catch (e) {
-      console.warn('Не удалось сохранить сложность Flat:', e);
+      console.warn('Не удалось сохранить сложность:', e);
     }
+  }
+
+  // Совместимость с уже написанным ниже кодом, который всегда имел дело с
+  // "текущим" режимом — эти обёртки читают/пишут сложность для currentGameMode.
+  function getFlatDifficulty() {
+    return getDifficulty(currentGameMode);
+  }
+
+  function setFlatDifficulty(difficulty) {
+    setDifficulty(currentGameMode, difficulty);
   }
 
   // ==== Навигация между экранами ====
@@ -938,10 +1053,13 @@
   setTimeout(() => {
     logoScreen.classList.add('hidden');
     const activeMode = getActiveMode();
-    if (activeMode === ACTIVE_MODE_FLAT) {
+    const resumeMode = getGameModeByActiveMode(activeMode);
+    if (resumeMode) {
+      currentGameMode = resumeMode;
+      applyGameModeVisuals();
       showScreen(flatmodeEl);
     } else {
-      // Street/Ramp пока не реализованы — на всякий случай сбрасываем неизвестный флаг
+      // Street пока не реализован — на всякий случай сбрасываем неизвестный флаг
       // и открываем Mainscreen, чтобы не застрять на пустом экране.
       if (activeMode !== 0) setActiveMode(0);
       showScreen(mainscreenEl);
@@ -967,44 +1085,90 @@
     }, CHANGE_DURATION_MS);
   }
 
-  // Kнопка Flat на Mainscreen — открывает/закрывает выбор сложности (Easy/Hard)
-  // вместо немедленного перехода в Flatmode; Ramp/Street прячутся, пока выбор открыт.
+  // Kнопки Flat/Ramp на Mainscreen — открывают/закрывают выбор сложности (Easy/Hard)
+  // вместо немедленного перехода в игру; остальные две кнопки режима прячутся,
+  // пока какой-то из выборов открыт.
   const flatDifficultyPickerEl = document.getElementById('flatDifficultyPicker');
+  const rampDifficultyPickerEl = document.getElementById('rampDifficultyPicker');
+  const modeFlatEl = document.getElementById('modeFlat');
+  const modeFlatVisualEl = document.getElementById('modeFlatVisual');
   const modeRampEl = document.getElementById('modeRamp');
   const modeRampVisualEl = document.getElementById('modeRampVisual');
   const modeStreetEl = document.getElementById('modeStreet');
   const modeStreetVisualEl = document.getElementById('modeStreetVisual');
 
-  function setFlatDifficultyPickerVisible(visible) {
-    flatDifficultyPickerEl.classList.toggle('visible', visible);
-    [modeRampEl, modeRampVisualEl, modeStreetEl, modeStreetVisualEl].forEach((el) => {
-      el.classList.toggle('mode-picker-hidden', visible);
+  function closeAllDifficultyPickers() {
+    flatDifficultyPickerEl.classList.remove('visible');
+    rampDifficultyPickerEl.classList.remove('visible');
+    [modeFlatEl, modeFlatVisualEl, modeRampEl, modeRampVisualEl, modeStreetEl, modeStreetVisualEl].forEach((el) => {
+      el.classList.remove('mode-picker-hidden', 'above-picker-shadow');
     });
+  }
+
+  // Открывает выбор сложности для одного режима: кнопка, которая его открыла,
+  // остаётся полностью видна ПОВЕРХ тени (above-picker-shadow), а две другие
+  // остаются на месте, но притемняются тенью снизу — не прячутся полностью.
+  function openDifficultyPicker(pickerEl, ownButtons, otherButtons) {
+    closeAllDifficultyPickers();
+    pickerEl.classList.add('visible');
+    ownButtons.forEach((el) => el.classList.add('above-picker-shadow'));
+    otherButtons.forEach((el) => el.classList.add('mode-picker-hidden'));
   }
 
   document.getElementById('modeFlat').addEventListener('click', () => {
     const isOpen = flatDifficultyPickerEl.classList.contains('visible');
-    setFlatDifficultyPickerVisible(!isOpen);
+    if (isOpen) {
+      closeAllDifficultyPickers();
+    } else {
+      openDifficultyPicker(
+        flatDifficultyPickerEl,
+        [modeFlatEl, modeFlatVisualEl],
+        [modeRampEl, modeStreetEl]
+      );
+    }
   });
 
-  function startFlatWithDifficulty(difficulty) {
-    setFlatDifficulty(difficulty);
+  document.getElementById('modeRamp').addEventListener('click', () => {
+    const isOpen = rampDifficultyPickerEl.classList.contains('visible');
+    if (isOpen) {
+      closeAllDifficultyPickers();
+    } else {
+      openDifficultyPicker(
+        rampDifficultyPickerEl,
+        [modeRampEl, modeRampVisualEl],
+        [modeFlatEl, modeStreetEl]
+      );
+    }
+  });
+
+  function startGameWithDifficulty(mode, difficulty) {
+    currentGameMode = mode;
+    setDifficulty(mode, difficulty);
+    applyGameModeVisuals();
     updateDifficultyBadge();
-    setFlatDifficultyPickerVisible(false);
+    closeAllDifficultyPickers();
     transitionToScreen(flatmodeEl);
   }
 
   document.getElementById('modeFlatEasy').addEventListener('click', () => {
-    startFlatWithDifficulty(DIFFICULTY_EASY);
+    startGameWithDifficulty(GAME_MODE_FLAT, DIFFICULTY_EASY);
   });
 
   document.getElementById('modeFlatHard').addEventListener('click', () => {
-    startFlatWithDifficulty(DIFFICULTY_HARD);
+    startGameWithDifficulty(GAME_MODE_FLAT, DIFFICULTY_HARD);
   });
 
-  // Street и Ramp пока неактивны — обработчиков клика намеренно нет
+  document.getElementById('modeRampEasy').addEventListener('click', () => {
+    startGameWithDifficulty(GAME_MODE_RAMP, DIFFICULTY_EASY);
+  });
 
-  // ==== Генератор трюков (Flatmode) ====
+  document.getElementById('modeRampHard').addEventListener('click', () => {
+    startGameWithDifficulty(GAME_MODE_RAMP, DIFFICULTY_HARD);
+  });
+
+  // Street пока неактивен — обработчика клика намеренно нет
+
+  // ==== Генератор трюков (Flatmode/Rampmode) ====
   const resultEl = document.getElementById('result');
 
   // Базовый размер шрифта в пузыре (px) — должен совпадать со значением font-size у #result в CSS.
@@ -1027,9 +1191,12 @@
 
   let stances = [];
   let mainTricks = [];
-  let additions = [];
+  let additions = [];   // используется в Flat (stance + addition + main)
+  let inList = [];      // используется в Ramp (stance + In + main + Out)
+  let outList = [];
   let nameReplacements = new Map(); // "исходная комбинация" -> "замена"
   let dataLoaded = false;
+  let dataLoadedForMode = null; // чтобы не перезагружать те же файлы повторно
 
   // Формат строки в файле: "Название" или "Название,сложность" (сложность — целое число от 1 до 5, по умолчанию 1).
   // Чем больше сложность, тем РЕЖЕ выпадает трюк — 1 самый частый, 5 самый редкий.
@@ -1096,54 +1263,101 @@
     return items[items.length - 1]; // подстраховка на случай погрешности округления
   }
 
-  // Загружаем все списки из текстовых файлов рядом со страницей.
-  // Файл name_replaces.txt необязателен — если его нет, замены просто не применяются.
-  async function loadLists() {
-    try {
-      const [stanceRes, mainRes, addRes] = await Promise.all([
-        fetch('data/flatmode/stances.txt'),
-        fetch('data/flatmode/main_tricks.txt'),
-        fetch('data/flatmode/additions.txt'),
-      ]);
-      stances = parseWeightedList(await stanceRes.text());
-      mainTricks = parseWeightedList(await mainRes.text());
-      additions = parseWeightedList(await addRes.text());
+  // Загружаем все списки из текстовых файлов рядом со страницей, для того
+  // набора файлов, который нужен текущему режиму (Flat: stances+additions,
+  // Ramp: stances+In+Out). Файл name_replaces.txt необязателен — если его
+  // нет, замены просто не применяются.
+  async function loadLists(mode) {
+    const dataDir = GAME_MODE_CONFIG[mode].dataDir;
+    const combination = GAME_MODE_CONFIG[mode].combination;
+    dataLoaded = false;
 
-      dataLoaded = mainTricks.length > 0; // stances и additions могут быть пустыми — это ок
+    try {
+      if (combination === 'stance-in-main-out') {
+        const [stanceRes, mainRes, inRes, outRes] = await Promise.all([
+          fetch(dataDir + '/stances.txt'),
+          fetch(dataDir + '/main_tricks.txt'),
+          fetch(dataDir + '/In.txt'),
+          fetch(dataDir + '/Out.txt'),
+        ]);
+        stances = parseWeightedList(await stanceRes.text());
+        mainTricks = parseWeightedList(await mainRes.text());
+        inList = parseWeightedList(await inRes.text());
+        outList = parseWeightedList(await outRes.text());
+        additions = [];
+      } else {
+        const [stanceRes, mainRes, addRes] = await Promise.all([
+          fetch(dataDir + '/stances.txt'),
+          fetch(dataDir + '/main_tricks.txt'),
+          fetch(dataDir + '/additions.txt'),
+        ]);
+        stances = parseWeightedList(await stanceRes.text());
+        mainTricks = parseWeightedList(await mainRes.text());
+        additions = parseWeightedList(await addRes.text());
+        inList = [];
+        outList = [];
+      }
+
+      dataLoaded = mainTricks.length > 0; // остальные списки могут быть пустыми — это ок
+      dataLoadedForMode = mode;
     } catch (e) {
-      console.error('Не удалось загрузить списки трюков:', e);
+      console.error('Не удалось загрузить списки трюков для режима ' + mode + ':', e);
       dataLoaded = false;
     }
 
     try {
-      const replRes = await fetch('data/flatmode/name_replaces.txt');
+      const replRes = await fetch(dataDir + '/name_replaces.txt');
       if (replRes.ok) {
         nameReplacements = parseReplacements(await replRes.text());
+      } else {
+        nameReplacements = new Map();
       }
     } catch (e) {
-      console.warn('Файл name_replaces.txt не найден — замены названий не применяются.');
+      nameReplacements = new Map();
+      console.warn('Файл name_replaces.txt не найден для режима ' + mode + ' — замены названий не применяются.');
     }
+  }
+
+  // Загружает данные для currentGameMode, только если они ещё не были
+  // загружены для этого режима (переключение Flat <-> Ramp туда-обратно
+  // не должно каждый раз заново дёргать сеть).
+  async function ensureListsLoaded() {
+    if (dataLoadedForMode === currentGameMode && dataLoaded) return;
+    await loadLists(currentGameMode);
   }
 
   const MAX_REROLL_ATTEMPTS = 60; // защита от зацикливания, если правила REROLL противоречивы
   const MAX_DIFFICULTY_SUM = 5;   // "лёгкий режим" (Easy): если сумма сложностей выше — REROLL. В Hard лимита нет.
 
   function generateTrick(attempt = 0, bestFallback = null) {
+    const combination = GAME_MODE_CONFIG[currentGameMode].combination;
     const stancePick = stances.length > 0 ? weightedPick(stances) : { value: null, difficulty: 0 };
-    const additionPick = additions.length > 0 ? weightedPick(additions) : { value: null, difficulty: 0 };
     const mainPick = weightedPick(mainTricks);
 
-    // Порядок: stance -> addition -> основной трюк
-    const combo = [stancePick.value, additionPick.value, mainPick.value].filter(Boolean).join(' ');
+    let comboParts;
+    let difficultySum;
 
-    const difficultySum = stancePick.difficulty + additionPick.difficulty + mainPick.difficulty;
+    if (combination === 'stance-in-main-out') {
+      // Ramp: stance -> In -> основной трюк -> Out
+      const inPick = inList.length > 0 ? weightedPick(inList) : { value: null, difficulty: 0 };
+      const outPick = outList.length > 0 ? weightedPick(outList) : { value: null, difficulty: 0 };
+      comboParts = [stancePick.value, inPick.value, mainPick.value, outPick.value];
+      difficultySum = stancePick.difficulty + inPick.difficulty + mainPick.difficulty + outPick.difficulty;
+    } else {
+      // Flat: stance -> addition -> основной трюк
+      const additionPick = additions.length > 0 ? weightedPick(additions) : { value: null, difficulty: 0 };
+      comboParts = [stancePick.value, additionPick.value, mainPick.value];
+      difficultySum = stancePick.difficulty + additionPick.difficulty + mainPick.difficulty;
+    }
+
+    const combo = comboParts.filter(Boolean).join(' ');
 
     // Если для получившейся комбинации есть замена названия — используем её
     const finalResult = nameReplacements.get(combo) || combo;
 
     // REROLL происходит если: 1) явно указан REROLL в name_replaces.txt,
     // 2) суммарная сложность выше лимита (только в Easy — в Hard лимита сложности нет),
-    // 3) комбинация оказалась полностью пустой (все три части — NULL)
+    // 3) комбинация оказалась полностью пустой (все части — NULL)
     const exceedsDifficulty = getFlatDifficulty() === DIFFICULTY_EASY && difficultySum > MAX_DIFFICULTY_SUM;
     const needsReroll = finalResult === 'REROLL' || exceedsDifficulty || combo === '';
 
@@ -1401,9 +1615,10 @@
     bubbleEl.classList.remove('active');
     resultEl.textContent = '';
 
-    if (!dataLoaded) {
+    if (!dataLoaded || dataLoadedForMode !== currentGameMode) {
       setResultText('Списки трюков ещё загружаются...');
       bubbleEl.classList.add('active');
+      ensureListsLoaded();
       return;
     }
 
@@ -1413,11 +1628,22 @@
     }, 120);
   }
 
-  loadLists();
+  // Меняет анимацию земли/рампы и подгружает данные для currentGameMode.
+  // Вызывается при возобновлении незавершённой игры и при старте новой (Easy/Hard).
+  const flatgroundImg = document.querySelector('#flatground img');
+
+  function applyGameModeVisuals() {
+    flatgroundImg.src = GAME_MODE_CONFIG[currentGameMode].groundImage + '?v=' + ASSET_VERSION;
+    ensureListsLoaded();
+  }
+
+  // На случай прямого захода в Mainscreen — подгружаем данные Flat заранее,
+  // чтобы первый Roll не ждал сеть (Ramp подгрузится сам при выборе Easy/Hard).
+  ensureListsLoaded();
 
   // Кнопка Roll: первый бросок — прячет Roll, показывает кнопки-иконки
   btn1El.addEventListener('click', () => {
-    setActiveMode(ACTIVE_MODE_FLAT);
+    setActiveMode(GAME_MODE_CONFIG[currentGameMode].activeMode);
     setBtn1Visible(false);
     judgeButtonsEl.classList.add('visible');
     rollNextTrick();
