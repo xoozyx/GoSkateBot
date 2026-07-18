@@ -1,4 +1,16 @@
-Rock BS 180,Rock'n'Roll
+Rock BS 180 out,Rock'n'Roll
 Nollie,REROLL
 Switch,REROLL
 Fakie,REROLL
+FS 180 to Nose Stall,REROLL
+BS 180 to Nose Stall,REROLL
+FS 180 to Nose Stall FS 180 out,REROLL
+FS 180 to Nose Stall BS 180 out,REROLL
+BS 180 to Nose Stall FS 180 out,REROLL
+BS 180 to Nose Stall BS 180 out,REROLL
+Smith Stall BS 180 out,REROLL
+FS 180 to Smith Stall,Smith Stall
+FS 180 to Smith Stall,Smith Stall
+FS 180 to Smith Stall FS 180 out,Smith Stall FS 180 out
+FS 180 to Smith Stall BS 180 out,Smith Stall BS 180 out
+BS 180 to Smith Stall,FS Smith Stall
