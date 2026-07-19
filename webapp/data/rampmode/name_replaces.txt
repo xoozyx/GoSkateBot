@@ -25,6 +25,14 @@ FS 180 to Rock BS 180 Out,Disaster BS 180 Out
 FS 180 to Nollie Rock BS 180 Out,Disaster BS 180 Out
 FS 180 to Switch Rock BS 180 Out,Switch Disaster BS 180 Out
 FS 180 to Fakie Rock BS 180 Out,Switch Disaster BS 180 Out
+BS 180 to Rock FS 180 Out,BS Disaster FS 180 Out
+BS 180 to Nollie Rock FS 180 Out,BS Disaster FS 180 Out
+BS 180 to Switch Rock FS 180 Out,Switch BS Disaster FS 180 Out
+BS 180 to Fakie Rock FS 180 Out,Switch BS Disaster FS 180 Out
+BS 180 to Rock BS 180 Out,BS Disaster BS 180 Out
+BS 180 to Nollie Rock BS 180 Out,BS Disaster BS 180 Out
+BS 180 to Switch Rock BS 180 Out,Switch BS Disaster BS 180 Out
+BS 180 to Fakie Rock BS 180 Out,Switch BS Disaster BS 180 Out
 FS 180 to Nose Stall,REROLL
 BS 180 to Nose Stall,REROLL
 FS 180 to Nose Stall FS 180 Out,REROLL
