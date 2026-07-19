@@ -10,29 +10,21 @@ Nollie Rock BS 180 Out,Rock'n'Roll
 Switch Rock BS 180 Out,Switch Rock'n'Roll
 Fakie Rock BS 180 Out,Switch Rock'n'Roll
 FS 180 to Rock,Disaster
-FS 180 to Nollie Rock,Disaster
-FS 180 to Switch Rock,Switch Disaster
-FS 180 to Fakie Rock,Switch Disaster
+Nollie FS 180 to Rock,Nollie Rock
+Switch FS 180 to Rock,Switch Disaster
+Fakie FS 180 to Rock,Fakie Frontside to Rock
 BS 180 to Rock,BS Disaster
-BS 180 to Nollie Rock,BS Disaster
-BS 180 to Switch Rock,Switch BS Disaster
-BS 180 to Fakie Rock,Switch BS Disaster
-FS 180 to Rock FS 180 Out,Disaster FS 180 Out
-FS 180 to Nollie Rock FS 180 Out,Disaster FS 180 Out
-FS 180 to Switch Rock FS 180 Out,Switch Disaster FS 180 Out
-FS 180 to Fakie Rock FS 180 Out,Switch Disaster FS 180 Out
-FS 180 to Rock BS 180 Out,Disaster BS 180 Out
-FS 180 to Nollie Rock BS 180 Out,Disaster BS 180 Out
-FS 180 to Switch Rock BS 180 Out,Switch Disaster BS 180 Out
-FS 180 to Fakie Rock BS 180 Out,Switch Disaster BS 180 Out
+Nollie BS 180 to Rock,Nollie Frontside to Rock
+Switch BS 180 to Rock,Switch BS Disaster
+Fakie BS 180 to Rock,Fakie Half-Cab to Rock
 BS 180 to Rock FS 180 Out,BS Disaster FS 180 Out
-BS 180 to Nollie Rock FS 180 Out,BS Disaster FS 180 Out
-BS 180 to Switch Rock FS 180 Out,Switch BS Disaster FS 180 Out
-BS 180 to Fakie Rock FS 180 Out,Switch BS Disaster FS 180 Out
+Nollie BS 180 to Rock FS 180 Out,Nollie Frontside to Rock FS 180 Out
+Switch BS 180 to Rock FS 180 Out,Switch BS Disaster FS 180 Out
+Fakie BS 180 to Rock FS 180 Out,Fakie Half-Cab to Rock FS 180 Out
 BS 180 to Rock BS 180 Out,BS Disaster BS 180 Out
-BS 180 to Nollie Rock BS 180 Out,BS Disaster BS 180 Out
-BS 180 to Switch Rock BS 180 Out,Switch BS Disaster BS 180 Out
-BS 180 to Fakie Rock BS 180 Out,Switch BS Disaster BS 180 Out
+Nollie BS 180 to Rock BS 180 Out,Nollie Frontside to Rock BS 180 Out
+Switch BS 180 to Rock BS 180 Out,Switch BS Disaster BS 180 Out
+Fakie BS 180 to Rock BS 180 Out,Fakie Half-Cab to Rock BS 180 Out
 FS 180 to Nose Stall,REROLL
 BS 180 to Nose Stall,REROLL
 FS 180 to Nose Stall FS 180 Out,REROLL
