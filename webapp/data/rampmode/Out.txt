@@ -1,3 +1,0 @@
-NULL,1
-FS 180 Out,2
-BS 180 Out,1
