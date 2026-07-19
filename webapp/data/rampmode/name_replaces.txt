@@ -1,0 +1,339 @@
+Nollie,REROLL
+Switch,REROLL
+Fakie,REROLL
+Rock FS 180 Out,FS Rock'n'Roll
+Nollie Rock FS 180 Out,FS Rock'n'Roll
+Switch Rock FS 180 Out,Switch FS Rock'n'Roll
+Fakie Rock FS 180 Out,Switch FS Rock'n'Roll
+Rock BS 180 Out,Rock'n'Roll
+Nollie Rock BS 180 Out,Rock'n'Roll
+Switch Rock BS 180 Out,Switch Rock'n'Roll
+Fakie Rock BS 180 Out,Switch Rock'n'Roll
+FS 180 to Rock,Disaster
+Nollie FS 180 to Rock,Nollie Rock
+Switch FS 180 to Rock,Switch Disaster
+Fakie FS 180 to Rock,Fakie Frontside to Rock
+BS 180 to Rock,BS Disaster
+Nollie BS 180 to Rock,Nollie Frontside to Rock
+Switch BS 180 to Rock,Switch BS Disaster
+Fakie BS 180 to Rock,Half-Cab to Rock
+BS 180 to Rock FS 180 Out,BS Disaster FS 180 Out
+Nollie BS 180 to Rock FS 180 Out,Nollie Frontside to Rock FS 180 Out
+Switch BS 180 to Rock FS 180 Out,Switch BS Disaster FS 180 Out
+Fakie BS 180 to Rock FS 180 Out,Fakie Half-Cab to Rock FS 180 Out
+BS 180 to Rock BS 180 Out,BS Disaster BS 180 Out
+Nollie BS 180 to Rock BS 180 Out,Nollie Frontside to Rock BS 180 Out
+Switch BS 180 to Rock BS 180 Out,Switch BS Disaster BS 180 Out
+Fakie BS 180 to Rock BS 180 Out,Half-Cab to Rock'n'Roll
+FS 180 to Nose Stall,REROLL
+BS 180 to Nose Stall,REROLL
+FS 180 to Nose Stall FS 180 Out,REROLL
+FS 180 to Nose Stall BS 180 Out,REROLL
+BS 180 to Nose Stall FS 180 Out,REROLL
+BS 180 to Nose Stall BS 180 Out,REROLL
+Nollie FS 180 to Nose Stall,REROLL
+Nollie BS 180 to Nose Stall,REROLL
+Nollie FS 180 to Nose Stall FS 180 Out,REROLL
+Nollie FS 180 to Nose Stall BS 180 Out,REROLL
+Nollie BS 180 to Nose Stall FS 180 Out,REROLL
+Nollie BS 180 to Nose Stall BS 180 Out,REROLL
+Switch FS 180 to Nose Stall,REROLL
+Switch BS 180 to Nose Stall,REROLL
+Switch FS 180 to Nose Stall FS 180 Out,REROLL
+Switch FS 180 to Nose Stall BS 180 Out,REROLL
+Switch BS 180 to Nose Stall FS 180 Out,REROLL
+Switch BS 180 to Nose Stall BS 180 Out,REROLL
+Fakie FS 180 to Nose Stall,REROLL
+Fakie BS 180 to Nose Stall,REROLL
+Fakie FS 180 to Nose Stall FS 180 Out,REROLL
+Fakie FS 180 to Nose Stall BS 180 Out,REROLL
+Fakie BS 180 to Nose Stall FS 180 Out,REROLL
+Fakie BS 180 to Nose Stall BS 180 Out,REROLL
+FS 180 to Tail Stall,REROLL
+BS 180 to Tail Stall,REROLL
+FS 180 to Tail Stall FS 180 Out,REROLL
+FS 180 to Tail Stall BS 180 Out,REROLL
+BS 180 to Tail Stall FS 180 Out,REROLL
+BS 180 to Tail Stall BS 180 Out,REROLL
+Nollie FS 180 to Tail Stall,REROLL
+Nollie BS 180 to Tail Stall,REROLL
+Nollie FS 180 to Tail Stall FS 180 Out,REROLL
+Nollie FS 180 to Tail Stall BS 180 Out,REROLL
+Nollie BS 180 to Tail Stall FS 180 Out,REROLL
+Nollie BS 180 to Tail Stall BS 180 Out,REROLL
+Switch FS 180 to Tail Stall,REROLL
+Switch BS 180 to Tail Stall,REROLL
+Switch FS 180 to Tail Stall FS 180 Out,REROLL
+Switch FS 180 to Tail Stall BS 180 Out,REROLL
+Switch BS 180 to Tail Stall FS 180 Out,REROLL
+Switch BS 180 to Tail Stall BS 180 Out,REROLL
+Fakie FS 180 to Tail Stall,REROLL
+Fakie BS 180 to Tail Stall,REROLL
+Fakie FS 180 to Tail Stall FS 180 Out,REROLL
+Fakie FS 180 to Tail Stall BS 180 Out,REROLL
+Fakie BS 180 to Tail Stall FS 180 Out,REROLL
+Fakie BS 180 to Tail Stall BS 180 Out,REROLL
+Axle Stall FS 180 Out,Axle Stall to Fakie
+Axle Stall BS 180 Out,Axle Stall
+FS 180 to Axle Stall,FS Axle Stall
+BS 180 to Axle Stall,Axle Stall
+FS 180 to Axle Stall FS 180 Out,FS Axle Stall
+FS 180 to Axle Stall BS 180 Out,FS Axle Stall to Fakie
+BS 180 to Axle Stall BS 180 Out,Axle Stall
+BS 180 to Axle Stall FS 180 Out,Axle Stall to Fakie
+Nollie Axle Stall FS 180 Out,Nollie Axle Stall to Fakie
+Nollie Axle Stall BS 180 Out,Nollie Axle Stall
+Nollie FS 180 to Axle Stall,Nollie FS Axle Stall
+Nollie BS 180 to Axle Stall,Nollie Axle Stall
+Nollie FS 180 to Axle Stall FS 180 Out,Nollie FS Axle Stall
+Nollie FS 180 to Axle Stall BS 180 Out,Nollie FS Axle Stall to Fakie
+Nollie BS 180 to Axle Stall BS 180 Out,Nollie Axle Stall
+Nollie BS 180 to Axle Stall FS 180 Out,Nollie Axle Stall to Fakie
+Switch Axle Stall FS 180 Out,Switch Axle Stall to Fakie
+Switch Axle Stall BS 180 Out,Switch Axle Stall
+Switch FS 180 to Axle Stall,Switch FS Axle Stall
+Switch BS 180 to Axle Stall,Switch Axle Stall
+Switch FS 180 to Axle Stall FS 180 Out,Switch FS Axle Stall
+Switch FS 180 to Axle Stall BS 180 Out,Switch FS Axle Stall to Fakie
+Switch BS 180 to Axle Stall BS 180 Out,Switch Axle Stall
+Switch BS 180 to Axle Stall FS 180 Out,Switch Axle Stall to Fakie
+Fakie Axle Stall FS 180 Out,Fakie Axle Stall to Fakie
+Fakie Axle Stall BS 180 Out,Fakie Axle Stall
+Fakie FS 180 to Axle Stall,Fakie FS Axle Stall
+Fakie BS 180 to Axle Stall,Fakie Axle Stall
+Fakie FS 180 to Axle Stall FS 180 Out,Fakie FS Axle Stall
+Fakie FS 180 to Axle Stall BS 180 Out,Fakie FS Axle Stall to Fakie
+Fakie BS 180 to Axle Stall BS 180 Out,Fakie Axle Stall
+Fakie BS 180 to Axle Stall FS 180 Out,Fakie Axle Stall to Fakie
+Feeble Stall FS 180 Out,Feeble Stall to Fakie
+Feeble Stall BS 180 Out,Feeble Stall
+FS 180 to Feeble Stall,FS Feeble Stall
+BS 180 to Feeble Stall,Feeble Stall
+FS 180 to Feeble Stall FS 180 Out,FS Feeble Stall
+FS 180 to Feeble Stall BS 180 Out,FS Feeble Stall to Fakie
+BS 180 to Feeble Stall BS 180 Out,Feeble Stall
+BS 180 to Feeble Stall FS 180 Out,Feeble Stall to Fakie
+Nollie Feeble Stall,FS Over Willy Stall
+Nollie Feeble Stall FS 180 Out,FS Over Willy Stall
+Nollie Feeble Stall BS 180 Out,FS Over Willy Stall to Fakie
+Nollie FS 180 to Feeble Stall,FS Over Willy Stall
+Nollie BS 180 to Feeble Stall,Over Willy Stall
+Nollie FS 180 to Feeble Stall FS 180 Out,FS Over Willy Stall to Fakie
+Nollie FS 180 to Feeble Stall BS 180 Out,FS Over Willy Stall
+Nollie BS 180 to Feeble Stall BS 180 Out,Over Willy Stall
+Nollie BS 180 to Feeble Stall FS 180 Out,Over Willy Stall to Fakie
+Switch Feeble Stall FS 180 Out,Switch Feeble Stall to Fakie
+Switch Feeble Stall BS 180 Out,Switch Feeble Stall
+Switch FS 180 to Feeble Stall,Switch FS Feeble Stall
+Switch BS 180 to Feeble Stall,Switch Feeble Stall
+Switch FS 180 to Feeble Stall FS 180 Out,Switch FS Feeble Stall
+Switch FS 180 to Feeble Stall BS 180 Out,Switch FS Feeble Stall to Fakie
+Switch BS 180 to Feeble Stall BS 180 Out,Switch Feeble Stall
+Switch BS 180 to Feeble Stall FS 180 Out,Switch Feeble Stall to Fakie
+Fakie Feeble Stall,Fakie Feeble Stall
+Fakie Feeble Stall FS 180 Out,Fakie Feeble Stall to Fakie
+Fakie Feeble Stall BS 180 Out,Fakie Feeble Stall
+Fakie FS 180 to Feeble Stall,Fakie Feeble Stall
+Fakie BS 180 to Feeble Stall,Fakie FS Feeble Stall
+Fakie FS 180 to Feeble Stall FS 180 Out,Fakie Feeble Stall to Fakie
+Fakie FS 180 to Feeble Stall BS 180 Out,Fakie Feeble Stall
+Fakie BS 180 to Feeble Stall BS 180 Out,Fakie FS Feeble Stall
+Fakie BS 180 to Feeble Stall FS 180 Out,Fakie FS Feeble Stall to Fakie
+Smith Stall FS 180 Out,Smith Stall
+Smith Stall BS 180 Out,Smith Stall to Fakie
+FS 180 to Smith Stall,Smith Stall
+BS 180 to Smith Stall,BS Smith Stall
+FS 180 to Smith Stall FS 180 Out,Smith Stall
+FS 180 to Smith Stall BS 180 Out,Smith Stall to Fakie
+BS 180 to Smith Stall BS 180 Out,BS Smith Stall
+BS 180 to Smith Stall FS 180 Out,BS Smith Stall to Fakie
+Nollie Smith Stall,FS Willy Stall
+Nollie Smith Stall FS 180 Out,FS Willy Stall
+Nollie Smith Stall BS 180 Out,FS Willy Stall to Fakie
+Nollie FS 180 to Smith Stall,FS Willy Stall
+Nollie BS 180 to Smith Stall,Willy Stall
+Nollie FS 180 to Smith Stall FS 180 Out,FS Willy Stall to Fakie
+Nollie FS 180 to Smith Stall BS 180 Out,FS Willy Stall
+Nollie BS 180 to Smith Stall BS 180 Out,Willy Stall
+Nollie BS 180 to Smith Stall FS 180 Out,Willy Stall to Fakie
+Switch Smith Stall FS 180 Out,Switch Smith Stall to Fakie
+Switch Smith Stall BS 180 Out,Switch BS Smith Stall
+Switch FS 180 to Smith Stall,Switch Smith Stall
+Switch BS 180 to Smith Stall,Switch Smith Stall
+Switch FS 180 to Smith Stall FS 180 Out,Switch Smith Stall to Fakie
+Switch FS 180 to Smith Stall BS 180 Out,Switch Smith Stall
+Switch BS 180 to Smith Stall BS 180 Out,Switch BS Smith Stall to Fakie
+Switch BS 180 to Smith Stall FS 180 Out,Switch BS Smith Stall
+Fakie Smith Stall,Fakie Smith Stall
+Fakie Smith Stall FS 180 Out,Fakie Smith Stall
+Fakie Smith Stall BS 180 Out,Fakie Smith Stall to Fakie
+Fakie FS 180 to Smith Stall,Fakie BS Smith Stall
+Fakie BS 180 to Smith Stall,Fakie Smith Stall
+Fakie FS 180 to Smith Stall FS 180 Out,Fakie BS Smith Stall
+Fakie FS 180 to Smith Stall BS 180 Out,Fakie BS Smith Stall to Fakie
+Fakie BS 180 to Smith Stall BS 180 Out,Fakie BS Smith Stall to Fakie
+Fakie BS 180 to Smith Stall FS 180 Out,Fakie Smith Stall
+5'O FS 180 Out,5'O to Fakie
+5'O BS 180 Out,5'O
+FS 180 to 5'O,FS 5'O
+BS 180 to 5'O,5'O
+FS 180 to 5'O FS 180 Out,FS 5'O
+FS 180 to 5'O BS 180 Out,FS 5'O to Fakie
+BS 180 to 5'O BS 180 Out,5'O
+BS 180 to 5'O FS 180 Out,5'O to Fakie
+Nollie 5'O FS 180 Out,Nollie 5'O to Fakie
+Nollie 5'O BS 180 Out,Nollie 5'O
+Nollie FS 180 to 5'O,Nollie FS 5'O
+Nollie BS 180 to 5'O,Nollie 5'O
+Nollie FS 180 to 5'O FS 180 Out,Nollie FS 5'O
+Nollie FS 180 to 5'O BS 180 Out,Nollie FS 5'O to Fakie
+Nollie BS 180 to 5'O BS 180 Out,Nollie 5'O
+Nollie BS 180 to 5'O FS 180 Out,Nollie 5'O to Fakie
+Switch 5'O FS 180 Out,Switch 5'O to Fakie
+Switch 5'O BS 180 Out,Switch 5'O
+Switch FS 180 to 5'O,Switch FS 5'O
+Switch BS 180 to 5'O,Switch 5'O
+Switch FS 180 to 5'O FS 180 Out,Switch FS 5'O
+Switch FS 180 to 5'O BS 180 Out,Switch FS 5'O to Fakie
+Switch BS 180 to 5'O BS 180 Out,Switch 5'O
+Switch BS 180 to 5'O FS 180 Out,Switch 5'O to Fakie
+Fakie 5'O FS 180 Out,Fakie 5'O to Fakie
+Fakie 5'O BS 180 Out,Fakie 5'O
+Fakie FS 180 to 5'O,Fakie FS 5'O
+Fakie BS 180 to 5'O,Fakie 5'O
+Fakie FS 180 to 5'O FS 180 Out,Fakie FS 5'O
+Fakie FS 180 to 5'O BS 180 Out,Fakie FS 5'O to Fakie
+Fakie BS 180 to 5'O BS 180 Out,Fakie 5'O
+Fakie BS 180 to 5'O FS 180 Out,Fakie 5'O to Fakie
+Nose Pick FS 180 Out,Nose Pick to Fakie
+Nose Pick BS 180 Out,Nose Pick
+FS 180 to Nose Pick,FS Nose Pick
+BS 180 to Nose Pick,Nose Pick
+FS 180 to Nose Pick FS 180 Out,FS Nose Pick
+FS 180 to Nose Pick BS 180 Out,FS Nose Pick to Fakie
+BS 180 to Nose Pick BS 180 Out,Nose Pick
+BS 180 to Nose Pick FS 180 Out,Nose Pick to Fakie
+Nollie Nose Pick FS 180 Out,Nollie Nose Pick to Fakie
+Nollie Nose Pick BS 180 Out,Nollie Nose Pick
+Nollie FS 180 to Nose Pick,Nollie FS Nose Pick
+Nollie BS 180 to Nose Pick,Nollie Nose Pick
+Nollie FS 180 to Nose Pick FS 180 Out,Nollie FS Nose Pick
+Nollie FS 180 to Nose Pick BS 180 Out,Nollie FS Nose Pick to Fakie
+Nollie BS 180 to Nose Pick BS 180 Out,Nollie Nose Pick
+Nollie BS 180 to Nose Pick FS 180 Out,Nollie Nose Pick to Fakie
+Switch Nose Pick FS 180 Out,Switch Nose Pick to Fakie
+Switch Nose Pick BS 180 Out,Switch Nose Pick
+Switch FS 180 to Nose Pick,Switch FS Nose Pick
+Switch BS 180 to Nose Pick,Switch Nose Pick
+Switch FS 180 to Nose Pick FS 180 Out,Switch FS Nose Pick
+Switch FS 180 to Nose Pick BS 180 Out,Switch FS Nose Pick to Fakie
+Switch BS 180 to Nose Pick BS 180 Out,Switch Nose Pick
+Switch BS 180 to Nose Pick FS 180 Out,Switch Nose Pick to Fakie
+Fakie Nose Pick FS 180 Out,Fakie Nose Pick to Fakie
+Fakie Nose Pick BS 180 Out,Fakie Nose Pick
+Fakie FS 180 to Nose Pick,Fakie FS Nose Pick
+Fakie BS 180 to Nose Pick,Fakie Nose Pick
+Fakie FS 180 to Nose Pick FS 180 Out,Fakie FS Nose Pick
+Fakie FS 180 to Nose Pick BS 180 Out,Fakie FS Nose Pick to Fakie
+Fakie BS 180 to Nose Pick BS 180 Out,Fakie Nose Pick
+Fakie BS 180 to Nose Pick FS 180 Out,Fakie Nose Pick to Fakie
+Slasher FS 180 Out,Slasher
+Slasher BS 180 Out,BS Slasher
+FS 180 to Slasher,Slasher
+BS 180 to Slasher,BS Slasher
+FS 180 to Slasher FS 180 Out,Slasher
+FS 180 to Slasher BS 180 Out,Slasher
+BS 180 to Slasher BS 180 Out,BS Slasher
+BS 180 to Slasher FS 180 Out,BS Slasher
+Nollie Slasher FS 180 Out,Slasher
+Nollie Slasher BS 180 Out,BS Slasher
+Nollie FS 180 to Slasher,Slasher
+Nollie BS 180 to Slasher,BS Slasher
+Nollie FS 180 to Slasher FS 180 Out,Slasher
+Nollie FS 180 to Slasher BS 180 Out,BS Slasher
+Nollie BS 180 to Slasher BS 180 Out,Slasher
+Nollie BS 180 to Slasher FS 180 Out,BS Slasher
+Switch Slasher FS 180 Out,Switch Slasher
+Switch Slasher BS 180 Out,Switch BS Slasher
+Switch FS 180 to Slasher,Switch Slasher
+Switch BS 180 to Slasher,Switch BS Slasher
+Switch FS 180 to Slasher FS 180 Out,Switch Slasher
+Switch FS 180 to Slasher BS 180 Out,Switch BS Slasher
+Switch BS 180 to Slasher BS 180 Out,Switch Slasher
+Switch BS 180 to Slasher FS 180 Out,Switch BS Slasher
+Fakie Slasher FS 180 Out,Switch BS Slasher
+Fakie Slasher BS 180 Out,Switch Slasher
+Fakie FS 180 to Slasher,Slasher
+Fakie BS 180 to Slasher,BS Slasher
+Fakie FS 180 to Slasher FS 180 Out,Slasher
+Fakie FS 180 to Slasher BS 180 Out,BS Slasher
+Fakie BS 180 to Slasher BS 180 Out,Slasher
+Fakie BS 180 to Slasher FS 180 Out,BS Slasher
+Crook FS 180 Out,Crook to Fakie
+Crook BS 180 Out,Crook
+FS 180 to Crook,FS Crook
+BS 180 to Crook,Crook
+FS 180 to Crook FS 180 Out,FS Crook
+FS 180 to Crook BS 180 Out,FS Crook to Fakie
+BS 180 to Crook BS 180 Out,Crook
+BS 180 to Crook FS 180 Out,Crook to Fakie
+Nollie Crook FS 180 Out,Nollie Crook to Fakie
+Nollie Crook BS 180 Out,Nollie Crook
+Nollie FS 180 to Crook,Nollie FS Crook
+Nollie BS 180 to Crook,Nollie Crook
+Nollie FS 180 to Crook FS 180 Out,Nollie FS Crook
+Nollie FS 180 to Crook BS 180 Out,Nollie FS Crook to Fakie
+Nollie BS 180 to Crook BS 180 Out,Nollie Crook
+Nollie BS 180 to Crook FS 180 Out,Nollie Crook to Fakie
+Switch Crook FS 180 Out,Switch Crook to Fakie
+Switch Crook BS 180 Out,Switch Crook
+Switch FS 180 to Crook,Switch FS Crook
+Switch BS 180 to Crook,Switch Crook
+Switch FS 180 to Crook FS 180 Out,Switch FS Crook
+Switch FS 180 to Crook BS 180 Out,Switch FS Crook to Fakie
+Switch BS 180 to Crook BS 180 Out,Switch Crook
+Switch BS 180 to Crook FS 180 Out,Switch Crook to Fakie
+Fakie Crook FS 180 Out,Fakie Crook to Fakie
+Fakie Crook BS 180 Out,Fakie Crook
+Fakie FS 180 to Crook,Fakie FS Crook
+Fakie BS 180 to Crook,Fakie Crook
+Fakie FS 180 to Crook FS 180 Out,Fakie FS Crook
+Fakie FS 180 to Crook BS 180 Out,Fakie FS Crook to Fakie
+Fakie BS 180 to Crook BS 180 Out,Fakie Crook
+Fakie BS 180 to Crook FS 180 Out,Fakie Crook to Fakie
+Blunt,Blunt to Fakie
+Blunt FS 180 Out,Blunt FS 180 Out
+Blunt BS 180 Out,Blunt BS 180 Out
+FS 180 to Blunt,Nose Blunt
+BS 180 to Blunt,BS Nose Blunt
+FS 180 to Blunt FS 180 Out,Nose Blunt FS 180 Out
+FS 180 to Blunt BS 180 Out,Nose Blunt BS 180 Out
+BS 180 to Blunt BS 180 Out,BS Nose Blunt BS 180 Out
+BS 180 to Blunt FS 180 Out,BS Nose Blunt FS 180 Out
+Nollie Blunt,Blunt to Fakie
+Nollie Blunt FS 180 Out,Blunt FS 180 Out
+Nollie Blunt BS 180 Out,Blunt BS 180 Out
+Nollie FS 180 to Blunt,Nose Blunt
+Nollie BS 180 to Blunt,BS Nose Blunt
+Nollie FS 180 to Blunt FS 180 Out,Nose Blunt FS 180 Out
+Nollie FS 180 to Blunt BS 180 Out,Nose Blunt BS 180 Out
+Nollie BS 180 to Blunt BS 180 Out,BS Nose Blunt BS 180 Out
+Nollie BS 180 to Blunt FS 180 Out,BS Nose Blunt FS 180 Out
+Switch Blunt,Switch Blunt
+Switch Blunt FS 180 Out,Switch Blunt FS 180 Out
+Switch Blunt BS 180 Out,Switch Blunt BS 180 Out
+Switch FS 180 to Blunt,Switch Nose Blunt FS 180 to Blunt
+Switch BS 180 to Blunt,Switch Blunt
+Switch FS 180 to Blunt FS 180 Out,Switch Nose Blunt FS 180 Out
+Switch FS 180 to Blunt BS 180 Out,Switch Nose Blunt BS 180 Out
+Switch BS 180 to Blunt BS 180 Out,Switch Blunt BS 180 Out
+Switch BS 180 to Blunt FS 180 Out,Switch Blunt FS 180 Out
+Fakie Blunt,Switch Blunt
+Fakie Blunt FS 180 Out,Switch Blunt FS 180 Out
+Fakie Blunt BS 180 Out,Switch Blunt
+Fakie FS 180 to Blunt,Switch FS Blunt
+Fakie BS 180 to Blunt,Switch Blunt
+Fakie FS 180 to Blunt FS 180 Out,Switch FS Blunt FS 180 Out
+Fakie FS 180 to Blunt BS 180 Out,Switch FS Blunt BS 180 Out
+Fakie BS 180 to Blunt BS 180 Out,Switch Blunt BS 180 Out
+Fakie BS 180 to Blunt FS 180 Out,Switch Blunt FS 180 Out

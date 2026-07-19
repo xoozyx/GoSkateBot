@@ -1,0 +1,189 @@
+FS 180,Frontside 180 ollie
+Nollie FS 180,Frontside 180 Nollie
+Fakie FS 180,Fakie Frontside 180
+Switch FS 180,Switch Frontside 180
+BS 180,Backside 180 ollie
+Nollie BS 180,Backside 180 Nollie
+Fakie BS 180,Half-cab
+Switch BS 180,Switch Backside 180
+FS 360,Frontside 360 ollie
+Nollie FS 360,Frontside 360 Nollie
+Fakie FS 360,Fakie Frontside 360
+Switch FS 360,Switch Frontside 360
+BS 360,Backside 360 ollie
+Nollie BS 360,Backside 360 Nollie
+Fakie BS 360,Full-cab
+Switch BS 360,Switch Backside 360
+FS 180 FS Pop Shove-It,FS Big Spin
+BS 180 Pop Shove-It, Big Spin
+FS 360 FS Pop Shove-It,FS Bigger Spin
+BS 360 Pop Shove-It, Bigger Spin
+Fakie FS 180 FS Pop Shove-It,Fakie FS Big Spin
+Fakie BS 180 Pop Shove-It,Fakie Big Spin
+Fakie FS 360 FS Pop Shove-It,Fakie FS Bigger Spin
+Fakie BS 360 Pop Shove-It,Fakie Bigger Spin
+Switch FS 180 FS Pop Shove-It,Switch FS Big Spin
+Switch BS 180 Pop Shove-It,Switch Big Spin
+Switch FS 360 FS Pop Shove-It,Switch FS Bigger Spin
+Switch BS 360 Pop Shove-It,Switch Bigger Spin
+Nollie FS 180 FS Pop Shove-It,Nollie FS Big Spin
+Nollie BS 180 Pop Shove-It,Nollie Big Spin
+Nollie FS 360 FS Pop Shove-It,Nollie FS Bigger Spin
+Nollie BS 360 Pop Shove-It,Nollie Bigger Spin
+FS 180 Pop Shove-It,REROLL
+BS 180 FS Pop Shove-It,REROLL
+Nollie FS 180 Pop Shove-It,REROLL
+Nollie BS 180 FS Pop Shove-It,REROLL
+Fakie FS 180 Pop Shove-It,REROLL
+Fakie BS 180 FS Pop Shove-It,REROLL
+Switch FS 180 Pop Shove-It,REROLL
+Switch BS 180 FS Pop Shove-It,REROLL
+FS 180 Kickflip,Frontside Flip
+Nollie FS 180 Kickflip,Nollie Frontside Flip
+Switch FS 180 Kickflip,Switch Frontside Flip
+Fakie FS 180 Kickflip,Fakie Frontside Flip
+BS 180 Kickflip,Backside Flip
+Nollie BS 180 Kickflip,Nollie Backside Flip
+Switch BS 180 Kickflip,Switch Backside Flip
+Fakie BS 180 Kickflip,Half-Cab Flip
+FS 360 Kickflip,360 Frontside Flip
+Nollie FS 360 Kickflip,Nollie 360 Frontside Flip
+Switch FS 360 Kickflip,Switch 360 Frontside Flip
+Fakie FS 360 Kickflip,Fakie 360 Frontside Flip
+BS 360 Kickflip,360 Backside Flip
+Nollie BS 360 Kickflip,Nollie 360 Backside Flip
+Switch BS 360 Kickflip,Switch 360 Backside Flip
+Fakie BS 360 Kickflip,Full-Cab Flip
+FS 180 Varial Kickflip,Twister Flip
+FS 360 Varial Kickflip,REROLL
+BS 180 Varial Kickflip,REROLL
+BS 360 Varial Kickflip,REROLL
+FS 180 Varial Heelflip,REROLL
+FS 360 Varial Heelflip,REROLL
+BS 180 Varial Heelflip,REROLL
+BS 360 Varial Heelflip,REROLL
+FS 180 Hard Flip,REROLL
+FS 360 Hard Flip,REROLL
+BS 180 Hard Flip,REROLL
+BS 360 Hard Flip,REROLL
+FS 180 Inward Heelflip,REROLL
+FS 360 Inward Heelflip,REROLL
+BS 180 Inward Heelflip,REROLL
+BS 360 Inward Heelflip,REROLL
+FS 180 360 Flip,REROLL
+FS 360 360 Flip,REROLL
+BS 180 360 Flip,Big Flip
+BS 360 360 Flip,Bigger Flip
+FS 180 Laser Flip,REROLL
+FS 360 Laser Flip,REROLL
+BS 180 Laser Flip,REROLL
+BS 360 Laser Flip,REROLL
+FS 180 360 Hard Flip,REROLL
+FS 360 360 Hard Flip,REROLL
+BS 180 360 Hard Flip,REROLL
+BS 360 360 Hard Flip,REROLL
+FS 180 360 Inward Heelflip,REROLL
+FS 360 360 Inward Heelflip,REROLL
+BS 180 360 Inward Heelflip,REROLL
+BS 360 360 Inward Heelflip,REROLL
+Nollie FS 180 Varial Kickflip,Nollie Twister Flip
+Nollie FS 360 Varial Kickflip,REROLL
+Nollie BS 180 Varial Kickflip,REROLL
+Nollie BS 360 Varial Kickflip,REROLL
+Nollie FS 180 Varial Heelflip,REROLL
+Nollie FS 360 Varial Heelflip,REROLL
+Nollie BS 180 Varial Heelflip,REROLL
+Nollie BS 360 Varial Heelflip,REROLL
+Nollie FS 180 Hard Flip,REROLL
+Nollie FS 360 Hard Flip,REROLL
+Nollie BS 180 Hard Flip,REROLL
+Nollie BS 360 Hard Flip,REROLL
+Nollie FS 180 Inward Heelflip,REROLL
+Nollie FS 360 Inward Heelflip,REROLL
+Nollie BS 180 Inward Heelflip,REROLL
+Nollie BS 360 Inward Heelflip,REROLL
+Nollie FS 180 360 Flip,REROLL
+Nollie FS 360 360 Flip,REROLL
+Nollie BS 180 360 Flip,Nollie Big Flip
+Nollie BS 360 360 Flip,Nollie Bigger Flip
+Nollie FS 180 Laser Flip,REROLL
+Nollie FS 360 Laser Flip,REROLL
+Nollie BS 180 Laser Flip,REROLL
+Nollie BS 360 Laser Flip,REROLL
+Nollie FS 180 360 Hard Flip,REROLL
+Nollie FS 360 360 Hard Flip,REROLL
+Nollie BS 180 360 Hard Flip,REROLL
+Nollie BS 360 360 Hard Flip,REROLL
+Nollie FS 180 360 Inward Heelflip,REROLL
+Nollie FS 360 360 Inward Heelflip,REROLL
+Nollie BS 180 360 Inward Heelflip,REROLL
+Nollie BS 360 360 Inward Heelflip,REROLL
+Switch FS 180 Varial Kickflip,Switch Twister Flip
+Switch FS 360 Varial Kickflip,REROLL
+Switch BS 180 Varial Kickflip,REROLL
+Switch BS 360 Varial Kickflip,REROLL
+Switch FS 180 Varial Heelflip,REROLL
+Switch FS 360 Varial Heelflip,REROLL
+Switch BS 180 Varial Heelflip,REROLL
+Switch BS 360 Varial Heelflip,REROLL
+Switch FS 180 Hard Flip,REROLL
+Switch FS 360 Hard Flip,REROLL
+Switch BS 180 Hard Flip,REROLL
+Switch BS 360 Hard Flip,REROLL
+Switch FS 180 Inward Heelflip,REROLL
+Switch FS 360 Inward Heelflip,REROLL
+Switch BS 180 Inward Heelflip,REROLL
+Switch BS 360 Inward Heelflip,REROLL
+Switch FS 180 360 Flip,REROLL
+Switch FS 360 360 Flip,REROLL
+Switch BS 180 360 Flip,Switch Big Flip
+Switch BS 360 360 Flip,Switch Bigger Flip
+Switch FS 180 Laser Flip,REROLL
+Switch FS 360 Laser Flip,REROLL
+Switch BS 180 Laser Flip,REROLL
+Switch BS 360 Laser Flip,REROLL
+Switch FS 180 360 Hard Flip,REROLL
+Switch FS 360 360 Hard Flip,REROLL
+Switch BS 180 360 Hard Flip,REROLL
+Switch BS 360 360 Hard Flip,REROLL
+Switch FS 180 360 Inward Heelflip,REROLL
+Switch FS 360 360 Inward Heelflip,REROLL
+Switch BS 180 360 Inward Heelflip,REROLL
+Switch BS 360 360 Inward Heelflip,REROLL
+Fakie FS 180 Varial Kickflip,Fakie Twister Flip
+Fakie FS 360 Varial Kickflip,REROLL
+Fakie BS 180 Varial Kickflip,REROLL
+Fakie BS 360 Varial Kickflip,REROLL
+Fakie FS 180 Varial Heelflip,REROLL
+Fakie FS 360 Varial Heelflip,REROLL
+Fakie BS 180 Varial Heelflip,REROLL
+Fakie BS 360 Varial Heelflip,REROLL
+Fakie FS 180 Hard Flip,REROLL
+Fakie FS 360 Hard Flip,REROLL
+Fakie BS 180 Hard Flip,REROLL
+Fakie BS 360 Hard Flip,REROLL
+Fakie FS 180 Inward Heelflip,REROLL
+Fakie FS 360 Inward Heelflip,REROLL
+Fakie BS 180 Inward Heelflip,REROLL
+Fakie BS 360 Inward Heelflip,REROLL
+Fakie FS 180 360 Flip,REROLL
+Fakie FS 360 360 Flip,REROLL
+Fakie BS 180 360 Flip,Fakie Big Flip
+Fakie BS 360 360 Flip,Fakie Bigger Flip
+Fakie FS 180 Laser Flip,REROLL
+Fakie FS 360 Laser Flip,REROLL
+Fakie BS 180 Laser Flip,REROLL
+Fakie BS 360 Laser Flip,REROLL
+Fakie FS 180 360 Hard Flip,REROLL
+Fakie FS 360 360 Hard Flip,REROLL
+Fakie BS 180 360 Hard Flip,REROLL
+Fakie BS 360 360 Hard Flip,REROLL
+Fakie FS 180 360 Inward Heelflip,REROLL
+Fakie FS 360 360 Inward Heelflip,REROLL
+Fakie BS 180 360 Inward Heelflip,REROLL
+Fakie BS 360 360 Inward Heelflip,REROLL
+FS 360 Pop Shove-It,REROLL
+BS 360 FS Pop Shove-It,REROLL
+Nollie,REROLL
+Switch,REROLL
+Fakie,REROLL

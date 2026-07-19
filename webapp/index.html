@@ -1,0 +1,1885 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>GoSkateBot</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    background: #cfe9ee;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  img {
+    -webkit-user-drag: none;
+    user-select: none;
+  }
+
+  #app {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  /* ==== Zoom-режим для Flatmode: приближаем игровой экран устройства,
+     обрезая D-pad/Start/A/B снизу и часть рамки по бокам — см. превью от пользователя.
+     Возвращается к обычному виду при выходе на Mainscreen. ==== */
+  #app.zoomed .device {
+    transform: scale(1.22) translateY(2%);
+  }
+
+  .device {
+    transition: transform 0.5s ease;
+  }
+
+  /* ==== Экран загрузки с логотипом ==== */
+  #logoScreen {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #cfe9ee;
+    opacity: 1;
+    transition: opacity 0.6s ease;
+  }
+
+  #logoScreen.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  #logoScreen img {
+    width: min(94vw, 90vh, 460px);
+    aspect-ratio: 208 / 306;
+    height: auto;
+    image-rendering: pixelated;
+  }
+
+  /* ==== Анимация перехода между экранами ==== */
+  #changeOverlay {
+    position: absolute;
+    inset: 0;
+    z-index: 25;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  #changeOverlay.visible {
+    opacity: 1;
+  }
+
+  #changeOverlay img {
+    width: min(94vw, 90vh, 460px);
+    aspect-ratio: 208 / 306;
+    height: auto;
+    image-rendering: pixelated;
+  }
+
+  /* ==== Общий контейнер-"устройство" (общий для Mainscreen и Flatmode) ==== */
+  .device {
+    position: relative;
+    width: min(94vw, 90vh, 460px);
+    aspect-ratio: 208 / 306;
+    background-image: url('images/console/Background.png?v=20260716a');
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    image-rendering: pixelated;
+  }
+
+  /* ==== Рамка консоли (Cover + D-pad/Start/A/B) — поверх содержимого экрана,
+     общая для Mainscreen и Flatmode/Rampmode (внутри каждого .device, чтобы
+     участвовать в zoom-эффекте Flatmode вместе с остальным содержимым). ==== */
+  #consoleCover {
+    position: absolute;
+    inset: 0;
+    z-index: 30;
+    pointer-events: none;
+    image-rendering: pixelated;
+  }
+
+  #consoleCover img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+  }
+
+  .console-btn-visual {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    image-rendering: pixelated;
+    z-index: 31;
+  }
+
+  .console-btn-visual img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+  }
+
+  .console-btn {
+    position: absolute;
+    border: none;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    z-index: 32;
+  }
+
+  .console-btn-a, .console-btn-b {
+    width: 12.02%;
+    aspect-ratio: 25 / 25;
+  }
+
+  .console-btn-a { left: 64.42%; top: 82.35%; }
+  .console-btn-b { left: 78.37%; top: 78.43%; }
+
+  .console-btn-up, .console-btn-down, .console-btn-left, .console-btn-right {
+    width: 9.62%;
+    aspect-ratio: 20 / 20;
+  }
+
+  .console-btn-up { left: 19.23%; top: 77.12%; }
+  .console-btn-down { left: 19.23%; top: 89.54%; }
+  .console-btn-left { left: 10.10%; top: 83.33%; }
+  .console-btn-right { left: 28.37%; top: 83.33%; }
+
+  .console-btn-start {
+    left: 43.27%;
+    top: 84.64%;
+    width: 17.31%;
+    aspect-ratio: 36 / 12;
+  }
+
+  /* ==== Экраны (Mainscreen / Flatmode) — переключаются плавным fade ==== */
+  .screen {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+  }
+
+  .screen.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* ==== Mainscreen: кнопки выбора режима ==== */
+  .mode-button {
+    position: absolute;
+    border: none;
+    padding: 0;
+    background: transparent;
+    -webkit-tap-highlight-color: transparent;
+    image-rendering: pixelated;
+  }
+
+  .mode-button img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+  }
+
+  .mode-button.enabled {
+    cursor: pointer;
+    transition: transform 0.08s ease;
+  }
+
+  .mode-button.enabled:active {
+    transform: scale(0.93);
+  }
+
+  .mode-button.disabled {
+    cursor: default;
+  }
+
+  /* "SELECT MODE" — декоративная анимация на весь канвас, под кнопками выбора режима. */
+  #selectModeLabel {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    image-rendering: pixelated;
+    z-index: 0;
+  }
+
+  #selectModeLabel img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+  }
+
+  /* Декоративный слой на весь канвас устройства (208x306, прозрачный фон) —
+     арт уже спозиционирован художником внутри PNG, поэтому просто накрываем
+     им весь .device. Сам по себе некликабелен — иначе прозрачные области
+     перекрывали бы клики по кнопкам Ramp/Street под ним. */
+  .mode-button-visual {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    image-rendering: pixelated;
+    z-index: 1;
+    transition: opacity 0.08s ease;
+  }
+
+  .mode-button-visual img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+  }
+
+  /* Кнопка идёт перед визуальным слоем в разметке (порядок в DOM не влияет
+     на z-index, который задан явно) — благодаря этому при нажатии на
+     невидимую кликабельную область можно подсветить видимую картинку рядом
+     через сиблинг-селектор, без лишнего JS. Не scale (сжался бы весь канвас
+     208x306 целиком, а не только видимая кнопка) — вместо этого лёгкое
+     затемнение, как обратная связь на нажатие. */
+  .fullcanvas-hitarea:active ~ .mode-button-visual {
+    opacity: 0.8;
+  }
+
+  /* Реальная кликабельная область для fullcanvas-кнопки — размер и позиция
+     подобраны по фактическим непрозрачным пикселям в PNG (см. bbox альфа-канала),
+     а не по всему канвасу, иначе кнопка перекрывала бы клики по остальным. */
+  .fullcanvas-hitarea {
+    z-index: 2;
+  }
+
+  /* Используется, чтобы отключить клики по Ramp/Street, пока открыт выбор
+     сложности Flat (и наоборот) — сами кнопки остаются на месте и видны,
+     просто притемнены тенью (.difficulty-picker-shadow) поверх них. */
+  .mode-picker-hidden {
+    pointer-events: none !important;
+  }
+
+  /* Кнопка, которая открыла выбор сложности, поднимается выше тени — остаётся
+     полностью видна, в отличие от двух других (Ramp/Street), которые тень затемняет. */
+  .above-picker-shadow {
+    z-index: 3;
+  }
+
+  /* Тень поверх недоступных сейчас кнопок режима (например Ramp/Street, пока
+     открыт выбор сложности Flat) — сама не даёт тени двигаться/растягиваться,
+     просто полноразмерный PNG поверх них, но под Easy/Hard. */
+  .difficulty-picker-shadow {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    image-rendering: pixelated;
+    z-index: 1;
+  }
+
+  .difficulty-picker-shadow img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+  }
+
+  #modeFlat {
+    left: 30.8%;
+    top: 16%;
+    width: 38.5%;
+    height: 16%;
+  }
+
+  #modeRamp {
+    left: 30.8%;
+    top: 35%;
+    width: 38.5%;
+    height: 12.75%;
+  }
+
+  #modeStreet {
+    left: 30.8%;
+    top: 50.65%;
+    width: 38.5%;
+    height: 12.1%;
+  }
+
+  /* Выбор сложности для Flat — показывается вместо Ramp/Street после нажатия
+     Flat, занимает ту же область, где раньше была кнопка Flat. */
+  #flatDifficultyPicker {
+    display: none;
+  }
+
+  #flatDifficultyPicker.visible {
+    display: block;
+  }
+
+  #modeFlatEasy {
+    left: 30.29%;
+    top: 32.03%;
+    width: 19.23%;
+    height: 8.17%;
+  }
+
+  #modeFlatHard {
+    left: 50.96%;
+    top: 32.03%;
+    width: 19.23%;
+    height: 8.17%;
+  }
+
+  /* Выбор сложности для Ramp — показывается вместо Flat/Street после нажатия
+     Ramp, сразу под кнопкой Ramp. */
+  #rampDifficultyPicker {
+    display: none;
+  }
+
+  #rampDifficultyPicker.visible {
+    display: block;
+  }
+
+  #modeRampEasy {
+    left: 30.29%;
+    top: 47.71%;
+    width: 19.23%;
+    height: 8.17%;
+  }
+
+  #modeRampHard {
+    left: 50.96%;
+    top: 47.71%;
+    width: 19.23%;
+    height: 8.17%;
+  }
+
+  /* ==== Речевой пузырь с результатом (Flatmode) ==== */
+  #bubble {
+    position: absolute;
+    inset: 0;
+    box-sizing: border-box;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  #bubble img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    image-rendering: pixelated;
+  }
+
+  #bubble.active {
+    opacity: 1;
+  }
+
+  #result {
+    position: absolute;
+    left: 22.1%;
+    right: 22.6%;
+    top: 9.8%;
+    height: 10.8%;
+    box-sizing: border-box;
+    padding: 0 2%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    text-align: center;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+    line-height: 1.3;
+    color: #ffffff;
+    word-wrap: break-word;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  #bubble.active ~ #result {
+    opacity: 1;
+  }
+
+  /* ==== Декоративные спрайты (стоят позади кнопок) ==== */
+  /* Теперь оба — полноразмерные PNG 208x306 с прозрачным фоном, арт уже
+     спозиционирован художником внутри самого файла. */
+  #flatground, #coach {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    image-rendering: pixelated;
+  }
+
+  #flatground {
+    z-index: 6;
+  }
+
+  #flatground img {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  #coach {
+    z-index: 2;
+  }
+
+  #coach img {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* ==== Кнопки Flatmode ==== */
+  /* Теперь это полноразмерные PNG 208x306 с прозрачным фоном — арт уже
+     спозиционирован художником. Реальная кликабельная область (fullcanvas-hitarea)
+     ограничена фактическими непрозрачными пикселями, декоративный слой
+     (menu-button-visual/judge-button-visual) занимает весь канвас и не кликается. */
+  .menu-button-visual {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    image-rendering: pixelated;
+    transition: opacity 0.08s ease;
+    z-index: 3;
+  }
+
+  .menu-button-visual img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+  }
+
+  .menu-button.fullcanvas-hitarea {
+    position: absolute;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    background: transparent;
+    -webkit-tap-highlight-color: transparent;
+    z-index: 4;
+  }
+
+  .menu-button.fullcanvas-hitarea:active ~ .menu-button-visual {
+    opacity: 0.8;
+  }
+
+  #btn1 {
+    left: 26.92%;
+    top: 33.99%;
+    width: 47.12%;
+    height: 8.5%;
+  }
+
+  /* Quit и кнопки подтверждения выхода должны быть выше пузыря с текстом и
+     анимации Flatground (у них z-index 5 и 6 соответственно) — иначе они
+     скрываются за скейтером/пузырём. Задаём z-index только этим кнопкам,
+     не трогая общий .menu-button (Start Game этого не требует).
+     Тень (внутри #quitConfirm) рисуется поверх притемнённой кнопки Quit
+     (z-index 7, но тень идёт позже в разметке — выигрывает при равенстве),
+     а сами кнопки QUIT/BACK — ещё выше тени. */
+  #btn2, #btn2Visual {
+    z-index: 7;
+  }
+
+  #quitConfirm .difficulty-picker-shadow {
+    z-index: 7;
+  }
+
+  #btnQuitConfirm, #btnQuitConfirmVisual,
+  #btnQuitBack, #btnQuitBackVisual {
+    z-index: 8;
+  }
+
+  #btn2 {
+    left: 78.85%;
+    top: 8.82%;
+    width: 8.17%;
+    height: 8.17%;
+  }
+
+  /* Подтверждение выхода — появляется поверх притемнённой кнопки Quit, две
+     кнопки (QUIT / BACK) занимают ту же строку в верхнем правом углу. */
+  #quitConfirm {
+    position: absolute;
+    inset: 0;
+    display: none;
+  }
+
+  #quitConfirm.visible {
+    display: block;
+  }
+
+  #btnQuitConfirm {
+    left: 47.6%;
+    top: 8.82%;
+    width: 19.23%;
+    height: 8.17%;
+  }
+
+  #btnQuitBack {
+    left: 67.79%;
+    top: 8.82%;
+    width: 19.23%;
+    height: 8.17%;
+  }
+
+  /* Кнопки-иконки "засчитано / не засчитано" — появляются на месте Start Game после броска */
+  #judgeButtons {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 3;
+  }
+
+  #judgeButtons.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .judge-button.fullcanvas-hitarea {
+    position: absolute;
+    border: none;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    z-index: 4;
+  }
+
+  .judge-button-visual {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    image-rendering: pixelated;
+    transition: opacity 0.08s ease;
+    z-index: 3;
+  }
+
+  .judge-button-visual img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+  }
+
+  #btnLanded {
+    left: 22.6%;
+    top: 33.99%;
+    width: 21.63%;
+    height: 8.5%;
+  }
+
+  #btnFailed {
+    left: 55.77%;
+    top: 33.99%;
+    width: 21.63%;
+    height: 8.5%;
+  }
+
+  .judge-button.fullcanvas-hitarea:active ~ .judge-button-visual {
+    opacity: 0.8;
+  }
+
+  /* Прокручиваемый лог трюков — теперь фон на весь канвас 208x306 (сама панель
+     нарисована художником внутри PNG, прозрачность вокруг неё). Свёрнутое и
+     развёрнутое состояния — это два разных полноразмерных PNG; сам #tricklist
+     больше не двигается и не меняет размер. Кроссфейд между ними — через
+     ::before с отдельной картинкой развёрнутого состояния и переходом opacity,
+     чтобы переключение не выглядело резким "миганием". */
+  #tricklist {
+    position: absolute;
+    inset: 0;
+    background-image: url('images/Tricklist_background.png?v=20260716a');
+    background-size: 100% 100%;
+    image-rendering: pixelated;
+    z-index: 4;
+    /* Сама панель — просто фон на весь экран, не должна перехватывать клики
+       по остальным элементам (Start Game и т.д.) там, где она прозрачна. */
+    pointer-events: none;
+  }
+
+  #tricklist::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url('images/Tricklist_background_expanded.png?v=20260716a');
+    background-size: 100% 100%;
+    image-rendering: pixelated;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  #tricklist.expanded::before {
+    opacity: 1;
+  }
+
+  #tricklist.expanded {
+    z-index: 15;
+  }
+
+  /* top/bottom/left/right подобраны по фактической тёмной области ВНУТРИ каждого
+     полноразмерного PNG (см. bbox альфа-канала), плюс отступ сверху под шапку
+     (счётчики/буквы SKATE), чтобы текст лога не наезжал на неё — отдельно для
+     свёрнутого и развёрнутого состояний. */
+  #tricklistContent {
+    position: absolute;
+    top: 52%;
+    bottom: 32%;
+    left: 16%;
+    right: 12.5%;
+    padding-left: 2%;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  #tricklist.expanded #tricklistContent {
+    top: 16%;
+    bottom: 32%;
+    left: 16%;
+    right: 12.5%;
+    padding-left: 2%;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  /* Панель #tricklist теперь всегда занимает весь канвas (inset:0) — картинка
+     разного вида для свёрнутого/развёрнутого состояния просто подменяется, сама
+     панель больше не меняет размер. Поэтому обычные % (без cqw-костыля) корректно
+     работают и остаются на месте независимо от состояния — нужно только сдвинуть
+     шапку между состояниями, как и буквы SKATE / кнопку сворачивания. */
+  #tricklistHeader {
+    position: absolute;
+    top: 46.08%;
+    left: 12.02%;
+    right: 12.5%;
+    box-sizing: border-box;
+    padding: 0 3%;
+    display: flex;
+    align-items: center;
+    z-index: 5;
+    transition: top 0.3s ease;
+  }
+
+  #tricklist.expanded #tricklistHeader {
+    top: 10.13%;
+  }
+
+  .trick-stats {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .trick-stat {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .trick-stat img {
+    width: 9px;
+    height: 9px;
+    image-rendering: pixelated;
+  }
+
+  .trick-stat span {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    color: #d8e8d0;
+  }
+
+  /* Реальная кликабельная область — по фактическим непрозрачным пикселям в PNG,
+     иначе полноразмерная прозрачная кнопка перекрывала бы клики по всему остальному
+     на экране Flatmode (Coach, Flatground, кнопки Roll/Landed/Failed и т.д.) */
+  #logToggleBtn {
+    position: absolute;
+    left: 80.29%;
+    top: 46.08%;
+    width: 4.81%;
+    height: 3.92%;
+    border: none;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    z-index: 6;
+    transition: top 0.3s ease;
+    pointer-events: auto;
+  }
+
+  #tricklist.expanded #logToggleBtn {
+    top: 10.13%;
+  }
+
+  /* Декоративный слой на весь канвас — ВАЖНО: Button_expand.png нарисован
+     художником для СВЁРНУТОГО состояния (~46% сверху), а Button_minimize.png —
+     уже для РАЗВЁРНУТОГО состояния (~10% сверху), т.е. у каждой картинки
+     положение своё и уже правильное само по себе. Никакого сдвига через
+     transform не нужно — иначе Button_minimize уезжает за пределы экрана. */
+  #logToggleVisual {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 6;
+  }
+
+  #logToggleVisual img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+  }
+
+  /* Бейдж сложности (Easy/Hard) в шапке лога — та же логика сдвига между
+     свёрнутым/развёрнутым состоянием, что и у букв SKATE. */
+  #difficultyBadge {
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    pointer-events: none;
+    transition: transform 0.3s ease;
+  }
+
+  #tricklist.expanded #difficultyBadge {
+    transform: translateY(-35.95%);
+  }
+
+  #difficultyBadge img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+  }
+
+  #skateLetters {
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    pointer-events: none;
+    transition: transform 0.3s ease;
+  }
+
+  #tricklist.expanded #skateLetters {
+    transform: translateY(-35.95%);
+  }
+
+  #skateLetters img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+  }
+
+  #tricklistInner {
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    pointer-events: auto;
+  }
+
+  #tricklistInner::-webkit-scrollbar {
+    width: 3px;
+  }
+
+  .trick-entry {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+  }
+
+  .trick-entry img {
+    width: 10px;
+    height: 10px;
+    flex-shrink: 0;
+    image-rendering: pixelated;
+  }
+
+  .trick-entry span {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    line-height: 1.35;
+    color: #d8e8d0;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    min-width: 0;
+  }
+</style>
+</head>
+<body>
+  <div id="app">
+    <div id="logoScreen">
+      <img src="images/Intro_screen.png?v=20260716a" alt="Загрузка">
+    </div>
+
+    <div id="changeOverlay">
+      <img id="changeScreenImg" src="images/Change_screen.png?v=20260716a" alt="">
+    </div>
+
+    <!-- ==== Mainscreen: выбор режима игры ==== -->
+    <div id="mainscreen" class="screen">
+      <div class="device">
+        <div id="selectModeLabel">
+          <img src="images/Animation_select_mode.png?v=20260716a" alt="">
+        </div>
+        <button class="mode-button enabled fullcanvas-hitarea" id="modeFlat" aria-label="Flat"></button>
+        <div class="mode-button-visual" id="modeFlatVisual">
+          <img src="images/Button_mainmenu_flat.png?v=20260716a" alt="">
+        </div>
+        <button class="mode-button enabled fullcanvas-hitarea" id="modeRamp" aria-label="Ramp"></button>
+        <div class="mode-button-visual" id="modeRampVisual">
+          <img src="images/Button_mainmenu_ramp.png?v=20260716a" alt="">
+        </div>
+        <button class="mode-button disabled fullcanvas-hitarea" id="modeStreet" aria-label="Street" disabled></button>
+        <div class="mode-button-visual" id="modeStreetVisual">
+          <img src="images/Button_mainmenu_street.png?v=20260716a" alt="">
+        </div>
+
+        <div id="flatDifficultyPicker">
+          <div class="difficulty-picker-shadow">
+            <img src="images/Shadow_screen.png?v=20260716a" alt="">
+          </div>
+          <button class="mode-button enabled fullcanvas-hitarea" id="modeFlatEasy" aria-label="Easy"></button>
+          <div class="mode-button-visual" id="modeFlatEasyVisual">
+            <img src="images/Button_mainmenu_flat_easy.png?v=20260716a" alt="">
+          </div>
+          <button class="mode-button enabled fullcanvas-hitarea" id="modeFlatHard" aria-label="Hard"></button>
+          <div class="mode-button-visual" id="modeFlatHardVisual">
+            <img src="images/Button_mainmenu_flat_hard.png?v=20260716a" alt="">
+          </div>
+        </div>
+
+        <div id="rampDifficultyPicker">
+          <div class="difficulty-picker-shadow">
+            <img src="images/Shadow_screen.png?v=20260716a" alt="">
+          </div>
+          <button class="mode-button enabled fullcanvas-hitarea" id="modeRampEasy" aria-label="Easy"></button>
+          <div class="mode-button-visual" id="modeRampEasyVisual">
+            <img src="images/Button_mainmenu_ramp_easy.png?v=20260716a" alt="">
+          </div>
+          <button class="mode-button enabled fullcanvas-hitarea" id="modeRampHard" aria-label="Hard"></button>
+          <div class="mode-button-visual" id="modeRampHardVisual">
+            <img src="images/Button_mainmenu_ramp_hard.png?v=20260716a" alt="">
+          </div>
+        </div>
+
+        <div id="consoleCover">
+          <img src="images/console/Cover.png?v=20260716a" alt="">
+        </div>
+        <div class="console-btn-visual" data-btn-visual="up">
+          <img src="images/console/Button_up_idle.png?v=20260716a" alt="">
+        </div>
+        <button class="console-btn console-btn-up" data-btn="up" aria-label="Up"></button>
+        <div class="console-btn-visual" data-btn-visual="down">
+          <img src="images/console/Button_down_idle.png?v=20260716a" alt="">
+        </div>
+        <button class="console-btn console-btn-down" data-btn="down" aria-label="Down"></button>
+        <div class="console-btn-visual" data-btn-visual="left">
+          <img src="images/console/Button_left_idle.png?v=20260716a" alt="">
+        </div>
+        <button class="console-btn console-btn-left" data-btn="left" aria-label="Left"></button>
+        <div class="console-btn-visual" data-btn-visual="right">
+          <img src="images/console/Button_right_idle.png?v=20260716a" alt="">
+        </div>
+        <button class="console-btn console-btn-right" data-btn="right" aria-label="Right"></button>
+        <div class="console-btn-visual" data-btn-visual="start">
+          <img src="images/console/Button_start_idle.png?v=20260716a" alt="">
+        </div>
+        <button class="console-btn console-btn-start" data-btn="start" aria-label="Start"></button>
+        <div class="console-btn-visual" data-btn-visual="a">
+          <img src="images/console/Button_a_idle.png?v=20260716a" alt="">
+        </div>
+        <button class="console-btn console-btn-a" data-btn="a" aria-label="A"></button>
+        <div class="console-btn-visual" data-btn-visual="b">
+          <img src="images/console/Button_b_idle.png?v=20260716a" alt="">
+        </div>
+        <button class="console-btn console-btn-b" data-btn="b" aria-label="B"></button>
+      </div>
+    </div>
+
+    <!-- ==== Flatmode: генератор трюков ==== -->
+    <div id="flatmode" class="screen">
+      <div class="device">
+        <div id="flatground">
+          <img src="images/Animation_flatmode.png?v=20260716a" alt="">
+        </div>
+
+        <div id="coach">
+          <img src="images/Animation_coach.png?v=20260716a" alt="">
+        </div>
+
+        <div id="bubble">
+          <img src="images/Text_bubble.png?v=20260716a" alt="">
+        </div>
+        <div id="result"></div>
+
+        <button class="menu-button fullcanvas-hitarea" id="btn1" aria-label="Начать"></button>
+        <div class="menu-button-visual" id="btn1Visual">
+          <img src="images/Button_startgame.png?v=20260716a" alt="">
+        </div>
+
+        <div id="judgeButtons">
+          <button class="judge-button fullcanvas-hitarea" id="btnLanded" aria-label="Засчитано"></button>
+          <div class="judge-button-visual" id="btnLandedVisual">
+            <img src="images/Button_landed.png?v=20260716a" alt="">
+          </div>
+          <button class="judge-button fullcanvas-hitarea" id="btnFailed" aria-label="Не засчитано"></button>
+          <div class="judge-button-visual" id="btnFailedVisual">
+            <img src="images/Button_failed.png?v=20260716a" alt="">
+          </div>
+        </div>
+
+        <div id="tricklist">
+          <div id="tricklistHeader">
+            <div class="trick-stats">
+              <div class="trick-stat">
+                <img src="images/Icon_landed.png?v=20260716a" alt="Засчитано">
+                <span id="landedCount">0</span>
+              </div>
+              <div class="trick-stat">
+                <img src="images/Icon_failed.png?v=20260716a" alt="Не засчитано">
+                <span id="failedCount">0</span>
+              </div>
+            </div>
+          </div>
+          <div id="difficultyBadge">
+            <img id="difficultyBadgeImg" src="images/Difficulty_easy.png?v=20260716a" alt="">
+          </div>
+          <div id="skateLetters">
+            <img id="skateLettersImg" src="images/Letters_null.png?v=20260716a" alt="SKATE">
+          </div>
+          <button id="logToggleBtn" aria-label="Развернуть лог"></button>
+          <div id="logToggleVisual">
+            <img id="logToggleImg" src="images/Button_expand.png?v=20260716a" alt="">
+          </div>
+          <div id="tricklistContent">
+            <div id="tricklistInner"></div>
+          </div>
+        </div>
+
+        <button class="menu-button fullcanvas-hitarea" id="btn2" aria-label="Назад в меню"></button>
+        <div class="menu-button-visual" id="btn2Visual">
+          <img src="images/Button_quit.png?v=20260716a" alt="">
+        </div>
+
+        <div id="quitConfirm">
+          <div class="difficulty-picker-shadow">
+            <img src="images/Shadow_screen.png?v=20260716a" alt="">
+          </div>
+          <button class="menu-button fullcanvas-hitarea" id="btnQuitConfirm" aria-label="Выйти в меню"></button>
+          <div class="menu-button-visual" id="btnQuitConfirmVisual">
+            <img src="images/Button_quit_quit.png?v=20260716a" alt="">
+          </div>
+          <button class="menu-button fullcanvas-hitarea" id="btnQuitBack" aria-label="Отмена"></button>
+          <div class="menu-button-visual" id="btnQuitBackVisual">
+            <img src="images/Button_quit_back.png?v=20260716a" alt="">
+          </div>
+        </div>
+
+        <div id="consoleCover">
+          <img src="images/console/Cover.png?v=20260716a" alt="">
+        </div>
+        <div class="console-btn-visual" data-btn-visual="up">
+          <img src="images/console/Button_up_idle.png?v=20260716a" alt="">
+        </div>
+        <button class="console-btn console-btn-up" data-btn="up" aria-label="Up"></button>
+        <div class="console-btn-visual" data-btn-visual="down">
+          <img src="images/console/Button_down_idle.png?v=20260716a" alt="">
+        </div>
+        <button class="console-btn console-btn-down" data-btn="down" aria-label="Down"></button>
+        <div class="console-btn-visual" data-btn-visual="left">
+          <img src="images/console/Button_left_idle.png?v=20260716a" alt="">
+        </div>
+        <button class="console-btn console-btn-left" data-btn="left" aria-label="Left"></button>
+        <div class="console-btn-visual" data-btn-visual="right">
+          <img src="images/console/Button_right_idle.png?v=20260716a" alt="">
+        </div>
+        <button class="console-btn console-btn-right" data-btn="right" aria-label="Right"></button>
+        <div class="console-btn-visual" data-btn-visual="start">
+          <img src="images/console/Button_start_idle.png?v=20260716a" alt="">
+        </div>
+        <button class="console-btn console-btn-start" data-btn="start" aria-label="Start"></button>
+        <div class="console-btn-visual" data-btn-visual="a">
+          <img src="images/console/Button_a_idle.png?v=20260716a" alt="">
+        </div>
+        <button class="console-btn console-btn-a" data-btn="a" aria-label="A"></button>
+        <div class="console-btn-visual" data-btn-visual="b">
+          <img src="images/console/Button_b_idle.png?v=20260716a" alt="">
+        </div>
+        <button class="console-btn console-btn-b" data-btn="b" aria-label="B"></button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // ==== Борьба с кэшированием внутри Telegram WebView ====
+  // У всех картинок (в HTML-разметке и в CSS background-image) в самом
+  // index.html прописана версия в query-параметре — ?v=ASSET_VERSION.
+  // Меняйте ASSET_VERSION при каждом обновлении картинок, и WebView будет
+  // вынужден запросить их заново, т.к. для него это буквально другой URL.
+  // (Раньше здесь был ещё и авто-reload самого index.html через location.replace,
+  // но он мог провоцировать двойной запуск скрипта и ломать переключение экранов —
+  // убрали, версии картинок для GitHub Pages достаточно.)
+  const ASSET_VERSION = encodeURIComponent(document.lastModified);
+
+  // На всякий случай отключаем Service Worker, если он когда-либо был
+  // зарегистрирован для этого источника (он мог бы отдавать старые файлы из кэша).
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then((regs) => {
+      regs.forEach((reg) => reg.unregister());
+    }).catch(() => {});
+  }
+
+  // Инициализация Telegram Web App SDK (если открыто внутри Telegram)
+  const tg = window.Telegram ? window.Telegram.WebApp : null;
+  if (tg) {
+    tg.ready();
+    tg.expand();
+  }
+
+  // ==== Флаг незавершённой игры ====
+  // 0 — игра не начата / завершена (Quit). 1 — Flat, 2 — Street, 3 — Ramp.
+  // Ставится при нажатии Start Game в соответствующем режиме, сбрасывается по Quit.
+  // Используется, чтобы после заставки открывать сразу нужный режим, если игра не была завершена.
+  const STORAGE_KEY_ACTIVE_MODE = 'goskate_activeMode';
+
+  function getActiveMode() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_ACTIVE_MODE);
+      const val = raw !== null ? parseInt(raw, 10) : 0;
+      return Number.isNaN(val) ? 0 : val;
+    } catch (e) {
+      console.warn('localStorage недоступен, используем 0 (нет активной игры):', e);
+      return 0;
+    }
+  }
+
+  function setActiveMode(mode) {
+    try {
+      localStorage.setItem(STORAGE_KEY_ACTIVE_MODE, String(mode));
+    } catch (e) {
+      console.warn('Не удалось сохранить флаг активной игры:', e);
+    }
+  }
+
+  const ACTIVE_MODE_FLAT = 1;
+  // const ACTIVE_MODE_STREET = 2; // на будущее, когда появится режим Street
+  const ACTIVE_MODE_RAMP = 3;
+
+  // ==== Текущий игровой режим ('flat' или 'ramp') — определяет, какие данные
+  // грузить (data/flatmode или data/rampmode), какую анимацию показывать и
+  // какой способ генерации трюков использовать. ====
+  const GAME_MODE_FLAT = 'flat';
+  const GAME_MODE_RAMP = 'ramp';
+  let currentGameMode = GAME_MODE_FLAT;
+
+  const GAME_MODE_CONFIG = {
+    [GAME_MODE_FLAT]: {
+      activeMode: ACTIVE_MODE_FLAT,
+      dataDir: 'data/flatmode',
+      groundImage: 'images/Animation_flatmode.png',
+      // Порядок сборки трюка: stance -> addition -> основной трюк
+      combination: 'stance-addition-main',
+    },
+    [GAME_MODE_RAMP]: {
+      activeMode: ACTIVE_MODE_RAMP,
+      dataDir: 'data/rampmode',
+      groundImage: 'images/Animation_ramp.png',
+      // Порядок сборки трюка: stance -> In -> основной трюк -> Out
+      combination: 'stance-in-main-out',
+    },
+  };
+
+  function getGameModeByActiveMode(activeMode) {
+    if (activeMode === ACTIVE_MODE_RAMP) return GAME_MODE_RAMP;
+    if (activeMode === ACTIVE_MODE_FLAT) return GAME_MODE_FLAT;
+    return null;
+  }
+
+  // Определяем режим СРАЗУ, синхронно, а не только в setTimeout заставки —
+  // иначе renderTricklist() (который вызывается сразу при загрузке скрипта,
+  // до того как заставка успеет отработать) применит правила Flat даже если
+  // на самом деле возобновляется игра в Ramp.
+  {
+    const resumedMode = getGameModeByActiveMode(getActiveMode());
+    if (resumedMode) currentGameMode = resumedMode;
+  }
+
+  // ==== Сложность (Easy/Hard) — своя для каждого режима, сохраняется вместе
+  // с активной игрой, чтобы при возврате в незавершённую игру применялись те же правила. ====
+  const STORAGE_KEY_DIFFICULTY_PREFIX = 'goskate_difficulty_';
+  const DIFFICULTY_EASY = 'easy';
+  const DIFFICULTY_HARD = 'hard';
+
+  function getDifficulty(mode) {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_DIFFICULTY_PREFIX + mode);
+      return raw === DIFFICULTY_HARD ? DIFFICULTY_HARD : DIFFICULTY_EASY;
+    } catch (e) {
+      return DIFFICULTY_EASY;
+    }
+  }
+
+  function setDifficulty(mode, difficulty) {
+    try {
+      localStorage.setItem(STORAGE_KEY_DIFFICULTY_PREFIX + mode, difficulty);
+    } catch (e) {
+      console.warn('Не удалось сохранить сложность:', e);
+    }
+  }
+
+  // Совместимость с уже написанным ниже кодом, который всегда имел дело с
+  // "текущим" режимом — эти обёртки читают/пишут сложность для currentGameMode.
+  function getFlatDifficulty() {
+    return getDifficulty(currentGameMode);
+  }
+
+  function setFlatDifficulty(difficulty) {
+    setDifficulty(currentGameMode, difficulty);
+  }
+
+  // ==== Навигация между экранами ====
+  const logoScreen = document.getElementById('logoScreen');
+  const mainscreenEl = document.getElementById('mainscreen');
+  const flatmodeEl = document.getElementById('flatmode');
+  const changeOverlay = document.getElementById('changeOverlay');
+  const changeScreenImg = document.getElementById('changeScreenImg');
+
+  const appEl = document.getElementById('app');
+
+  function showScreen(el) {
+    [mainscreenEl, flatmodeEl].forEach(s => s.classList.remove('active'));
+    el.classList.add('active');
+    appEl.classList.toggle('zoomed', el === flatmodeEl);
+  }
+
+  // ==== Заставка (Intro_screen.png): 15 кадров по 83мс = 1245мс на один проигрыш.
+  // Показываем ровно один цикл, чтобы анимация не зациклилась повторно ==== 
+  const LOGO_DURATION_MS = 1245;
+
+  setTimeout(() => {
+    logoScreen.classList.add('hidden');
+    const activeMode = getActiveMode();
+    const resumeMode = getGameModeByActiveMode(activeMode);
+    if (resumeMode) {
+      currentGameMode = resumeMode;
+      applyGameModeVisuals();
+      showScreen(flatmodeEl);
+    } else {
+      // Street пока не реализован — на всякий случай сбрасываем неизвестный флаг
+      // и открываем Mainscreen, чтобы не застрять на пустом экране.
+      if (activeMode !== 0) setActiveMode(0);
+      showScreen(mainscreenEl);
+    }
+  }, LOGO_DURATION_MS);
+
+  // ==== Анимация перехода между экранами (Change_screen.png): 9 кадров по 83мс = 747мс.
+  // Экран меняется "под прикрытием" ровно в середине анимации, сама анимация проигрывается один раз.
+  const CHANGE_DURATION_MS = 747;
+  const CHANGE_SWAP_AT_MS = 374;
+
+  function transitionToScreen(targetEl) {
+    // Перезапускаем APNG с первого кадра (иначе она просто продолжит бесконечный цикл)
+    changeScreenImg.src = 'images/Change_screen.png?t=' + Date.now();
+    changeOverlay.classList.add('visible');
+
+    setTimeout(() => {
+      showScreen(targetEl);
+    }, CHANGE_SWAP_AT_MS);
+
+    setTimeout(() => {
+      changeOverlay.classList.remove('visible');
+    }, CHANGE_DURATION_MS);
+  }
+
+  // Kнопки Flat/Ramp на Mainscreen — открывают/закрывают выбор сложности (Easy/Hard)
+  // вместо немедленного перехода в игру; остальные две кнопки режима прячутся,
+  // пока какой-то из выборов открыт.
+  const flatDifficultyPickerEl = document.getElementById('flatDifficultyPicker');
+  const rampDifficultyPickerEl = document.getElementById('rampDifficultyPicker');
+  const modeFlatEl = document.getElementById('modeFlat');
+  const modeFlatVisualEl = document.getElementById('modeFlatVisual');
+  const modeRampEl = document.getElementById('modeRamp');
+  const modeRampVisualEl = document.getElementById('modeRampVisual');
+  const modeStreetEl = document.getElementById('modeStreet');
+  const modeStreetVisualEl = document.getElementById('modeStreetVisual');
+
+  function closeAllDifficultyPickers() {
+    flatDifficultyPickerEl.classList.remove('visible');
+    rampDifficultyPickerEl.classList.remove('visible');
+    [modeFlatEl, modeFlatVisualEl, modeRampEl, modeRampVisualEl, modeStreetEl, modeStreetVisualEl].forEach((el) => {
+      el.classList.remove('mode-picker-hidden', 'above-picker-shadow');
+    });
+  }
+
+  // Открывает выбор сложности для одного режима: кнопка, которая его открыла,
+  // остаётся полностью видна ПОВЕРХ тени (above-picker-shadow), а две другие
+  // остаются на месте, но притемняются тенью снизу — не прячутся полностью.
+  function openDifficultyPicker(pickerEl, ownButtons, otherButtons) {
+    closeAllDifficultyPickers();
+    pickerEl.classList.add('visible');
+    ownButtons.forEach((el) => el.classList.add('above-picker-shadow'));
+    otherButtons.forEach((el) => el.classList.add('mode-picker-hidden'));
+  }
+
+  document.getElementById('modeFlat').addEventListener('click', () => {
+    const isOpen = flatDifficultyPickerEl.classList.contains('visible');
+    if (isOpen) {
+      closeAllDifficultyPickers();
+    } else {
+      openDifficultyPicker(
+        flatDifficultyPickerEl,
+        [modeFlatEl, modeFlatVisualEl],
+        [modeRampEl, modeStreetEl]
+      );
+    }
+  });
+
+  document.getElementById('modeRamp').addEventListener('click', () => {
+    const isOpen = rampDifficultyPickerEl.classList.contains('visible');
+    if (isOpen) {
+      closeAllDifficultyPickers();
+    } else {
+      openDifficultyPicker(
+        rampDifficultyPickerEl,
+        [modeRampEl, modeRampVisualEl],
+        [modeFlatEl, modeStreetEl]
+      );
+    }
+  });
+
+  function startGameWithDifficulty(mode, difficulty) {
+    currentGameMode = mode;
+    setDifficulty(mode, difficulty);
+    applyGameModeVisuals();
+    updateDifficultyBadge();
+    closeAllDifficultyPickers();
+    transitionToScreen(flatmodeEl);
+  }
+
+  document.getElementById('modeFlatEasy').addEventListener('click', () => {
+    startGameWithDifficulty(GAME_MODE_FLAT, DIFFICULTY_EASY);
+  });
+
+  document.getElementById('modeFlatHard').addEventListener('click', () => {
+    startGameWithDifficulty(GAME_MODE_FLAT, DIFFICULTY_HARD);
+  });
+
+  document.getElementById('modeRampEasy').addEventListener('click', () => {
+    startGameWithDifficulty(GAME_MODE_RAMP, DIFFICULTY_EASY);
+  });
+
+  document.getElementById('modeRampHard').addEventListener('click', () => {
+    startGameWithDifficulty(GAME_MODE_RAMP, DIFFICULTY_HARD);
+  });
+
+  // Street пока неактивен — обработчика клика намеренно нет
+
+  // ==== Генератор трюков (Flatmode/Rampmode) ====
+  const resultEl = document.getElementById('result');
+
+  // Базовый размер шрифта в пузыре (px) — должен совпадать со значением font-size у #result в CSS.
+  const RESULT_FONT_BASE = 11;
+  // Пороги по длине текста → во сколько раз уменьшаем шрифт. Подобраны так, чтобы
+  // длинные названия трюков (stance + addition + основной трюк) не вылезали за пузырь.
+  const RESULT_FONT_STEPS = [
+    { maxLength: 16, scale: 1 },
+    { maxLength: 24, scale: 0.82 },
+    { maxLength: 32, scale: 0.68 },
+    { maxLength: Infinity, scale: 0.56 },
+  ];
+
+  function setResultText(text) {
+    resultEl.textContent = text;
+    const step = RESULT_FONT_STEPS.find(s => text.length <= s.maxLength);
+    resultEl.style.fontSize = (RESULT_FONT_BASE * step.scale) + 'px';
+  }
+  const bubbleEl = document.getElementById('bubble');
+
+  let stances = [];
+  let mainTricks = [];
+  let additions = [];   // используется в Flat (stance + addition + main)
+  let inList = [];      // используется в Ramp (stance + In + main + Out)
+  let outList = [];
+  let nameReplacements = new Map(); // "исходная комбинация" -> "замена"
+  let dataLoaded = false;
+  let dataLoadedForMode = null; // чтобы не перезагружать те же файлы повторно
+
+  // Формат строки в файле: "Название" или "Название,сложность" (сложность — целое число от 1 до 5, по умолчанию 1).
+  // Чем больше сложность, тем РЕЖЕ выпадает трюк — 1 самый частый, 5 самый редкий.
+  // Строка "NULL,вес" — особый случай: число здесь не сложность, а вес НАПРЯМУЮ (шанс оставить часть трюка пустой).
+  function parseWeightedList(text) {
+    return text
+      .split('\n')
+      .map(line => line.trim())
+      .filter(Boolean)
+      .map(line => {
+        const parts = line.split(',');
+        const rawName = parts[0].trim();
+        const numRaw = parts.length > 1 ? parseFloat(parts[1]) : NaN;
+
+        // Число ограничено диапазоном 1–5 и округляется до целого
+        let num = !isNaN(numRaw) ? Math.round(numRaw) : 1;
+        num = Math.min(5, Math.max(1, num));
+
+        // NULL (в любом регистре) — специальное значение "оставить пустым"
+        const isNull = rawName.toUpperCase() === 'NULL';
+        const value = isNull ? null : rawName;
+
+        // Для NULL число — это вес напрямую.
+        // Для обычного трюка число — это сложность, поэтому вес инвертируем:
+        // сложность 1 → вес 5 (часто), сложность 5 → вес 1 (редко)
+        const weight = isNull ? num : (6 - num);
+
+        // Саму сложность тоже сохраняем (пригодится для "лёгкого режима").
+        // У NULL сложности нет (пустая часть трюка ничего не усложняет) — считаем её 0.
+        const difficulty = isNull ? 0 : num;
+
+        return { value, weight, difficulty };
+      });
+  }
+
+  // Формат строки в name_replaces.txt: "Исходная комбинация,Замена"
+  // Разбиваем по ПЕРВОЙ запятой — так замена сама может содержать запятые, если понадобится.
+  function parseReplacements(text) {
+    const map = new Map();
+    text
+      .split('\n')
+      .map(line => line.trim())
+      .filter(Boolean)
+      .forEach(line => {
+        const commaIndex = line.indexOf(',');
+        if (commaIndex === -1) return; // строка без запятой — пропускаем
+        const from = line.slice(0, commaIndex).trim();
+        const to = line.slice(commaIndex + 1).trim();
+        if (from && to) map.set(from, to);
+      });
+    return map;
+  }
+
+  // Взвешенный случайный выбор одного элемента из списка {value, weight, difficulty}
+  // Возвращает весь объект целиком (не только value), чтобы можно было учитывать сложность.
+  // value может быть null, если выпало значение NULL — значит, эта часть трюка остаётся пустой
+  function weightedPick(items) {
+    const total = items.reduce((sum, it) => sum + it.weight, 0);
+    let r = Math.random() * total;
+    for (const it of items) {
+      if (r < it.weight) return it;
+      r -= it.weight;
+    }
+    return items[items.length - 1]; // подстраховка на случай погрешности округления
+  }
+
+  // Загружаем все списки из текстовых файлов рядом со страницей, для того
+  // набора файлов, который нужен текущему режиму (Flat: stances+additions,
+  // Ramp: stances+In+Out). Файл name_replaces.txt необязателен — если его
+  // нет, замены просто не применяются.
+  async function loadLists(mode) {
+    const dataDir = GAME_MODE_CONFIG[mode].dataDir;
+    const combination = GAME_MODE_CONFIG[mode].combination;
+    dataLoaded = false;
+
+    try {
+      if (combination === 'stance-in-main-out') {
+        const [stanceRes, mainRes, inRes, outRes] = await Promise.all([
+          fetch(dataDir + '/stances.txt'),
+          fetch(dataDir + '/main_tricks.txt'),
+          fetch(dataDir + '/In.txt'),
+          fetch(dataDir + '/Out.txt'),
+        ]);
+        stances = parseWeightedList(await stanceRes.text());
+        mainTricks = parseWeightedList(await mainRes.text());
+        inList = parseWeightedList(await inRes.text());
+        outList = parseWeightedList(await outRes.text());
+        additions = [];
+      } else {
+        const [stanceRes, mainRes, addRes] = await Promise.all([
+          fetch(dataDir + '/stances.txt'),
+          fetch(dataDir + '/main_tricks.txt'),
+          fetch(dataDir + '/additions.txt'),
+        ]);
+        stances = parseWeightedList(await stanceRes.text());
+        mainTricks = parseWeightedList(await mainRes.text());
+        additions = parseWeightedList(await addRes.text());
+        inList = [];
+        outList = [];
+      }
+
+      dataLoaded = mainTricks.length > 0; // остальные списки могут быть пустыми — это ок
+      dataLoadedForMode = mode;
+    } catch (e) {
+      console.error('Не удалось загрузить списки трюков для режима ' + mode + ':', e);
+      dataLoaded = false;
+    }
+
+    try {
+      const replRes = await fetch(dataDir + '/name_replaces.txt');
+      if (replRes.ok) {
+        nameReplacements = parseReplacements(await replRes.text());
+      } else {
+        nameReplacements = new Map();
+      }
+    } catch (e) {
+      nameReplacements = new Map();
+      console.warn('Файл name_replaces.txt не найден для режима ' + mode + ' — замены названий не применяются.');
+    }
+  }
+
+  // Загружает данные для currentGameMode, только если они ещё не были
+  // загружены для этого режима (переключение Flat <-> Ramp туда-обратно
+  // не должно каждый раз заново дёргать сеть).
+  async function ensureListsLoaded() {
+    if (dataLoadedForMode === currentGameMode && dataLoaded) return;
+    await loadLists(currentGameMode);
+  }
+
+  const MAX_REROLL_ATTEMPTS = 60; // защита от зацикливания, если правила REROLL противоречивы
+  const MAX_DIFFICULTY_SUM = 5;   // "лёгкий режим" (Easy): если сумма сложностей выше — REROLL. В Hard лимита нет.
+
+  function generateTrick(attempt = 0, bestFallback = null) {
+    const combination = GAME_MODE_CONFIG[currentGameMode].combination;
+    const stancePick = stances.length > 0 ? weightedPick(stances) : { value: null, difficulty: 0 };
+    const mainPick = weightedPick(mainTricks);
+
+    let comboParts;
+    let difficultySum;
+
+    if (combination === 'stance-in-main-out') {
+      // Ramp: stance -> In -> основной трюк -> Out
+      const inPick = inList.length > 0 ? weightedPick(inList) : { value: null, difficulty: 0 };
+      const outPick = outList.length > 0 ? weightedPick(outList) : { value: null, difficulty: 0 };
+      comboParts = [stancePick.value, inPick.value, mainPick.value, outPick.value];
+      difficultySum = stancePick.difficulty + inPick.difficulty + mainPick.difficulty + outPick.difficulty;
+    } else {
+      // Flat: stance -> addition -> основной трюк
+      const additionPick = additions.length > 0 ? weightedPick(additions) : { value: null, difficulty: 0 };
+      comboParts = [stancePick.value, additionPick.value, mainPick.value];
+      difficultySum = stancePick.difficulty + additionPick.difficulty + mainPick.difficulty;
+    }
+
+    const combo = comboParts.filter(Boolean).join(' ');
+
+    // Если для получившейся комбинации есть замена названия — используем её
+    const finalResult = nameReplacements.get(combo) || combo;
+
+    // REROLL происходит если: 1) явно указан REROLL в name_replaces.txt,
+    // 2) суммарная сложность выше лимита (только в Easy — в Hard лимита сложности нет),
+    // 3) комбинация оказалась полностью пустой (все части — NULL)
+    const exceedsDifficulty = getFlatDifficulty() === DIFFICULTY_EASY && difficultySum > MAX_DIFFICULTY_SUM;
+    const needsReroll = finalResult === 'REROLL' || exceedsDifficulty || combo === '';
+
+    // Запоминаем лучший из виденных вариантов на случай, если так и не найдём
+    // подходящий за MAX_REROLL_ATTEMPTS попыток — но ТОЛЬКО если он не превышает
+    // лимит сложности и не пустой; явный REROLL никогда не годится как fallback.
+    let nextBestFallback = bestFallback;
+    if (finalResult !== 'REROLL' && combo !== '' && !exceedsDifficulty) {
+      if (!nextBestFallback || difficultySum < nextBestFallback.difficultySum) {
+        nextBestFallback = { finalResult, difficultySum };
+      }
+    }
+
+    if (needsReroll) {
+      if (attempt >= MAX_REROLL_ATTEMPTS) {
+        if (nextBestFallback) {
+          console.warn('Достигнут лимит REROLL-попыток, показываю лучший найденный вариант (сложность ' + nextBestFallback.difficultySum + ').');
+          return nextBestFallback.finalResult;
+        }
+        // Ни одного варианта в пределах лимита сложности не нашлось вовсе —
+        // возвращаем пустую строку вместо трюка, который нарушает MAX_DIFFICULTY_SUM.
+        console.warn('Достигнут лимит REROLL-попыток, подходящих по сложности вариантов не найдено.');
+        return '';
+      }
+      return generateTrick(attempt + 1, nextBestFallback);
+    }
+
+    return finalResult;
+  }
+
+  // ==== Фильтр от повторов + сохранение между открытиями (localStorage) ====
+  const HISTORY_SIZE = 50;
+  const MAX_UNIQUE_ATTEMPTS = 30; // защита от зацикливания, если уникальных вариантов почти не осталось
+  const STORAGE_KEY_HISTORY = 'goskate_recentResults';
+  const STORAGE_KEY_LAST = 'goskate_lastResult';
+
+  // Безопасные обёртки: некоторые webview (в т.ч. иногда внутри Telegram) могут
+  // ограничивать доступ к localStorage — тогда просто работаем в режиме "только память".
+  function loadFromStorage(key, fallback) {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw !== null ? JSON.parse(raw) : fallback;
+    } catch (e) {
+      console.warn('localStorage недоступен, используем данные только в памяти:', e);
+      return fallback;
+    }
+  }
+
+  function saveToStorage(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (e) {
+      console.warn('Не удалось сохранить в localStorage:', e);
+    }
+  }
+
+  // Последние 15 результатов — не даём им повториться подряд
+  let recentResults = loadFromStorage(STORAGE_KEY_HISTORY, []);
+
+  // ==== Лог засчитанных/незасчитанных трюков ====
+  const STORAGE_KEY_TRICKLIST = 'goskate_tricklist';
+  const tricklistInner = document.getElementById('tricklistInner');
+  const tricklistEl = document.getElementById('tricklist');
+  const judgeButtonsEl = document.getElementById('judgeButtons');
+  const btn1El = document.getElementById('btn1');
+  const btn1VisualEl = document.getElementById('btn1Visual');
+  const btn2El = document.getElementById('btn2');
+  const btn2VisualEl = document.getElementById('btn2Visual');
+  const landedCountEl = document.getElementById('landedCount');
+  const failedCountEl = document.getElementById('failedCount');
+  const logToggleBtn = document.getElementById('logToggleBtn');
+  const logToggleImg = document.getElementById('logToggleImg');
+
+  // btn1 теперь состоит из двух слоёв — невидимой кликабельной кнопки (btn1El)
+  // и декоративной картинки поверх/под ней (btn1VisualEl). Скрывать/показывать
+  // нужно оба сразу, иначе картинка Roll останется висеть после "скрытия".
+  function setBtn1Visible(visible) {
+    const display = visible ? '' : 'none';
+    btn1El.style.display = display;
+    btn1VisualEl.style.display = display;
+  }
+
+  let tricklistEntries = loadFromStorage(STORAGE_KEY_TRICKLIST, []); // [{text, status}], новые в начале
+
+  const skateLettersImg = document.getElementById('skateLettersImg');
+  const difficultyBadgeImg = document.getElementById('difficultyBadgeImg');
+
+  function updateDifficultyBadge() {
+    const image = getFlatDifficulty() === DIFFICULTY_HARD ? 'Difficulty_hard.png' : 'Difficulty_easy.png';
+    difficultyBadgeImg.src = 'images/' + image + '?v=' + ASSET_VERSION;
+  }
+
+  // Пороги по количеству "Не засчитано" → какую картинку с буквами показывать.
+  // Easy: буква каждые 3 ошибки, game over на 15-й.
+  // Hard: буква на КАЖДОЙ ошибке, game over уже на 5-й (без лимита сложности трюков).
+  const SKATE_STAGES_EASY = [
+    { threshold: 0, image: 'Letters_null.png' },
+    { threshold: 3, image: 'Letters_s.png' },
+    { threshold: 6, image: 'Letters_sk.png' },
+    { threshold: 9, image: 'Letters_ska.png' },
+    { threshold: 12, image: 'Letters_skat.png' },
+    { threshold: 15, image: 'Letters_skate.png' },
+  ];
+  const SKATE_STAGES_HARD = [
+    { threshold: 0, image: 'Letters_null.png' },
+    { threshold: 1, image: 'Letters_s.png' },
+    { threshold: 2, image: 'Letters_sk.png' },
+    { threshold: 3, image: 'Letters_ska.png' },
+    { threshold: 4, image: 'Letters_skat.png' },
+    { threshold: 5, image: 'Letters_skate.png' },
+  ];
+  const GAME_OVER_FAILS_EASY = 15;
+  const GAME_OVER_FAILS_HARD = 5;
+  let isGameOver = false;
+
+  function getSkateStages() {
+    return getFlatDifficulty() === DIFFICULTY_HARD ? SKATE_STAGES_HARD : SKATE_STAGES_EASY;
+  }
+
+  function getGameOverFails() {
+    return getFlatDifficulty() === DIFFICULTY_HARD ? GAME_OVER_FAILS_HARD : GAME_OVER_FAILS_EASY;
+  }
+
+  function updateSkateLetters(failedCount) {
+    const stages = getSkateStages();
+    let stage = stages[0];
+    for (const s of stages) {
+      if (failedCount >= s.threshold) stage = s;
+    }
+    skateLettersImg.src = 'images/' + stage.image + '?v=' + ASSET_VERSION;
+  }
+
+  function triggerGameOver() {
+    if (isGameOver) return;
+    isGameOver = true;
+    bubbleEl.classList.remove('active');
+    resultEl.textContent = '';
+    setTimeout(() => {
+      setResultText('Game over!');
+      bubbleEl.classList.add('active');
+    }, 120);
+    judgeButtonsEl.classList.remove('visible');
+    setBtn1Visible(false);
+  }
+
+  function renderTricklist() {
+    tricklistInner.innerHTML = '';
+    let landed = 0;
+    let failed = 0;
+
+    tricklistEntries.forEach(entry => {
+      if (entry.status === 'landed') landed++;
+      else failed++;
+
+      const row = document.createElement('div');
+      row.className = 'trick-entry';
+
+      const icon = document.createElement('img');
+      icon.src = (entry.status === 'landed' ? 'images/Icon_landed.png' : 'images/Icon_failed.png') + '?v=' + ASSET_VERSION;
+      icon.alt = entry.status === 'landed' ? 'Засчитано' : 'Не засчитано';
+
+      const span = document.createElement('span');
+      span.textContent = entry.text;
+
+      row.appendChild(icon);
+      row.appendChild(span);
+      tricklistInner.appendChild(row);
+    });
+
+    landedCountEl.textContent = landed;
+    failedCountEl.textContent = failed;
+    updateSkateLetters(failed);
+    updateDifficultyBadge();
+
+    if (failed >= getGameOverFails()) {
+      triggerGameOver();
+    }
+  }
+
+  function addTricklistEntry(text, status) {
+    tricklistEntries.unshift({ text, status }); // новая запись — наверх списка
+    saveToStorage(STORAGE_KEY_TRICKLIST, tricklistEntries);
+    renderTricklist();
+  }
+
+  renderTricklist();
+
+  // ==== Разворачивание / сворачивание лога ====
+  let logExpanded = false;
+
+  function setLogExpanded(expanded) {
+    logExpanded = expanded;
+    tricklistEl.classList.toggle('expanded', expanded);
+    logToggleImg.src = (expanded ? 'images/Button_minimize.png' : 'images/Button_expand.png') + '?v=' + ASSET_VERSION;
+    logToggleBtn.setAttribute('aria-label', expanded ? 'Свернуть лог' : 'Развернуть лог');
+  }
+
+  logToggleBtn.addEventListener('click', () => {
+    setLogExpanded(!logExpanded);
+  });
+
+  // Показываем последний сгенерированный результат сразу при открытии Flatmode.
+  // Если трюк уже ждёт оценки — сразу показываем кнопки-иконки вместо Roll.
+  // Если игра уже была завершена (15 ошибок) — вместо этого сразу показываем Game over.
+  if (isGameOver) {
+    triggerGameOver();
+  } else {
+    const lastResult = loadFromStorage(STORAGE_KEY_LAST, '');
+    console.log('[GoSkate debug] restore check — isGameOver:', isGameOver, 'lastResult:', JSON.stringify(lastResult));
+    if (lastResult) {
+      setResultText(lastResult);
+      bubbleEl.classList.add('active');
+      setBtn1Visible(false);
+      judgeButtonsEl.classList.add('visible');
+      console.log('[GoSkate debug] restored bubble/result, hid btn1');
+    } else {
+      console.log('[GoSkate debug] no lastResult found — leaving btn1 visible');
+    }
+  }
+
+  function generateUniqueTrick() {
+    let result;
+    let attempts = 0;
+
+    do {
+      result = generateTrick();
+      attempts++;
+      // Пустой результат никогда не должен показываться пользователю — это
+      // означает, что generateTrick() исчерпал попытки подобрать трюк по
+      // правилам (см. MAX_REROLL_ATTEMPTS внутри неё). Пробуем ещё раз, а не
+      // просто "как есть" — пустой трюк не более уникален, чем любой другой.
+    } while ((result === '' || recentResults.includes(result)) && attempts < MAX_UNIQUE_ATTEMPTS);
+
+    if (result === '') {
+      // Совсем крайний случай: за все попытки не нашлось ни одного трюка.
+      // Показываем что-то осмысленное вместо пустого пузыря.
+      console.warn('generateUniqueTrick: не удалось подобрать трюк, показываю запасной вариант.');
+      result = 'Trick';
+    }
+
+    recentResults.push(result);
+    if (recentResults.length > HISTORY_SIZE) {
+      recentResults.shift(); // убираем самый старый, окно "едет" вперёд
+    }
+
+    saveToStorage(STORAGE_KEY_HISTORY, recentResults);
+    saveToStorage(STORAGE_KEY_LAST, result);
+
+    return result;
+  }
+
+  // Общая функция генерации нового трюка (используется и кнопкой Roll, и кнопками-иконками)
+  function rollNextTrick() {
+    if (isGameOver) return;
+    bubbleEl.classList.remove('active');
+    resultEl.textContent = '';
+
+    if (!dataLoaded || dataLoadedForMode !== currentGameMode) {
+      setResultText('Списки трюков ещё загружаются...');
+      bubbleEl.classList.add('active');
+      ensureListsLoaded();
+      return;
+    }
+
+    setTimeout(() => {
+      setResultText(generateUniqueTrick());
+      bubbleEl.classList.add('active');
+    }, 120);
+  }
+
+  // Меняет анимацию земли/рампы и подгружает данные для currentGameMode.
+  // Вызывается при возобновлении незавершённой игры и при старте новой (Easy/Hard).
+  const flatgroundImg = document.querySelector('#flatground img');
+
+  function applyGameModeVisuals() {
+    flatgroundImg.src = GAME_MODE_CONFIG[currentGameMode].groundImage + '?v=' + ASSET_VERSION;
+    ensureListsLoaded();
+  }
+
+  // На случай прямого захода в Mainscreen — подгружаем данные Flat заранее,
+  // чтобы первый Roll не ждал сеть (Ramp подгрузится сам при выборе Easy/Hard).
+  ensureListsLoaded();
+
+  // Кнопка Roll: первый бросок — прячет Roll, показывает кнопки-иконки
+  btn1El.addEventListener('click', () => {
+    setActiveMode(GAME_MODE_CONFIG[currentGameMode].activeMode);
+    setBtn1Visible(false);
+    judgeButtonsEl.classList.add('visible');
+    rollNextTrick();
+  });
+
+  // Кнопки "засчитано / не засчитано": записывают текущий трюк в лог и сразу кидают следующий
+  document.getElementById('btnLanded').addEventListener('click', () => {
+    if (resultEl.textContent) addTricklistEntry(resultEl.textContent, 'landed');
+    rollNextTrick();
+  });
+
+  document.getElementById('btnFailed').addEventListener('click', () => {
+    if (resultEl.textContent) addTricklistEntry(resultEl.textContent, 'failed');
+    rollNextTrick();
+  });
+
+  // Кнопка 2: показывает подтверждение вместо немедленного выхода
+  const quitConfirmEl = document.getElementById('quitConfirm');
+
+  function showQuitConfirm() {
+    btn2El.classList.add('mode-picker-hidden');
+    quitConfirmEl.classList.add('visible');
+  }
+
+  function hideQuitConfirm() {
+    quitConfirmEl.classList.remove('visible');
+    btn2El.classList.remove('mode-picker-hidden');
+  }
+
+  // Стирает сохранённый трюк, историю последних результатов и лог трюков,
+  // возвращает на Mainscreen (Telegram-приложение НЕ закрывается)
+  function doQuit() {
+    setActiveMode(0);
+    try {
+      localStorage.removeItem(STORAGE_KEY_LAST);
+      localStorage.removeItem(STORAGE_KEY_HISTORY);
+      localStorage.removeItem(STORAGE_KEY_TRICKLIST);
+    } catch (e) {
+      console.warn('Не удалось очистить localStorage:', e);
+    }
+    recentResults = [];
+    tricklistEntries = [];
+    isGameOver = false;
+    renderTricklist();
+
+    // Прячем пузырь/текст и возвращаем кнопку Start Game на место, сворачиваем лог,
+    // чтобы при следующем заходе в Flatmode экран был полностью чистым
+    bubbleEl.classList.remove('active');
+    resultEl.textContent = '';
+    judgeButtonsEl.classList.remove('visible');
+    setBtn1Visible(true);
+    setLogExpanded(false);
+    hideQuitConfirm();
+
+    transitionToScreen(mainscreenEl);
+  }
+
+  btn2El.addEventListener('click', () => {
+    showQuitConfirm();
+  });
+
+  document.getElementById('btnQuitConfirm').addEventListener('click', () => {
+    doQuit();
+  });
+
+  document.getElementById('btnQuitBack').addEventListener('click', () => {
+    hideQuitConfirm();
+  });
+
+  // ==== Кнопки консоли (D-pad, Start, A, B) — чисто декоративные, просто
+  // меняют картинку idle -> pushed, пока зажаты, без какого-либо действия.
+  // pointerdown/up/leave/cancel вместо click — так зажатая кнопка не отпускает
+  // картинку сама раньше времени, работает и с мышью, и с тачем.
+  // Картинка теперь лежит в соседнем .console-btn-visual (полноразмерный слой),
+  // а не внутри самой кнопки — кнопка это только маленькая кликабельная зона.
+  document.querySelectorAll('.console-btn').forEach((btn) => {
+    const name = btn.getAttribute('data-btn');
+    const visual = btn.previousElementSibling;
+    const img = visual.querySelector('img');
+    const idleSrc = 'images/console/Button_' + name + '_idle.png?v=' + ASSET_VERSION;
+    const pushedSrc = 'images/console/Button_' + name + '_pushed.png?v=' + ASSET_VERSION;
+
+    const press = (e) => {
+      e.preventDefault();
+      img.src = pushedSrc;
+    };
+    const release = () => {
+      img.src = idleSrc;
+    };
+
+    btn.addEventListener('pointerdown', press);
+    btn.addEventListener('pointerup', release);
+    btn.addEventListener('pointerleave', release);
+    btn.addEventListener('pointercancel', release);
+  });
+</script>
+</body>
+</html>
