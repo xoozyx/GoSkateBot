@@ -2,8 +2,8 @@ Rock,1
 Nose Stall,3
 Tail Stall,2
 Axle Stall,2
-Feeble,2
-Smith Stall Stall,3
+Feeble Stall,2
+Smith Stall,3
 5'O,2
 Nose Pick,4
 Slasher,3
