@@ -432,11 +432,21 @@
   /* Quit и кнопки подтверждения выхода должны быть выше пузыря с текстом и
      анимации Flatground (у них z-index 5 и 6 соответственно) — иначе они
      скрываются за скейтером/пузырём. Задаём z-index только этим кнопкам,
-     не трогая общий .menu-button (Start Game этого не требует). */
-  #btn2, #btn2Visual,
+     не трогая общий .menu-button (Start Game этого не требует).
+     Тень (внутри #quitConfirm) рисуется поверх притемнённой кнопки Quit
+     (z-index 7, но тень идёт позже в разметке — выигрывает при равенстве),
+     а сами кнопки QUIT/BACK — ещё выше тени. */
+  #btn2, #btn2Visual {
+    z-index: 7;
+  }
+
+  #quitConfirm .difficulty-picker-shadow {
+    z-index: 7;
+  }
+
   #btnQuitConfirm, #btnQuitConfirmVisual,
   #btnQuitBack, #btnQuitBackVisual {
-    z-index: 7;
+    z-index: 8;
   }
 
   #btn2 {
@@ -446,12 +456,8 @@
     height: 8.17%;
   }
 
-  #btn2Visual.hidden, #btn2.hidden {
-    display: none;
-  }
-
-  /* Подтверждение выхода — появляется вместо кнопки Quit, две кнопки
-     (QUIT / BACK) занимают ту же строку в верхнем правом углу. */
+  /* Подтверждение выхода — появляется поверх притемнённой кнопки Quit, две
+     кнопки (QUIT / BACK) занимают ту же строку в верхнем правом углу. */
   #quitConfirm {
     position: absolute;
     inset: 0;
@@ -891,6 +897,9 @@
         </div>
 
         <div id="quitConfirm">
+          <div class="difficulty-picker-shadow">
+            <img src="images/Shadow_screen.png?v=20260716a" alt="">
+          </div>
           <button class="menu-button fullcanvas-hitarea" id="btnQuitConfirm" aria-label="Выйти в меню"></button>
           <div class="menu-button-visual" id="btnQuitConfirmVisual">
             <img src="images/Button_quit_quit.png?v=20260716a" alt="">
@@ -1664,15 +1673,13 @@
   const quitConfirmEl = document.getElementById('quitConfirm');
 
   function showQuitConfirm() {
-    btn2El.classList.add('hidden');
-    btn2VisualEl.classList.add('hidden');
+    btn2El.classList.add('mode-picker-hidden');
     quitConfirmEl.classList.add('visible');
   }
 
   function hideQuitConfirm() {
     quitConfirmEl.classList.remove('visible');
-    btn2El.classList.remove('hidden');
-    btn2VisualEl.classList.remove('hidden');
+    btn2El.classList.remove('mode-picker-hidden');
   }
 
   // Стирает сохранённый трюк, историю последних результатов и лог трюков,
