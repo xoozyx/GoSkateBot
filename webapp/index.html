@@ -55,7 +55,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #cfe9ee;
     opacity: 1;
     transition: opacity 0.6s ease;
   }
@@ -93,6 +92,11 @@
     aspect-ratio: 208 / 306;
     height: auto;
     image-rendering: pixelated;
+    transition: transform 0.5s ease;
+  }
+
+  #app.zoomed #changeOverlay img {
+    transform: scale(1.22) translateY(2%);
   }
 
   /* ==== Общий контейнер-"устройство" (общий для Mainscreen и Flatmode) ==== */
@@ -100,15 +104,41 @@
     position: relative;
     width: min(94vw, 90vh, 460px);
     aspect-ratio: 208 / 306;
-    background-image: url('images/console/Background.png?v=20260716a');
-    background-size: 100% 100%;
-    background-repeat: no-repeat;
     image-rendering: pixelated;
   }
 
-  /* ==== Рамка консоли (Cover + D-pad/Start/A/B) — поверх содержимого экрана,
-     общая для Mainscreen и Flatmode/Rampmode (внутри каждого .device, чтобы
-     участвовать в zoom-эффекте Flatmode вместе с остальным содержимым). ==== */
+  /* ==== Рамка консоли (Background снизу, Cover + D-pad/Start/A/B сверху) ====
+     Раньше жила внутри каждого .screen > .device и поэтому была не видна,
+     пока .screen не станет .active (т.е. не видна во время заставки).
+     Теперь это отдельный, всегда видимый элемент на уровне #app, того же
+     размера что и .device, с тем же zoom-переходом Flatmode. */
+  #consoleFrame {
+    position: relative;
+    width: min(94vw, 90vh, 460px);
+    aspect-ratio: 208 / 306;
+    transition: transform 0.5s ease;
+  }
+
+  #app.zoomed #consoleFrame {
+    transform: scale(1.22) translateY(2%);
+  }
+
+  #consoleFrame img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+  }
+
+  #consoleBackground {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* ==== Cover + D-pad/Start/A/B — единственная копия внутри #consoleFrame,
+     всегда видна поверх всего (включая заставку и переход между экранами). ==== */
   #consoleCover {
     position: absolute;
     inset: 0;
@@ -304,6 +334,28 @@
     width: 100%;
     height: 100%;
     image-rendering: pixelated;
+  }
+
+  /* Кнопка "назад в главное меню", показывается вместо кликабельности у
+     самой кнопки режима, пока открыт выбор сложности Flat/Ramp. */
+  #mainscreenQuit, #mainscreenQuitVisual {
+    display: none;
+  }
+
+  #mainscreenQuit.visible, #mainscreenQuitVisual.visible {
+    display: block;
+  }
+
+  #mainscreenQuit {
+    left: 78.85%;
+    top: 8.82%;
+    width: 8.17%;
+    height: 8.17%;
+    z-index: 3;
+  }
+
+  #mainscreenQuitVisual {
+    z-index: 3;
   }
 
   #modeFlat {
@@ -842,6 +894,43 @@
 </head>
 <body>
   <div id="app">
+    <div id="consoleFrame">
+      <div id="consoleBackground">
+        <img src="images/console/Background.png?v=20260716a" alt="">
+      </div>
+      <div id="consoleCover">
+        <img src="images/console/Cover.png?v=20260716a" alt="">
+      </div>
+      <div class="console-btn-visual" data-btn-visual="up">
+        <img src="images/console/Button_up_idle.png?v=20260716a" alt="">
+      </div>
+      <button class="console-btn console-btn-up" data-btn="up" aria-label="Up"></button>
+      <div class="console-btn-visual" data-btn-visual="down">
+        <img src="images/console/Button_down_idle.png?v=20260716a" alt="">
+      </div>
+      <button class="console-btn console-btn-down" data-btn="down" aria-label="Down"></button>
+      <div class="console-btn-visual" data-btn-visual="left">
+        <img src="images/console/Button_left_idle.png?v=20260716a" alt="">
+      </div>
+      <button class="console-btn console-btn-left" data-btn="left" aria-label="Left"></button>
+      <div class="console-btn-visual" data-btn-visual="right">
+        <img src="images/console/Button_right_idle.png?v=20260716a" alt="">
+      </div>
+      <button class="console-btn console-btn-right" data-btn="right" aria-label="Right"></button>
+      <div class="console-btn-visual" data-btn-visual="start">
+        <img src="images/console/Button_start_idle.png?v=20260716a" alt="">
+      </div>
+      <button class="console-btn console-btn-start" data-btn="start" aria-label="Start"></button>
+      <div class="console-btn-visual" data-btn-visual="a">
+        <img src="images/console/Button_a_idle.png?v=20260716a" alt="">
+      </div>
+      <button class="console-btn console-btn-a" data-btn="a" aria-label="A"></button>
+      <div class="console-btn-visual" data-btn-visual="b">
+        <img src="images/console/Button_b_idle.png?v=20260716a" alt="">
+      </div>
+      <button class="console-btn console-btn-b" data-btn="b" aria-label="B"></button>
+    </div>
+
     <div id="logoScreen">
       <img src="images/Intro_screen.png?v=20260716a" alt="Загрузка">
     </div>
@@ -897,37 +986,10 @@
           </div>
         </div>
 
-        <div id="consoleCover">
-          <img src="images/console/Cover.png?v=20260716a" alt="">
+        <button class="mode-button enabled fullcanvas-hitarea" id="mainscreenQuit" aria-label="Назад"></button>
+        <div class="mode-button-visual" id="mainscreenQuitVisual">
+          <img src="images/Button_quit.png?v=20260716a" alt="">
         </div>
-        <div class="console-btn-visual" data-btn-visual="up">
-          <img src="images/console/Button_up_idle.png?v=20260716a" alt="">
-        </div>
-        <button class="console-btn console-btn-up" data-btn="up" aria-label="Up"></button>
-        <div class="console-btn-visual" data-btn-visual="down">
-          <img src="images/console/Button_down_idle.png?v=20260716a" alt="">
-        </div>
-        <button class="console-btn console-btn-down" data-btn="down" aria-label="Down"></button>
-        <div class="console-btn-visual" data-btn-visual="left">
-          <img src="images/console/Button_left_idle.png?v=20260716a" alt="">
-        </div>
-        <button class="console-btn console-btn-left" data-btn="left" aria-label="Left"></button>
-        <div class="console-btn-visual" data-btn-visual="right">
-          <img src="images/console/Button_right_idle.png?v=20260716a" alt="">
-        </div>
-        <button class="console-btn console-btn-right" data-btn="right" aria-label="Right"></button>
-        <div class="console-btn-visual" data-btn-visual="start">
-          <img src="images/console/Button_start_idle.png?v=20260716a" alt="">
-        </div>
-        <button class="console-btn console-btn-start" data-btn="start" aria-label="Start"></button>
-        <div class="console-btn-visual" data-btn-visual="a">
-          <img src="images/console/Button_a_idle.png?v=20260716a" alt="">
-        </div>
-        <button class="console-btn console-btn-a" data-btn="a" aria-label="A"></button>
-        <div class="console-btn-visual" data-btn-visual="b">
-          <img src="images/console/Button_b_idle.png?v=20260716a" alt="">
-        </div>
-        <button class="console-btn console-btn-b" data-btn="b" aria-label="B"></button>
       </div>
     </div>
 
@@ -1009,38 +1071,6 @@
             <img src="images/Button_quit_back.png?v=20260716a" alt="">
           </div>
         </div>
-
-        <div id="consoleCover">
-          <img src="images/console/Cover.png?v=20260716a" alt="">
-        </div>
-        <div class="console-btn-visual" data-btn-visual="up">
-          <img src="images/console/Button_up_idle.png?v=20260716a" alt="">
-        </div>
-        <button class="console-btn console-btn-up" data-btn="up" aria-label="Up"></button>
-        <div class="console-btn-visual" data-btn-visual="down">
-          <img src="images/console/Button_down_idle.png?v=20260716a" alt="">
-        </div>
-        <button class="console-btn console-btn-down" data-btn="down" aria-label="Down"></button>
-        <div class="console-btn-visual" data-btn-visual="left">
-          <img src="images/console/Button_left_idle.png?v=20260716a" alt="">
-        </div>
-        <button class="console-btn console-btn-left" data-btn="left" aria-label="Left"></button>
-        <div class="console-btn-visual" data-btn-visual="right">
-          <img src="images/console/Button_right_idle.png?v=20260716a" alt="">
-        </div>
-        <button class="console-btn console-btn-right" data-btn="right" aria-label="Right"></button>
-        <div class="console-btn-visual" data-btn-visual="start">
-          <img src="images/console/Button_start_idle.png?v=20260716a" alt="">
-        </div>
-        <button class="console-btn console-btn-start" data-btn="start" aria-label="Start"></button>
-        <div class="console-btn-visual" data-btn-visual="a">
-          <img src="images/console/Button_a_idle.png?v=20260716a" alt="">
-        </div>
-        <button class="console-btn console-btn-a" data-btn="a" aria-label="A"></button>
-        <div class="console-btn-visual" data-btn-visual="b">
-          <img src="images/console/Button_b_idle.png?v=20260716a" alt="">
-        </div>
-        <button class="console-btn console-btn-b" data-btn="b" aria-label="B"></button>
       </div>
     </div>
   </div>
@@ -1226,9 +1256,10 @@
     }, CHANGE_DURATION_MS);
   }
 
-  // Kнопки Flat/Ramp на Mainscreen — открывают/закрывают выбор сложности (Easy/Hard)
-  // вместо немедленного перехода в игру; остальные две кнопки режима прячутся,
-  // пока какой-то из выборов открыт.
+  // Kнопки Flat/Ramp на Mainscreen — открывают выбор сложности (Easy/Hard);
+  // остальные две кнопки режима прячутся под тенью, пока выбор открыт.
+  // Кнопка, которая открыла выбор, остаётся видна поверх тени, но больше не
+  // кликабельна — назад возвращает отдельная кнопка Quit.
   const flatDifficultyPickerEl = document.getElementById('flatDifficultyPicker');
   const rampDifficultyPickerEl = document.getElementById('rampDifficultyPicker');
   const modeFlatEl = document.getElementById('modeFlat');
@@ -1237,49 +1268,53 @@
   const modeRampVisualEl = document.getElementById('modeRampVisual');
   const modeStreetEl = document.getElementById('modeStreet');
   const modeStreetVisualEl = document.getElementById('modeStreetVisual');
+  const mainscreenQuitEl = document.getElementById('mainscreenQuit');
+  const mainscreenQuitVisualEl = document.getElementById('mainscreenQuitVisual');
 
   function closeAllDifficultyPickers() {
     flatDifficultyPickerEl.classList.remove('visible');
     rampDifficultyPickerEl.classList.remove('visible');
+    mainscreenQuitEl.classList.remove('visible');
+    mainscreenQuitVisualEl.classList.remove('visible');
     [modeFlatEl, modeFlatVisualEl, modeRampEl, modeRampVisualEl, modeStreetEl, modeStreetVisualEl].forEach((el) => {
       el.classList.remove('mode-picker-hidden', 'above-picker-shadow');
     });
   }
 
   // Открывает выбор сложности для одного режима: кнопка, которая его открыла,
-  // остаётся полностью видна ПОВЕРХ тени (above-picker-shadow), а две другие
+  // остаётся полностью видна ПОВЕРХ тени (above-picker-shadow), но больше не
+  // кликабельна (mode-picker-hidden отключает клики, не пряча картинку) —
+  // выйти обратно можно только через кнопку Quit. Две другие кнопки режима
   // остаются на месте, но притемняются тенью снизу — не прячутся полностью.
   function openDifficultyPicker(pickerEl, ownButtons, otherButtons) {
     closeAllDifficultyPickers();
     pickerEl.classList.add('visible');
-    ownButtons.forEach((el) => el.classList.add('above-picker-shadow'));
+    mainscreenQuitEl.classList.add('visible');
+    mainscreenQuitVisualEl.classList.add('visible');
+    ownButtons.forEach((el) => el.classList.add('above-picker-shadow', 'mode-picker-hidden'));
     otherButtons.forEach((el) => el.classList.add('mode-picker-hidden'));
   }
 
   document.getElementById('modeFlat').addEventListener('click', () => {
-    const isOpen = flatDifficultyPickerEl.classList.contains('visible');
-    if (isOpen) {
-      closeAllDifficultyPickers();
-    } else {
-      openDifficultyPicker(
-        flatDifficultyPickerEl,
-        [modeFlatEl, modeFlatVisualEl],
-        [modeRampEl, modeStreetEl]
-      );
-    }
+    if (flatDifficultyPickerEl.classList.contains('visible')) return;
+    openDifficultyPicker(
+      flatDifficultyPickerEl,
+      [modeFlatEl, modeFlatVisualEl],
+      [modeRampEl, modeStreetEl]
+    );
   });
 
   document.getElementById('modeRamp').addEventListener('click', () => {
-    const isOpen = rampDifficultyPickerEl.classList.contains('visible');
-    if (isOpen) {
-      closeAllDifficultyPickers();
-    } else {
-      openDifficultyPicker(
-        rampDifficultyPickerEl,
-        [modeRampEl, modeRampVisualEl],
-        [modeFlatEl, modeStreetEl]
-      );
-    }
+    if (rampDifficultyPickerEl.classList.contains('visible')) return;
+    openDifficultyPicker(
+      rampDifficultyPickerEl,
+      [modeRampEl, modeRampVisualEl],
+      [modeFlatEl, modeStreetEl]
+    );
+  });
+
+  mainscreenQuitEl.addEventListener('click', () => {
+    closeAllDifficultyPickers();
   });
 
   function startGameWithDifficulty(mode, difficulty) {
