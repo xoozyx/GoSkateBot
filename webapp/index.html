@@ -1414,11 +1414,39 @@
     { maxLength: Infinity, scale: 0.56 },
   ];
 
+  // ==== Эффект печатной машинки для текста в пузыре ====
+  const TYPEWRITER_MS_PER_CHAR = 28; // скорость печати одного символа
+  let typewriterTimer = null;
+
   function setResultText(text, isTrick) {
-    resultEl.textContent = text;
+    // Обрываем предыдущую анимацию печати, если она ещё не закончилась —
+    // иначе быстрые повторные вызовы (например, серия Roll) накладывались бы
+    // друг на друга и печатали вперемешку.
+    if (typewriterTimer !== null) {
+      clearInterval(typewriterTimer);
+      typewriterTimer = null;
+    }
+
     const step = RESULT_FONT_STEPS.find(s => text.length <= s.maxLength);
     resultEl.style.fontSize = (RESULT_FONT_BASE * step.scale) + 'px';
-    setInfoButtonVisible(!!isTrick);
+
+    // Info-кнопка появляется только после того, как текст допечатан —
+    // иначе можно было бы открыть ссылку на трюк раньше, чем он весь виден.
+    setInfoButtonVisible(false);
+    resultEl.textContent = '';
+
+    if (!text) return;
+
+    let i = 0;
+    typewriterTimer = setInterval(() => {
+      i++;
+      resultEl.textContent = text.slice(0, i);
+      if (i >= text.length) {
+        clearInterval(typewriterTimer);
+        typewriterTimer = null;
+        setInfoButtonVisible(!!isTrick);
+      }
+    }, TYPEWRITER_MS_PER_CHAR);
   }
   const bubbleEl = document.getElementById('bubble');
   const btnInfoEl = document.getElementById('btnInfo');
@@ -1814,6 +1842,14 @@
     tricklistEl.classList.toggle('expanded', expanded);
     logToggleImg.src = (expanded ? 'images/Button_minimize.png' : 'images/Button_expand.png') + '?v=' + ASSET_VERSION;
     logToggleBtn.setAttribute('aria-label', expanded ? 'Свернуть лог' : 'Развернуть лог');
+
+    // Quit и Info перекрываются развёрнутым логом — прячем их на время,
+    // чтобы не оставались кликабельны поверх/под ним.
+    const hideForExpanded = expanded ? 'none' : '';
+    btn2El.style.display = hideForExpanded;
+    btn2VisualEl.style.display = hideForExpanded;
+    btnInfoEl.style.display = hideForExpanded;
+    btnInfoVisualEl.style.display = hideForExpanded;
   }
 
   logToggleBtn.addEventListener('click', () => {
