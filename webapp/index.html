@@ -107,21 +107,55 @@
     image-rendering: pixelated;
   }
 
-  /* ==== Рамка консоли (Background снизу, Cover + D-pad/Start/A/B сверху) ====
-     Раньше жила внутри каждого .screen > .device и поэтому была не видна,
-     пока .screen не станет .active (т.е. не видна во время заставки).
-     Теперь это отдельный, всегда видимый элемент на уровне #app, того же
-     размера что и .device, с тем же zoom-переходом Flatmode — кнопки внутри
-     остаются кликабельны и на увеличенной позиции, т.к. CSS transform двигает
-     хитбокс вместе с картинкой. */
+  /* ==== Background — отдельный слой, самый нижний z-index (под Mainscreen/
+     Flatmode), но всегда видимый (не внутри .screen, поэтому не пропадает
+     во время заставки) и с тем же zoom-переходом, что и остальное. ==== */
+  #consoleBackground {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  #consoleBackground img {
+    width: min(94vw, 90vh, 460px);
+    aspect-ratio: 208 / 306;
+    height: auto;
+    image-rendering: pixelated;
+    transition: transform 0.5s ease;
+  }
+
+  #app.zoomed #consoleBackground img {
+    transform: scale(1.22) translateY(2%);
+  }
+
+  /* ==== Рамка консоли (Cover + D-pad/Start/A/B) — поверх Mainscreen/Flatmode
+     (z-index 10), того же размера и с тем же zoom-переходом, что и .device —
+     кнопки внутри остаются кликабельны и на увеличенной позиции, т.к. CSS
+     transform двигает хитбокс вместе с картинкой (весь #consoleFrame — один
+     трансформируемый блок, а не каждый ребёнок по отдельности, иначе
+     сломались бы точные размеры/позиции самих кнопок). ==== */
   #consoleFrame {
+    position: absolute;
+    inset: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  #consoleFrameInner {
     position: relative;
     width: min(94vw, 90vh, 460px);
     aspect-ratio: 208 / 306;
     transition: transform 0.5s ease;
   }
 
-  #app.zoomed #consoleFrame {
+  #app.zoomed #consoleFrameInner {
     transform: scale(1.22) translateY(2%);
   }
 
@@ -130,13 +164,6 @@
     width: 100%;
     height: 100%;
     image-rendering: pixelated;
-  }
-
-  #consoleBackground {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
   }
 
   /* ==== Cover + D-pad/Start/A/B — единственная копия внутри #consoleFrame,
@@ -179,6 +206,7 @@
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     z-index: 32;
+    pointer-events: auto;
   }
 
   .console-btn-a, .console-btn-b {
@@ -578,6 +606,25 @@
     height: 8.17%;
   }
 
+  /* Info — тот же приподнятый уровень, что и Quit (иначе пряталась бы за
+     пузырём/скейтером), в верхнем левом углу. Показывается только когда в
+     пузыре есть сгенерированный трюк — см. JS (showInfoButton/hideInfoButton). */
+  #btnInfo, #btnInfoVisual {
+    z-index: 7;
+    display: none;
+  }
+
+  #btnInfo.visible, #btnInfoVisual.visible {
+    display: block;
+  }
+
+  #btnInfo {
+    left: 12.98%;
+    top: 8.82%;
+    width: 8.17%;
+    height: 8.17%;
+  }
+
   /* Подтверждение выхода — появляется поверх притемнённой кнопки Quit, две
      кнопки (QUIT / BACK) занимают ту же строку в верхнем правом углу. */
   #quitConfirm {
@@ -896,41 +943,43 @@
 </head>
 <body>
   <div id="app">
+    <div id="consoleBackground">
+      <img src="images/console/Background.png?v=20260716a" alt="">
+    </div>
     <div id="consoleFrame">
-      <div id="consoleBackground">
-        <img src="images/console/Background.png?v=20260716a" alt="">
+      <div id="consoleFrameInner">
+        <div id="consoleCover">
+          <img src="images/console/Cover.png?v=20260716a" alt="">
+        </div>
+        <div class="console-btn-visual" data-btn-visual="up">
+          <img src="images/console/Button_up_idle.png?v=20260716a" alt="">
+        </div>
+        <button class="console-btn console-btn-up" data-btn="up" aria-label="Up"></button>
+        <div class="console-btn-visual" data-btn-visual="down">
+          <img src="images/console/Button_down_idle.png?v=20260716a" alt="">
+        </div>
+        <button class="console-btn console-btn-down" data-btn="down" aria-label="Down"></button>
+        <div class="console-btn-visual" data-btn-visual="left">
+          <img src="images/console/Button_left_idle.png?v=20260716a" alt="">
+        </div>
+        <button class="console-btn console-btn-left" data-btn="left" aria-label="Left"></button>
+        <div class="console-btn-visual" data-btn-visual="right">
+          <img src="images/console/Button_right_idle.png?v=20260716a" alt="">
+        </div>
+        <button class="console-btn console-btn-right" data-btn="right" aria-label="Right"></button>
+        <div class="console-btn-visual" data-btn-visual="start">
+          <img src="images/console/Button_start_idle.png?v=20260716a" alt="">
+        </div>
+        <button class="console-btn console-btn-start" data-btn="start" aria-label="Start"></button>
+        <div class="console-btn-visual" data-btn-visual="a">
+          <img src="images/console/Button_a_idle.png?v=20260716a" alt="">
+        </div>
+        <button class="console-btn console-btn-a" data-btn="a" aria-label="A"></button>
+        <div class="console-btn-visual" data-btn-visual="b">
+          <img src="images/console/Button_b_idle.png?v=20260716a" alt="">
+        </div>
+        <button class="console-btn console-btn-b" data-btn="b" aria-label="B"></button>
       </div>
-      <div id="consoleCover">
-        <img src="images/console/Cover.png?v=20260716a" alt="">
-      </div>
-      <div class="console-btn-visual" data-btn-visual="up">
-        <img src="images/console/Button_up_idle.png?v=20260716a" alt="">
-      </div>
-      <button class="console-btn console-btn-up" data-btn="up" aria-label="Up"></button>
-      <div class="console-btn-visual" data-btn-visual="down">
-        <img src="images/console/Button_down_idle.png?v=20260716a" alt="">
-      </div>
-      <button class="console-btn console-btn-down" data-btn="down" aria-label="Down"></button>
-      <div class="console-btn-visual" data-btn-visual="left">
-        <img src="images/console/Button_left_idle.png?v=20260716a" alt="">
-      </div>
-      <button class="console-btn console-btn-left" data-btn="left" aria-label="Left"></button>
-      <div class="console-btn-visual" data-btn-visual="right">
-        <img src="images/console/Button_right_idle.png?v=20260716a" alt="">
-      </div>
-      <button class="console-btn console-btn-right" data-btn="right" aria-label="Right"></button>
-      <div class="console-btn-visual" data-btn-visual="start">
-        <img src="images/console/Button_start_idle.png?v=20260716a" alt="">
-      </div>
-      <button class="console-btn console-btn-start" data-btn="start" aria-label="Start"></button>
-      <div class="console-btn-visual" data-btn-visual="a">
-        <img src="images/console/Button_a_idle.png?v=20260716a" alt="">
-      </div>
-      <button class="console-btn console-btn-a" data-btn="a" aria-label="A"></button>
-      <div class="console-btn-visual" data-btn-visual="b">
-        <img src="images/console/Button_b_idle.png?v=20260716a" alt="">
-      </div>
-      <button class="console-btn console-btn-b" data-btn="b" aria-label="B"></button>
     </div>
 
     <div id="logoScreen">
@@ -1010,6 +1059,11 @@
           <img src="images/Text_bubble.png?v=20260716a" alt="">
         </div>
         <div id="result"></div>
+
+        <button class="menu-button fullcanvas-hitarea" id="btnInfo" aria-label="Как выполнить трюк"></button>
+        <div class="menu-button-visual" id="btnInfoVisual">
+          <img src="images/Button_info.png?v=20260716a" alt="">
+        </div>
 
         <button class="menu-button fullcanvas-hitarea" id="btn1" aria-label="Начать"></button>
         <div class="menu-button-visual" id="btn1Visual">
@@ -1360,12 +1414,20 @@
     { maxLength: Infinity, scale: 0.56 },
   ];
 
-  function setResultText(text) {
+  function setResultText(text, isTrick) {
     resultEl.textContent = text;
     const step = RESULT_FONT_STEPS.find(s => text.length <= s.maxLength);
     resultEl.style.fontSize = (RESULT_FONT_BASE * step.scale) + 'px';
+    setInfoButtonVisible(!!isTrick);
   }
   const bubbleEl = document.getElementById('bubble');
+  const btnInfoEl = document.getElementById('btnInfo');
+  const btnInfoVisualEl = document.getElementById('btnInfoVisual');
+
+  function setInfoButtonVisible(visible) {
+    btnInfoEl.classList.toggle('visible', visible);
+    btnInfoVisualEl.classList.toggle('visible', visible);
+  }
 
   let stances = [];
   let mainTricks = [];
@@ -1373,6 +1435,7 @@
   let inList = [];      // используется в Ramp (stance + In + main + Out)
   let outList = [];
   let nameReplacements = new Map(); // "исходная комбинация" -> "замена"
+  let howtoLinks = new Map(); // "название трюка" -> ссылка на обучающее видео
   let dataLoaded = false;
   let dataLoadedForMode = null; // чтобы не перезагружать те же файлы повторно
 
@@ -1389,9 +1452,13 @@
         const rawName = parts[0].trim();
         const numRaw = parts.length > 1 ? parseFloat(parts[1]) : NaN;
 
-        // Число ограничено диапазоном 1–5 и округляется до целого
+        // Число округляется до целого и не может быть меньше 1 — но верхнего
+        // предела больше НЕТ. Раньше значение зажималось в диапазон 1–5, из-за
+        // чего трюк со сложностью, скажем, 7 в файле тихо превращался в
+        // сложность 5 — и мог проходить лимит MAX_DIFFICULTY_SUM в Easy,
+        // хотя автор данных явно хотел, чтобы он был выше лимита и не выпадал.
         let num = !isNaN(numRaw) ? Math.round(numRaw) : 1;
-        num = Math.min(5, Math.max(1, num));
+        num = Math.max(1, num);
 
         // NULL (в любом регистре) — специальное значение "оставить пустым"
         const isNull = rawName.toUpperCase() === 'NULL';
@@ -1399,8 +1466,12 @@
 
         // Для NULL число — это вес напрямую.
         // Для обычного трюка число — это сложность, поэтому вес инвертируем:
-        // сложность 1 → вес 5 (часто), сложность 5 → вес 1 (редко)
-        const weight = isNull ? num : (6 - num);
+        // сложность 1 → вес 5 (часто), сложность 5 → вес 1 (редко).
+        // Сложности ВЫШЕ 5 — величина для сравнения с MAX_DIFFICULTY_SUM,
+        // но вес всё равно не должен уходить в ноль/отрицательные числа —
+        // поэтому вес отдельно зажат снизу на 1, независимо от того,
+        // насколько высока сама сложность.
+        const weight = isNull ? num : Math.max(1, 6 - num);
 
         // Саму сложность тоже сохраняем (пригодится для "лёгкого режима").
         // У NULL сложности нет (пустая часть трюка ничего не усложняет) — считаем её 0.
@@ -1493,6 +1564,18 @@
     } catch (e) {
       nameReplacements = new Map();
       console.warn('Файл name_replaces.txt не найден для режима ' + mode + ' — замены названий не применяются.');
+    }
+
+    try {
+      const howtoRes = await fetch(dataDir + '/howto.txt');
+      if (howtoRes.ok) {
+        howtoLinks = parseReplacements(await howtoRes.text());
+      } else {
+        howtoLinks = new Map();
+      }
+    } catch (e) {
+      howtoLinks = new Map();
+      console.warn('Файл howto.txt не найден для режима ' + mode + ' — кнопка Info будет искать в Google.');
     }
   }
 
@@ -1674,7 +1757,7 @@
     bubbleEl.classList.remove('active');
     resultEl.textContent = '';
     setTimeout(() => {
-      setResultText('Game over!');
+      setResultText('Game over!', false);
       bubbleEl.classList.add('active');
     }, 120);
     judgeButtonsEl.classList.remove('visible');
@@ -1746,7 +1829,7 @@
     const lastResult = loadFromStorage(STORAGE_KEY_LAST, '');
     console.log('[GoSkate debug] restore check — isGameOver:', isGameOver, 'lastResult:', JSON.stringify(lastResult));
     if (lastResult) {
-      setResultText(lastResult);
+      setResultText(lastResult, true);
       bubbleEl.classList.add('active');
       setBtn1Visible(false);
       judgeButtonsEl.classList.add('visible');
@@ -1794,14 +1877,14 @@
     resultEl.textContent = '';
 
     if (!dataLoaded || dataLoadedForMode !== currentGameMode) {
-      setResultText('Списки трюков ещё загружаются...');
+      setResultText('Списки трюков ещё загружаются...', false);
       bubbleEl.classList.add('active');
       ensureListsLoaded();
       return;
     }
 
     setTimeout(() => {
-      setResultText(generateUniqueTrick());
+      setResultText(generateUniqueTrick(), true);
       bubbleEl.classList.add('active');
     }, 120);
   }
@@ -1871,6 +1954,7 @@
     // чтобы при следующем заходе в Flatmode экран был полностью чистым
     bubbleEl.classList.remove('active');
     resultEl.textContent = '';
+    setInfoButtonVisible(false);
     judgeButtonsEl.classList.remove('visible');
     setBtn1Visible(true);
     setLogExpanded(false);
@@ -1889,6 +1973,21 @@
 
   document.getElementById('btnQuitBack').addEventListener('click', () => {
     hideQuitConfirm();
+  });
+
+  // Info: открывает обучающую ссылку для текущего сгенерированного трюка
+  // (из howto.txt соответствующего режима), либо, если ссылки нет,
+  // поисковый запрос в Google "How to <трюк> on a skateboard".
+  btnInfoEl.addEventListener('click', () => {
+    const trick = resultEl.textContent.trim();
+    if (!trick) return;
+    const url = howtoLinks.get(trick);
+    if (url) {
+      window.open(url, '_blank', 'noopener');
+    } else {
+      const query = 'How to ' + trick + ' on a skateboard';
+      window.open('https://www.google.com/search?q=' + encodeURIComponent(query), '_blank', 'noopener');
+    }
   });
 
   // ==== Кнопки консоли (D-pad, Start, A, B) — чисто декоративные, просто
