@@ -1958,9 +1958,11 @@
   // Кнопка 2: показывает подтверждение вместо немедленного выхода
   const quitConfirmEl = document.getElementById('quitConfirm');
 
-  // Все остальные кликабельные кнопки на экране игры (Roll, Landed/Failed,
-  // разворачивание лога, Info, D-pad/Start/A/B) — на время подтверждения
-  // выхода становятся некликабельны, активны только QUIT и BACK.
+  // Кнопки на экране игры (Roll, Landed/Failed, разворачивание лога, Info) —
+  // на время подтверждения выхода становятся некликабельны, активны только
+  // QUIT и BACK. D-pad/Start/A/B консоли — чисто декоративные (просто меняют
+  // картинку при нажатии, без игрового действия), поэтому не трогаем — они
+  // должны работать всегда, независимо от состояния подтверждения выхода.
   function getOtherGameplayButtons() {
     return [
       btn1El,
@@ -1968,7 +1970,6 @@
       btnInfoEl,
       document.getElementById('btnLanded'),
       document.getElementById('btnFailed'),
-      ...document.querySelectorAll('.console-btn'),
     ].filter(Boolean);
   }
 
