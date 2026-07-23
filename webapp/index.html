@@ -579,6 +579,25 @@
     height: 8.5%;
   }
 
+  /* Retry — показывается вместо Roll/Landed/Failed, когда списки трюков не
+     удалось загрузить (обрыв связи и т.п.). Не показывается одновременно с
+     Landed/Failed, чтобы нельзя было случайно записать в лог служебное
+     сообщение о загрузке вместо трюка. */
+  #btnRetry, #btnRetryVisual {
+    display: none;
+  }
+
+  #btnRetry.visible, #btnRetryVisual.visible {
+    display: block;
+  }
+
+  #btnRetry {
+    left: 37.5%;
+    top: 33.99%;
+    width: 25.48%;
+    height: 8.5%;
+  }
+
   /* Quit и кнопки подтверждения выхода должны быть выше пузыря с текстом и
      анимации Flatground (у них z-index 5 и 6 соответственно) — иначе они
      скрываются за скейтером/пузырём. Задаём z-index только этим кнопкам,
@@ -1068,6 +1087,11 @@
         <button class="menu-button fullcanvas-hitarea" id="btn1" aria-label="Начать"></button>
         <div class="menu-button-visual" id="btn1Visual">
           <img src="images/Button_startgame.png?v=20260716a" alt="">
+        </div>
+
+        <button class="menu-button fullcanvas-hitarea" id="btnRetry" aria-label="Повторить"></button>
+        <div class="menu-button-visual" id="btnRetryVisual">
+          <img src="images/Button_retry.png?v=20260716a" alt="">
         </div>
 
         <div id="judgeButtons">
@@ -1711,6 +1735,8 @@
   const judgeButtonsEl = document.getElementById('judgeButtons');
   const btn1El = document.getElementById('btn1');
   const btn1VisualEl = document.getElementById('btn1Visual');
+  const btnRetryEl = document.getElementById('btnRetry');
+  const btnRetryVisualEl = document.getElementById('btnRetryVisual');
   const btn2El = document.getElementById('btn2');
   const btn2VisualEl = document.getElementById('btn2Visual');
   const landedCountEl = document.getElementById('landedCount');
@@ -1725,6 +1751,11 @@
     const display = visible ? '' : 'none';
     btn1El.style.display = display;
     btn1VisualEl.style.display = display;
+  }
+
+  function setRetryVisible(visible) {
+    btnRetryEl.classList.toggle('visible', visible);
+    btnRetryVisualEl.classList.toggle('visible', visible);
   }
 
   let tricklistEntries = loadFromStorage(STORAGE_KEY_TRICKLIST, []); // [{text, status}], новые в начале
@@ -1905,21 +1936,34 @@
   }
 
   // Общая функция генерации нового трюка (используется и кнопкой Roll, и кнопками-иконками)
-  function rollNextTrick() {
+  async function rollNextTrick() {
     if (isGameOver) return;
     bubbleEl.classList.remove('active');
     resultEl.textContent = '';
+    judgeButtonsEl.classList.remove('visible');
+    setRetryVisible(false);
 
     if (!dataLoaded || dataLoadedForMode !== currentGameMode) {
       setResultText('Списки трюков ещё загружаются...', false);
       bubbleEl.classList.add('active');
-      ensureListsLoaded();
-      return;
+      await ensureListsLoaded();
+
+      if (!dataLoaded || dataLoadedForMode !== currentGameMode) {
+        // Не получилось — показываем Retry вместо Roll/Landed/Failed. Само
+        // служебное сообщение при этом никогда не попадает в лог трюков,
+        // т.к. Landed/Failed в этот момент скрыты и некликабельны.
+        bubbleEl.classList.remove('active');
+        resultEl.textContent = '';
+        setBtn1Visible(false);
+        setRetryVisible(true);
+        return;
+      }
     }
 
     setTimeout(() => {
       setResultText(generateUniqueTrick(), true);
       bubbleEl.classList.add('active');
+      judgeButtonsEl.classList.add('visible');
     }, 120);
   }
 
@@ -1955,6 +1999,14 @@
     rollNextTrick();
   });
 
+  // Retry: показывается вместо Roll, когда не удалось загрузить списки трюков
+  // (обрыв связи и т.п.) — пробуем ещё раз.
+  btnRetryEl.addEventListener('click', () => {
+    setRetryVisible(false);
+    setBtn1Visible(true);
+    rollNextTrick();
+  });
+
   // Кнопка 2: показывает подтверждение вместо немедленного выхода
   const quitConfirmEl = document.getElementById('quitConfirm');
 
@@ -1966,6 +2018,7 @@
   function getOtherGameplayButtons() {
     return [
       btn1El,
+      btnRetryEl,
       logToggleBtn,
       btnInfoEl,
       document.getElementById('btnLanded'),
@@ -2008,6 +2061,7 @@
     setInfoButtonVisible(false);
     judgeButtonsEl.classList.remove('visible');
     setBtn1Visible(true);
+    setRetryVisible(false);
     setLogExpanded(false);
     hideQuitConfirm();
 
