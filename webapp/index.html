@@ -613,6 +613,7 @@
     z-index: 7;
   }
 
+  #btnQuitRestart, #btnQuitRestartVisual,
   #btnQuitConfirm, #btnQuitConfirmVisual,
   #btnQuitBack, #btnQuitBackVisual {
     z-index: 8;
@@ -654,6 +655,13 @@
 
   #quitConfirm.visible {
     display: block;
+  }
+
+  #btnQuitRestart {
+    left: 38.46%;
+    top: 8.82%;
+    width: 8.17%;
+    height: 8.17%;
   }
 
   #btnQuitConfirm {
@@ -1141,6 +1149,10 @@
         <div id="quitConfirm">
           <div class="difficulty-picker-shadow">
             <img src="images/Shadow_screen.png?v=20260716a" alt="">
+          </div>
+          <button class="menu-button fullcanvas-hitarea" id="btnQuitRestart" aria-label="Начать заново"></button>
+          <div class="menu-button-visual" id="btnQuitRestartVisual">
+            <img src="images/Button_quit_restart.png?v=20260716a" alt="">
           </div>
           <button class="menu-button fullcanvas-hitarea" id="btnQuitConfirm" aria-label="Выйти в меню"></button>
           <div class="menu-button-visual" id="btnQuitConfirmVisual">
@@ -2040,8 +2052,10 @@
 
   // Стирает сохранённый трюк, историю последних результатов и лог трюков,
   // возвращает на Mainscreen (Telegram-приложение НЕ закрывается)
-  function doQuit() {
-    setActiveMode(0);
+  // Общий сброс состояния текущей игры (лог трюков, сохранённый последний
+  // трюк, счётчики) — используется и при Quit (выход в меню), и при Restart
+  // (начать заново, не выходя из текущего режима).
+  function resetGameState() {
     try {
       localStorage.removeItem(STORAGE_KEY_LAST);
       localStorage.removeItem(STORAGE_KEY_HISTORY);
@@ -2055,7 +2069,7 @@
     renderTricklist();
 
     // Прячем пузырь/текст и возвращаем кнопку Start Game на место, сворачиваем лог,
-    // чтобы при следующем заходе в Flatmode экран был полностью чистым
+    // чтобы экран был полностью чистым
     bubbleEl.classList.remove('active');
     resultEl.textContent = '';
     setInfoButtonVisible(false);
@@ -2063,9 +2077,20 @@
     setBtn1Visible(true);
     setRetryVisible(false);
     setLogExpanded(false);
-    hideQuitConfirm();
+  }
 
+  function doQuit() {
+    setActiveMode(0);
+    resetGameState();
+    hideQuitConfirm();
     transitionToScreen(mainscreenEl);
+  }
+
+  // Restart: сбрасывает текущую игру (тот же режим и сложность), не выходя
+  // на Mainscreen — просто снова экран "готов к Roll".
+  function doRestart() {
+    resetGameState();
+    hideQuitConfirm();
   }
 
   btn2El.addEventListener('click', () => {
@@ -2074,6 +2099,10 @@
 
   document.getElementById('btnQuitConfirm').addEventListener('click', () => {
     doQuit();
+  });
+
+  document.getElementById('btnQuitRestart').addEventListener('click', () => {
+    doRestart();
   });
 
   document.getElementById('btnQuitBack').addEventListener('click', () => {
