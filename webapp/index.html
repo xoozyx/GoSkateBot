@@ -1454,7 +1454,7 @@
   const TYPEWRITER_MS_PER_CHAR = 28; // скорость печати одного символа
   let typewriterTimer = null;
 
-  function setResultText(text, isTrick) {
+  function setResultText(text, isTrick, onComplete) {
     // Обрываем предыдущую анимацию печати, если она ещё не закончилась —
     // иначе быстрые повторные вызовы (например, серия Roll) накладывались бы
     // друг на друга и печатали вперемешку.
@@ -1470,7 +1470,10 @@
     setInfoButtonVisible(!!isTrick);
     resultEl.textContent = '';
 
-    if (!text) return;
+    if (!text) {
+      if (onComplete) onComplete();
+      return;
+    }
 
     let i = 0;
     typewriterTimer = setInterval(() => {
@@ -1479,6 +1482,7 @@
       if (i >= text.length) {
         clearInterval(typewriterTimer);
         typewriterTimer = null;
+        if (onComplete) onComplete();
       }
     }, TYPEWRITER_MS_PER_CHAR);
   }
@@ -1906,10 +1910,11 @@
     const lastResult = loadFromStorage(STORAGE_KEY_LAST, '');
     console.log('[GoSkate debug] restore check — isGameOver:', isGameOver, 'lastResult:', JSON.stringify(lastResult));
     if (lastResult) {
-      setResultText(lastResult, true);
       bubbleEl.classList.add('active');
       setBtn1Visible(false);
-      judgeButtonsEl.classList.add('visible');
+      setResultText(lastResult, true, () => {
+        judgeButtonsEl.classList.add('visible');
+      });
       console.log('[GoSkate debug] restored bubble/result, hid btn1');
     } else {
       console.log('[GoSkate debug] no lastResult found — leaving btn1 visible');
@@ -1961,11 +1966,13 @@
       await ensureListsLoaded();
 
       if (!dataLoaded || dataLoadedForMode !== currentGameMode) {
-        // Не получилось — показываем Retry вместо Roll/Landed/Failed. Само
-        // служебное сообщение при этом никогда не попадает в лог трюков,
-        // т.к. Landed/Failed в этот момент скрыты и некликабельны.
-        bubbleEl.classList.remove('active');
-        resultEl.textContent = '';
+        // Не получилось — показываем Retry вместо Roll/Landed/Failed, а в
+        // пузыре вместо "загружается" — понятное сообщение об ошибке, и
+        // пузырь НЕ прячем, чтобы сообщение оставалось видно рядом с Retry.
+        // Само сообщение при этом никогда не попадает в лог трюков, т.к.
+        // Landed/Failed в этот момент скрыты и некликабельны.
+        setResultText('Connection problem, please try again later', false);
+        bubbleEl.classList.add('active');
         setBtn1Visible(false);
         setRetryVisible(true);
         return;
@@ -1973,9 +1980,10 @@
     }
 
     setTimeout(() => {
-      setResultText(generateUniqueTrick(), true);
       bubbleEl.classList.add('active');
-      judgeButtonsEl.classList.add('visible');
+      setResultText(generateUniqueTrick(), true, () => {
+        judgeButtonsEl.classList.add('visible');
+      });
     }, 120);
   }
 
@@ -1992,11 +2000,10 @@
   // чтобы первый Roll не ждал сеть (Ramp подгрузится сам при выборе Easy/Hard).
   ensureListsLoaded();
 
-  // Кнопка Roll: первый бросок — прячет Roll, показывает кнопки-иконки
+  // Кнопка Roll: первый бросок — прячет Roll, показывает кнопки-иконки после печати
   btn1El.addEventListener('click', () => {
     setActiveMode(GAME_MODE_CONFIG[currentGameMode].activeMode);
     setBtn1Visible(false);
-    judgeButtonsEl.classList.add('visible');
     rollNextTrick();
   });
 
