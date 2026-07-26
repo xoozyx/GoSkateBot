@@ -1,0 +1,50 @@
+FS 360 Ollie
+Fakie FS 360
+Switch FS 360
+Nollie FS 360
+BS 360 Ollie
+Fakie Full Cab
+Switch BS 360
+Nollie BS 360
+Switch Kickflip
+Nollie Kickflip
+Switch Heelflip
+Nollie Heelflip
+Switch Varial Kickflip
+Nollie Varial Kickflip
+Switch Varial Heelflip
+Nollie Varial Heelflip
+Hard Flip
+Fakie Hard Flip
+Switch Hard Flip
+Nollie Hard Flip
+Inward Heelflip
+Fakie Inward Heelflip
+Switch Inward Heelflip
+Nollie Inward Heelflip
+Switch Backside Flip
+Nollie Backside Flip
+Switch Frontside Flip
+Nollie Frontside Flip
+Switch Backside Heelflip
+Nollie Backside Heelflip
+Frontside Heelflip
+Fakie Frontside Heelflip
+Switch Frontside Heelflip
+Nollie Frontside Heelflip
+Switch 360 Flip
+Nollie 360 Flip
+Bigflip
+Switch Bigflip
+Nollie Bigflip
+Laser Flip
+Fakie Laser Flip
+Switch Laser Flip
+Nollie Laser Flip
+Big Heelflip
+Fakie Big Heelflip
+Switch Big Heelflip
+Nollie Big Heelflip
+Switch Bigspin
+FS Bigspin
+Switch FS Bigspin

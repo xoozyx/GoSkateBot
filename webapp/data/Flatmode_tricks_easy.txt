@@ -1,0 +1,38 @@
+FS 180 Ollie
+Fakie FS 180
+Switch FS 180
+Nollie FS 180
+BS 180 Ollie
+Fakie Half Cab
+Switch BS 180
+Nollie BS 180
+Kickflip
+Fakie Kickflip
+Heelflip
+Fakie Heelflip
+Pop Shove-It
+Fakie Pop Shove-It
+Switch Pop Shove-It
+Nollie Pop Shove-It
+FS Pop Shove-It
+Fakie FS Pop Shove-It
+Switch FS Pop Shove-It
+Nollie FS Pop Shove-It
+Varial Kickflip
+Fakie Varial Kickflip
+Varial Heelflip
+Fakie Varial Heelflip
+Backside Flip
+Fakie Half Cab Flip
+Frontside Flip
+Fakie Frontside Flip
+Backside Heelflip
+Fakie Half Cab Heelflip
+360 Flip
+Fakie 360 Flip
+Fakie Bigflip
+Bigspin
+Fakie Bigspin
+Nollie Bigspin
+Fakie FS Bigspin
+Nollie FS Bigspin

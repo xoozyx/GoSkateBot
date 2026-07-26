@@ -1,0 +1,40 @@
+Rock to Fakie
+Switch Rock
+Rock,n,Roll
+Switch Rock,n,Roll
+Nollie FS 180 to Switch Rock
+Fakie FS 180 to Rock
+Nollie BS 180 to Switch Rock
+Fakie Half Cab to Rock
+Nollie FS 180 to Switch Rock,n,Roll
+Fakie FS 180 to Rock,n,Roll
+Nollie BS 180 to Switch Rock,n,Roll
+Fakie Half Cab to Rock,n,Roll
+FS Rock,n,Roll
+Switch FS Rock,n,Roll
+Disaster
+Disaster FS 180 Out
+Disaster BS 180 Out
+BS Disaster
+BS Disaster FS 180 Out
+BS Disaster BS 180 Out
+Tail Stall
+Tail Stall FS 180 Out
+Nose Stall
+Nose Stall FS 180 Out
+Axle Stall
+Switch Axle Stall to Regular
+FS Axle Stall
+Switch FS Axle Stall to Regular
+5.0 Stall
+Switch 5.0 Stall to Regular
+FS 5.0 Stall
+Switch FS 5.0 Stall to Regular
+Febble Stall
+Switch Febble Stall to Regular
+FS Febble Stall
+Switch FS Febble Stall to Regular
+Smith Stall
+Switch Smith Stall to Regular
+BS Smith Stall
+Switch BS Smith Stall to Regular

@@ -1232,17 +1232,15 @@
   const GAME_MODE_CONFIG = {
     [GAME_MODE_FLAT]: {
       activeMode: ACTIVE_MODE_FLAT,
-      dataDir: 'data/flatmode',
       groundImage: 'images/Animation_flatmode.png',
-      // Порядок сборки трюка: stance -> addition -> основной трюк
-      combination: 'stance-addition-main',
+      easyFile: 'data/Flatmode_tricks_easy.txt',
+      hardFile: 'data/Flatmode_tricks_hard.txt',
     },
     [GAME_MODE_RAMP]: {
       activeMode: ACTIVE_MODE_RAMP,
-      dataDir: 'data/rampmode',
       groundImage: 'images/Animation_ramp.png',
-      // Порядок сборки трюка: stance -> In -> основной трюк -> Out
-      combination: 'stance-in-main-out',
+      easyFile: 'data/Rampmode_tricks_easy.txt',
+      hardFile: 'data/Rampmode_tricks_hard.txt',
     },
   };
 
@@ -1495,60 +1493,27 @@
     btnInfoVisualEl.classList.toggle('visible', visible);
   }
 
-  let stances = [];
-  let mainTricks = [];
-  let additions = [];   // используется в Flat (stance + addition + main)
-  let inList = [];      // используется в Ramp (stance + In + main + Out)
-  let outList = [];
-  let nameReplacements = new Map(); // "исходная комбинация" -> "замена"
-  let howtoLinks = new Map(); // "название трюка" -> ссылка на обучающее видео
+  let easyTricks = [];   // список трюков Easy для текущего режима (Flat или Ramp)
+  let hardTricks = [];   // список трюков Hard для текущего режима (пустой в Easy)
+  let howtoLinks = new Map(); // "название трюка" -> ссылка на обучающее видео (общий файл для всех режимов)
   let dataLoaded = false;
-  let dataLoadedForMode = null; // чтобы не перезагружать те же файлы повторно
+  let dataLoadedForMode = null;      // '<mode>' — режим, под который загружены easy/hardTricks
+  let dataLoadedForDifficulty = null; // 'easy'/'hard' — сложность, под которую загружены (в Easy hardTricks не грузим)
 
-  // Формат строки в файле: "Название" или "Название,сложность" (сложность — целое число от 1 до 5, по умолчанию 1).
-  // Чем больше сложность, тем РЕЖЕ выпадает трюк — 1 самый частый, 5 самый редкий.
-  // Строка "NULL,вес" — особый случай: число здесь не сложность, а вес НАПРЯМУЮ (шанс оставить часть трюка пустой).
-  function parseWeightedList(text) {
+  // Простой список трюков — один трюк на строку, без веса/сложности (теперь
+  // сложность определяется тем, из какого ФАЙЛА трюк взят, см. Flatmode/Rampmode
+  // _tricks_easy.txt и _tricks_hard.txt). Пустые строки пропускаются, пробелы
+  // по краям обрезаются. Никакого специального смысла у запятых внутри строки
+  // нет — "Rock,n,Roll" остаётся одним трюком целиком.
+  function parseTrickList(text) {
     return text
       .split('\n')
       .map(line => line.trim())
-      .filter(Boolean)
-      .map(line => {
-        const parts = line.split(',');
-        const rawName = parts[0].trim();
-        const numRaw = parts.length > 1 ? parseFloat(parts[1]) : NaN;
-
-        // Число округляется до целого и не может быть меньше 1 — но верхнего
-        // предела больше НЕТ. Раньше значение зажималось в диапазон 1–5, из-за
-        // чего трюк со сложностью, скажем, 7 в файле тихо превращался в
-        // сложность 5 — и мог проходить лимит MAX_DIFFICULTY_SUM в Easy,
-        // хотя автор данных явно хотел, чтобы он был выше лимита и не выпадал.
-        let num = !isNaN(numRaw) ? Math.round(numRaw) : 1;
-        num = Math.max(1, num);
-
-        // NULL (в любом регистре) — специальное значение "оставить пустым"
-        const isNull = rawName.toUpperCase() === 'NULL';
-        const value = isNull ? null : rawName;
-
-        // Для NULL число — это вес напрямую.
-        // Для обычного трюка число — это сложность, поэтому вес инвертируем:
-        // сложность 1 → вес 5 (часто), сложность 5 → вес 1 (редко).
-        // Сложности ВЫШЕ 5 — величина для сравнения с MAX_DIFFICULTY_SUM,
-        // но вес всё равно не должен уходить в ноль/отрицательные числа —
-        // поэтому вес отдельно зажат снизу на 1, независимо от того,
-        // насколько высока сама сложность.
-        const weight = isNull ? num : Math.max(1, 6 - num);
-
-        // Саму сложность тоже сохраняем (пригодится для "лёгкого режима").
-        // У NULL сложности нет (пустая часть трюка ничего не усложняет) — считаем её 0.
-        const difficulty = isNull ? 0 : num;
-
-        return { value, weight, difficulty };
-      });
+      .filter(Boolean);
   }
 
-  // Формат строки в name_replaces.txt: "Исходная комбинация,Замена"
-  // Разбиваем по ПЕРВОЙ запятой — так замена сама может содержать запятые, если понадобится.
+  // Формат строки в Howto.txt: "Название трюка,Ссылка"
+  // Разбиваем по ПЕРВОЙ запятой — так ссылка сама может содержать запятые, если понадобится.
   function parseReplacements(text) {
     const map = new Map();
     text
@@ -1565,158 +1530,69 @@
     return map;
   }
 
-  // Взвешенный случайный выбор одного элемента из списка {value, weight, difficulty}
-  // Возвращает весь объект целиком (не только value), чтобы можно было учитывать сложность.
-  // value может быть null, если выпало значение NULL — значит, эта часть трюка остаётся пустой
-  function weightedPick(items) {
-    const total = items.reduce((sum, it) => sum + it.weight, 0);
-    let r = Math.random() * total;
-    for (const it of items) {
-      if (r < it.weight) return it;
-      r -= it.weight;
-    }
-    return items[items.length - 1]; // подстраховка на случай погрешности округления
-  }
-
-  // Загружаем все списки из текстовых файлов рядом со страницей, для того
-  // набора файлов, который нужен текущему режиму (Flat: stances+additions,
-  // Ramp: stances+In+Out). Файл name_replaces.txt необязателен — если его
-  // нет, замены просто не применяются.
-  async function loadLists(mode) {
-    const dataDir = GAME_MODE_CONFIG[mode].dataDir;
-    const combination = GAME_MODE_CONFIG[mode].combination;
+  // Загружает список(-ки) трюков для текущего режима и сложности:
+  // Easy — только *_tricks_easy.txt; Hard — easy.txt + hard.txt вместе
+  // (в Hard доступны все трюки, не только "хардовые").
+  // Howto.txt общий один на все режимы, грузится один раз.
+  async function loadLists(mode, difficulty) {
+    const config = GAME_MODE_CONFIG[mode];
     dataLoaded = false;
 
     try {
-      if (combination === 'stance-in-main-out') {
-        const [stanceRes, mainRes, inRes, outRes] = await Promise.all([
-          fetch(dataDir + '/stances.txt'),
-          fetch(dataDir + '/main_tricks.txt'),
-          fetch(dataDir + '/In.txt'),
-          fetch(dataDir + '/Out.txt'),
-        ]);
-        stances = parseWeightedList(await stanceRes.text());
-        mainTricks = parseWeightedList(await mainRes.text());
-        inList = parseWeightedList(await inRes.text());
-        outList = parseWeightedList(await outRes.text());
-        additions = [];
+      const easyRes = await fetch(config.easyFile);
+      easyTricks = parseTrickList(await easyRes.text());
+
+      if (difficulty === DIFFICULTY_HARD) {
+        const hardRes = await fetch(config.hardFile);
+        hardTricks = parseTrickList(await hardRes.text());
       } else {
-        const [stanceRes, mainRes, addRes] = await Promise.all([
-          fetch(dataDir + '/stances.txt'),
-          fetch(dataDir + '/main_tricks.txt'),
-          fetch(dataDir + '/additions.txt'),
-        ]);
-        stances = parseWeightedList(await stanceRes.text());
-        mainTricks = parseWeightedList(await mainRes.text());
-        additions = parseWeightedList(await addRes.text());
-        inList = [];
-        outList = [];
+        hardTricks = [];
       }
 
-      dataLoaded = mainTricks.length > 0; // остальные списки могут быть пустыми — это ок
+      dataLoaded = (easyTricks.length + hardTricks.length) > 0;
       dataLoadedForMode = mode;
+      dataLoadedForDifficulty = difficulty;
     } catch (e) {
       console.error('Не удалось загрузить списки трюков для режима ' + mode + ':', e);
       dataLoaded = false;
     }
 
-    try {
-      const replRes = await fetch(dataDir + '/name_replaces.txt');
-      if (replRes.ok) {
-        nameReplacements = parseReplacements(await replRes.text());
-      } else {
-        nameReplacements = new Map();
-      }
-    } catch (e) {
-      nameReplacements = new Map();
-      console.warn('Файл name_replaces.txt не найден для режима ' + mode + ' — замены названий не применяются.');
-    }
-
-    try {
-      const howtoRes = await fetch(dataDir + '/howto.txt');
-      if (howtoRes.ok) {
-        howtoLinks = parseReplacements(await howtoRes.text());
-      } else {
-        howtoLinks = new Map();
-      }
-    } catch (e) {
-      howtoLinks = new Map();
-      console.warn('Файл howto.txt не найден для режима ' + mode + ' — кнопка Info будет искать в Google.');
-    }
-  }
-
-  // Загружает данные для currentGameMode, только если они ещё не были
-  // загружены для этого режима (переключение Flat <-> Ramp туда-обратно
-  // не должно каждый раз заново дёргать сеть).
-  async function ensureListsLoaded() {
-    if (dataLoadedForMode === currentGameMode && dataLoaded) return;
-    await loadLists(currentGameMode);
-  }
-
-  const MAX_REROLL_ATTEMPTS = 60; // защита от зацикливания, если правила REROLL противоречивы
-  const MAX_DIFFICULTY_SUM = 5;   // "лёгкий режим" (Easy): если сумма сложностей выше — REROLL. В Hard лимита нет.
-
-  function generateTrick(attempt = 0, bestFallback = null) {
-    const combination = GAME_MODE_CONFIG[currentGameMode].combination;
-    const stancePick = stances.length > 0 ? weightedPick(stances) : { value: null, difficulty: 0 };
-    const mainPick = weightedPick(mainTricks);
-
-    let comboParts;
-    let difficultySum;
-
-    if (combination === 'stance-in-main-out') {
-      // Ramp: stance -> In -> основной трюк -> Out
-      const inPick = inList.length > 0 ? weightedPick(inList) : { value: null, difficulty: 0 };
-      const outPick = outList.length > 0 ? weightedPick(outList) : { value: null, difficulty: 0 };
-      comboParts = [stancePick.value, inPick.value, mainPick.value, outPick.value];
-      difficultySum = stancePick.difficulty + inPick.difficulty + mainPick.difficulty + outPick.difficulty;
-    } else {
-      // Flat: stance -> addition -> основной трюк
-      const additionPick = additions.length > 0 ? weightedPick(additions) : { value: null, difficulty: 0 };
-      comboParts = [stancePick.value, additionPick.value, mainPick.value];
-      difficultySum = stancePick.difficulty + additionPick.difficulty + mainPick.difficulty;
-    }
-
-    const combo = comboParts.filter(Boolean).join(' ');
-
-    // Если для получившейся комбинации есть замена названия — используем её
-    const finalResult = nameReplacements.get(combo) || combo;
-
-    // REROLL происходит если: 1) явно указан REROLL в name_replaces.txt,
-    // 2) суммарная сложность выше лимита (только в Easy — в Hard лимита сложности нет),
-    // 3) комбинация оказалась полностью пустой (все части — NULL)
-    const exceedsDifficulty = getFlatDifficulty() === DIFFICULTY_EASY && difficultySum > MAX_DIFFICULTY_SUM;
-    const needsReroll = finalResult === 'REROLL' || exceedsDifficulty || combo === '';
-
-    // Запоминаем лучший из виденных вариантов на случай, если так и не найдём
-    // подходящий за MAX_REROLL_ATTEMPTS попыток — но ТОЛЬКО если он не превышает
-    // лимит сложности и не пустой; явный REROLL никогда не годится как fallback.
-    let nextBestFallback = bestFallback;
-    if (finalResult !== 'REROLL' && combo !== '' && !exceedsDifficulty) {
-      if (!nextBestFallback || difficultySum < nextBestFallback.difficultySum) {
-        nextBestFallback = { finalResult, difficultySum };
-      }
-    }
-
-    if (needsReroll) {
-      if (attempt >= MAX_REROLL_ATTEMPTS) {
-        if (nextBestFallback) {
-          console.warn('Достигнут лимит REROLL-попыток, показываю лучший найденный вариант (сложность ' + nextBestFallback.difficultySum + ').');
-          return nextBestFallback.finalResult;
+    // Howto.txt грузим один раз (одинаковый для всех режимов и сложностей).
+    if (howtoLinks.size === 0) {
+      try {
+        const howtoRes = await fetch('data/Howto.txt');
+        if (howtoRes.ok) {
+          howtoLinks = parseReplacements(await howtoRes.text());
         }
-        // Ни одного варианта в пределах лимита сложности не нашлось вовсе —
-        // возвращаем пустую строку вместо трюка, который нарушает MAX_DIFFICULTY_SUM.
-        console.warn('Достигнут лимит REROLL-попыток, подходящих по сложности вариантов не найдено.');
-        return '';
+      } catch (e) {
+        console.warn('Файл data/Howto.txt не найден — кнопка Info будет искать в Google.');
       }
-      return generateTrick(attempt + 1, nextBestFallback);
     }
+  }
 
-    return finalResult;
+  // Загружает данные для currentGameMode/текущей сложности, только если они
+  // ещё не были загружены именно для этой пары (переключение Flat <-> Ramp
+  // или Easy <-> Hard туда-обратно не должно каждый раз заново дёргать сеть).
+  async function ensureListsLoaded() {
+    const difficulty = getFlatDifficulty();
+    if (dataLoadedForMode === currentGameMode && dataLoadedForDifficulty === difficulty && dataLoaded) return;
+    await loadLists(currentGameMode, difficulty);
+  }
+
+  // Генерация трюка теперь — просто случайный выбор из подходящего списка:
+  // Easy — только easyTricks; Hard — easyTricks + hardTricks вместе.
+  // Никакого REROLL/веса/сложности-суммы больше нет — за это отвечает то,
+  // в каком файле лежит трюк.
+  function generateTrick() {
+    const pool = getFlatDifficulty() === DIFFICULTY_HARD
+      ? easyTricks.concat(hardTricks)
+      : easyTricks;
+    if (pool.length === 0) return '';
+    return pool[Math.floor(Math.random() * pool.length)];
   }
 
   // ==== Фильтр от повторов + сохранение между открытиями (localStorage) ====
-  const HISTORY_SIZE = 50;
+  const HISTORY_SIZE = 30;
   const MAX_UNIQUE_ATTEMPTS = 30; // защита от зацикливания, если уникальных вариантов почти не осталось
   const STORAGE_KEY_HISTORY = 'goskate_recentResults';
   const STORAGE_KEY_LAST = 'goskate_lastResult';
