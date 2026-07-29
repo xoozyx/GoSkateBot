@@ -14,6 +14,7 @@ Switch Axle Stall
 Axle Stall to Fakie
 Switch FS Axle Stall
 FS Axle Stall to Fakie
+Switch FS Slasher
 Switch 5.0 Stall
 5.0 Stall to Fakie
 Switch FS 5.0 Stall

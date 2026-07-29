@@ -26,6 +26,7 @@ Axle Stall
 Switch Axle Stall to Regular
 FS Axle Stall
 Switch FS Axle Stall to Regular
+FS Slasher
 5.0 Stall
 Switch 5.0 Stall to Regular
 FS 5.0 Stall
