@@ -440,6 +440,13 @@
     height: 7.19%;
   }
 
+  #toggleBodyvarial {
+    left: 30.29%;
+    top: 47.39%;
+    width: 42.31%;
+    height: 7.19%;
+  }
+
   /* Выбор сложности для Ramp — показывается вместо Flat/Street после нажатия
      Ramp, сразу под кнопкой Ramp. */
   #rampDifficultyPicker {
@@ -1059,6 +1066,10 @@
           <div class="mode-button-visual" id="toggleOldschoolVisual">
             <img src="images/Button_mainmenu_flat_oldschool_off.png?v=20260716a" alt="">
           </div>
+          <button class="mode-button enabled fullcanvas-hitarea" id="toggleBodyvarial" aria-label="Body Varial"></button>
+          <div class="mode-button-visual" id="toggleBodyvarialVisual">
+            <img src="images/Button_mainmenu_flat_bodyvarial_off.png?v=20260716a" alt="">
+          </div>
         </div>
 
         <div id="rampDifficultyPicker">
@@ -1248,6 +1259,8 @@
       hardFile: 'data/Flatmode_tricks_hard.txt',
       oldschoolEasyFile: 'data/Flatmode_tricks_oldschool_easy.txt',
       oldschoolHardFile: 'data/Flatmode_tricks_oldschool_hard.txt',
+      bodyvarialEasyFile: 'data/Flatmode_tricks_bodyvarial_easy.txt',
+      bodyvarialHardFile: 'data/Flatmode_tricks_bodyvarial_hard.txt',
     },
     [GAME_MODE_RAMP]: {
       activeMode: ACTIVE_MODE_RAMP,
@@ -1305,28 +1318,47 @@
     setDifficulty(currentGameMode, difficulty);
   }
 
-  // ==== Old School (только Flat) — вкл/выкл, добавляет в ростер генерации
-  // трюки из Flatmode_tricks_oldschool_*.txt поверх обычных списков. ====
-  const STORAGE_KEY_OLDSCHOOL_PREFIX = 'goskate_oldschool_';
+  // ==== Переключатели-модификаторы ростера (только Flat) — каждый просто
+  // добавляет в генерацию трюки из своей пары _easy/_hard файлов поверх
+  // обычных списков. Общее хранилище на все такие переключатели. ====
+  const STORAGE_KEY_TOGGLE_PREFIX = 'goskate_toggle_';
 
-  function getOldschool(mode) {
+  function getToggle(name, mode) {
     try {
-      return localStorage.getItem(STORAGE_KEY_OLDSCHOOL_PREFIX + mode) === '1';
+      return localStorage.getItem(STORAGE_KEY_TOGGLE_PREFIX + name + '_' + mode) === '1';
     } catch (e) {
       return false;
     }
   }
 
-  function setOldschool(mode, enabled) {
+  function setToggle(name, mode, enabled) {
     try {
-      localStorage.setItem(STORAGE_KEY_OLDSCHOOL_PREFIX + mode, enabled ? '1' : '0');
+      localStorage.setItem(STORAGE_KEY_TOGGLE_PREFIX + name + '_' + mode, enabled ? '1' : '0');
     } catch (e) {
-      console.warn('Не удалось сохранить состояние Old School:', e);
+      console.warn('Не удалось сохранить состояние переключателя ' + name + ':', e);
     }
   }
 
+  // Old School: добавляет Flatmode_tricks_oldschool_*.txt
+  function getOldschool(mode) {
+    return getToggle('oldschool', mode);
+  }
+  function setOldschool(mode, enabled) {
+    setToggle('oldschool', mode, enabled);
+  }
   function getFlatOldschool() {
     return getOldschool(currentGameMode);
+  }
+
+  // Body Varial: добавляет Flatmode_tricks_bodyvarial_*.txt
+  function getBodyvarial(mode) {
+    return getToggle('bodyvarial', mode);
+  }
+  function setBodyvarial(mode, enabled) {
+    setToggle('bodyvarial', mode, enabled);
+  }
+  function getFlatBodyvarial() {
+    return getBodyvarial(currentGameMode);
   }
 
   // ==== Навигация между экранами ====
@@ -1425,6 +1457,7 @@
   document.getElementById('modeFlat').addEventListener('click', () => {
     if (flatDifficultyPickerEl.classList.contains('visible')) return;
     syncOldschoolToggleVisual();
+    syncBodyvarialToggleVisual();
     openDifficultyPicker(
       flatDifficultyPickerEl,
       [modeFlatEl, modeFlatVisualEl],
@@ -1481,6 +1514,20 @@
   document.getElementById('toggleOldschool').addEventListener('click', () => {
     setOldschool(GAME_MODE_FLAT, !getOldschool(GAME_MODE_FLAT));
     syncOldschoolToggleVisual();
+  });
+
+  // ==== Переключатель Body Varial (только Flat) — тот же принцип, что и Old
+  // School: просто вкл/выкл, добавляет свою пару _easy/_hard файлов. ====
+  const toggleBodyvarialImg = document.querySelector('#toggleBodyvarialVisual img');
+
+  function syncBodyvarialToggleVisual() {
+    const on = getBodyvarial(GAME_MODE_FLAT);
+    toggleBodyvarialImg.src = 'images/Button_mainmenu_flat_bodyvarial_' + (on ? 'on' : 'off') + '.png?v=' + ASSET_VERSION;
+  }
+
+  document.getElementById('toggleBodyvarial').addEventListener('click', () => {
+    setBodyvarial(GAME_MODE_FLAT, !getBodyvarial(GAME_MODE_FLAT));
+    syncBodyvarialToggleVisual();
   });
 
   document.getElementById('modeRampHard').addEventListener('click', () => {
@@ -1552,11 +1599,14 @@
   let hardTricks = [];       // список трюков Hard для текущего режима (пустой в Easy)
   let oldschoolEasyTricks = []; // Flat, Old School ON — добавляется поверх easyTricks
   let oldschoolHardTricks = []; // Flat, Old School ON + Hard — добавляется поверх hardTricks
+  let bodyvarialEasyTricks = []; // Flat, Body Varial ON — добавляется поверх easyTricks
+  let bodyvarialHardTricks = []; // Flat, Body Varial ON + Hard — добавляется поверх hardTricks
   let howtoLinks = new Map(); // "название трюка" -> ссылка на обучающее видео (общий файл для всех режимов)
   let dataLoaded = false;
   let dataLoadedForMode = null;       // '<mode>' — режим, под который загружены списки
   let dataLoadedForDifficulty = null; // 'easy'/'hard' — сложность, под которую загружены
   let dataLoadedForOldschool = null;  // true/false — состояние Old School, под которое загружены
+  let dataLoadedForBodyvarial = null; // true/false — состояние Body Varial, под которое загружены
 
   // Простой список трюков — один трюк на строку, без веса/сложности (теперь
   // сложность определяется тем, из какого ФАЙЛА трюк взят, см. Flatmode/Rampmode
@@ -1594,14 +1644,12 @@
     return parseTrickList(await res.text());
   }
 
-  // Загружает список(-ки) трюков для текущего режима, сложности и состояния
-  // Old School (только Flat):
-  // Easy, Old School OFF  — easy.txt
-  // Easy, Old School ON   — easy.txt + oldschool_easy.txt
-  // Hard, Old School OFF  — easy.txt + hard.txt
-  // Hard, Old School ON   — easy.txt + hard.txt + oldschool_easy.txt + oldschool_hard.txt
+  // Загружает списки трюков для текущего режима, сложности и включённых
+  // переключателей-модификаторов (Old School, Body Varial — только Flat):
+  // каждый включённый модификатор добавляет свою пару _easy/_hard файлов
+  // поверх обычных списков (hard-файл — только если сложность Hard).
   // Howto.txt общий один на все режимы, грузится один раз.
-  async function loadLists(mode, difficulty, oldschool) {
+  async function loadLists(mode, difficulty, oldschool, bodyvarial) {
     const config = GAME_MODE_CONFIG[mode];
     dataLoaded = false;
 
@@ -1619,10 +1667,25 @@
         oldschoolHardTricks = [];
       }
 
-      dataLoaded = (easyTricks.length + hardTricks.length + oldschoolEasyTricks.length + oldschoolHardTricks.length) > 0;
+      if (bodyvarial && config.bodyvarialEasyFile) {
+        bodyvarialEasyTricks = await fetchTrickList(config.bodyvarialEasyFile);
+        bodyvarialHardTricks = difficulty === DIFFICULTY_HARD
+          ? await fetchTrickList(config.bodyvarialHardFile)
+          : [];
+      } else {
+        bodyvarialEasyTricks = [];
+        bodyvarialHardTricks = [];
+      }
+
+      dataLoaded = (
+        easyTricks.length + hardTricks.length +
+        oldschoolEasyTricks.length + oldschoolHardTricks.length +
+        bodyvarialEasyTricks.length + bodyvarialHardTricks.length
+      ) > 0;
       dataLoadedForMode = mode;
       dataLoadedForDifficulty = difficulty;
       dataLoadedForOldschool = oldschool;
+      dataLoadedForBodyvarial = bodyvarial;
     } catch (e) {
       console.error('Не удалось загрузить списки трюков для режима ' + mode + ':', e);
       dataLoaded = false;
@@ -1641,28 +1704,34 @@
     }
   }
 
-  // Загружает данные для currentGameMode/текущей сложности/Old School, только
-  // если они ещё не были загружены именно для этой комбинации (переключение
-  // Flat <-> Ramp, Easy <-> Hard или Old School вкл/выкл туда-обратно не
-  // должно каждый раз заново дёргать сеть).
+  // Загружает данные для currentGameMode/текущей сложности/переключателей,
+  // только если они ещё не были загружены именно для этой комбинации
+  // (переключение Flat <-> Ramp, Easy <-> Hard или любого модификатора
+  // вкл/выкл туда-обратно не должно каждый раз заново дёргать сеть).
   async function ensureListsLoaded() {
     const difficulty = getFlatDifficulty();
     const oldschool = getFlatOldschool();
+    const bodyvarial = getFlatBodyvarial();
     if (
       dataLoadedForMode === currentGameMode &&
       dataLoadedForDifficulty === difficulty &&
       dataLoadedForOldschool === oldschool &&
+      dataLoadedForBodyvarial === bodyvarial &&
       dataLoaded
     ) return;
-    await loadLists(currentGameMode, difficulty, oldschool);
+    await loadLists(currentGameMode, difficulty, oldschool, bodyvarial);
   }
 
   // Генерация трюка теперь — просто случайный выбор из подходящего списка,
-  // собранного из easy/hard/oldschool_easy/oldschool_hard по текущим
-  // сложности и состоянию Old School (см. loadLists). Никакого REROLL/веса/
-  // сложности-суммы больше нет — за это отвечает то, в каком файле лежит трюк.
+  // собранного из easy/hard + любых включённых модификаторов (см. loadLists).
+  // Никакого REROLL/веса/сложности-суммы больше нет — за это отвечает то,
+  // в каком файле лежит трюк.
   function generateTrick() {
-    const pool = easyTricks.concat(hardTricks, oldschoolEasyTricks, oldschoolHardTricks);
+    const pool = easyTricks.concat(
+      hardTricks,
+      oldschoolEasyTricks, oldschoolHardTricks,
+      bodyvarialEasyTricks, bodyvarialHardTricks
+    );
     if (pool.length === 0) return '';
     return pool[Math.floor(Math.random() * pool.length)];
   }
