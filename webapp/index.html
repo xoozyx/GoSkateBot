@@ -252,6 +252,18 @@
     pointer-events: auto;
   }
 
+  /* Некоторые элементы внутри экрана (например #tricklistInner) намеренно
+     включают pointer-events:auto сами по себе — это перекрывает унаследованное
+     от родителя значение none. Пока экран неактивен, он должен быть полностью
+     некликабельным целиком, независимо от таких точечных исключений внутри —
+     иначе невидимый неактивный экран может перехватывать клики, предназначенные
+     активному экрану под/над ним (баг: Ramp Easy/Hard/Air Tricks в Mainscreen
+     частично перекрывались невидимым, но всё ещё кликабельным #tricklistInner
+     из экрана Flatmode). */
+  .screen:not(.active) * {
+    pointer-events: none !important;
+  }
+
   /* ==== Mainscreen: кнопки выбора режима ==== */
   .mode-button {
     position: absolute;
@@ -1097,6 +1109,7 @@
           </div>
         </div>
 
+
         <button class="mode-button enabled fullcanvas-hitarea" id="mainscreenQuit" aria-label="Назад"></button>
         <div class="mode-button-visual" id="mainscreenQuitVisual">
           <img src="images/Button_quit.png?v=20260716a" alt="">
@@ -1331,13 +1344,9 @@
     setDifficulty(currentGameMode, difficulty);
   }
 
-  // ==== Переключатели-модификаторы ростера — каждый просто добавляет в
-  // генерацию трюки из своей пары _easy/_hard файлов поверх обычных списков.
-  // Общее хранилище на все такие переключатели, привязано к конкретному
-  // режиму (Old School/Body Varial — Flat; Air Tricks — Ramp), а не к
-  // currentGameMode напрямую — иначе переключение до выбора Easy/Hard могло
-  // бы сохранить состояние не под тем режимом, если currentGameMode ещё не
-  // обновился с прошлой игры. Список имён — TOGGLE_NAMES (см. ниже, у генерации).
+  // ==== Переключатели-модификаторы ростера (только Flat) — каждый просто
+  // добавляет в генерацию трюки из своей пары _easy/_hard файлов поверх
+  // обычных списков. Общее хранилище на все такие переключатели. ====
   const STORAGE_KEY_TOGGLE_PREFIX = 'goskate_toggle_';
 
   function getToggle(name, mode) {
@@ -1354,6 +1363,39 @@
     } catch (e) {
       console.warn('Не удалось сохранить состояние переключателя ' + name + ':', e);
     }
+  }
+
+  // Old School: добавляет Flatmode_tricks_oldschool_*.txt
+  function getOldschool(mode) {
+    return getToggle('oldschool', mode);
+  }
+  function setOldschool(mode, enabled) {
+    setToggle('oldschool', mode, enabled);
+  }
+  function getFlatOldschool() {
+    return getOldschool(currentGameMode);
+  }
+
+  // Body Varial: добавляет Flatmode_tricks_bodyvarial_*.txt
+  function getBodyvarial(mode) {
+    return getToggle('bodyvarial', mode);
+  }
+  function setBodyvarial(mode, enabled) {
+    setToggle('bodyvarial', mode, enabled);
+  }
+  function getFlatBodyvarial() {
+    return getBodyvarial(currentGameMode);
+  }
+
+  // Air Tricks (только Ramp): добавляет Rampmode_tricks_Airs_*.txt
+  function getAirtricks(mode) {
+    return getToggle('airtricks', mode);
+  }
+  function setAirtricks(mode, enabled) {
+    setToggle('airtricks', mode, enabled);
+  }
+  function getRampAirtricks() {
+    return getAirtricks(currentGameMode);
   }
 
   // ==== Навигация между экранами ====
@@ -1474,13 +1516,55 @@
     closeAllDifficultyPickers();
   });
 
+  // ==== Сообщение "режим начался" — показывается в пузыре при старте новой
+  // игры (клик по Easy/Hard на Mainscreen) и затем попадает в лог трюков как
+  // системная запись (без иконки landed/failed, см. addTricklistEntry). ====
+  function buildModeStartMessage(mode, difficulty) {
+    const difficultyLabel = difficulty.toUpperCase();
+    let label;
+    const extras = [];
+
+    if (mode === GAME_MODE_FLAT) {
+      label = 'Flatground';
+      if (getOldschool(GAME_MODE_FLAT)) extras.push('Old School tricks');
+      if (getBodyvarial(GAME_MODE_FLAT)) extras.push('Body Varials');
+    } else if (mode === GAME_MODE_RAMP) {
+      label = 'Ramp';
+      if (getAirtricks(GAME_MODE_RAMP)) extras.push('Air Tricks');
+    } else {
+      label = 'Game';
+    }
+
+    if (extras.length === 0) {
+      return label + ' ' + difficultyLabel + ' mode starts without additional tricks.';
+    }
+    return label + ' ' + difficultyLabel + ' mode starts with additional ' + extras.join(' and ') + '.';
+  }
+
+  // Сообщение о старте режима ждёт здесь до нажатия Start Game — в лог
+  // попадает не сразу по клику Easy/Hard, а вместе с первым сгенерированным
+  // трюком (см. btn1El.addEventListener ниже).
+  let pendingModeStartMessage = null;
+
+  function showModeStartMessage(text) {
+    // Ждём, пока анимация смены экрана дорисует новый экран (см.
+    // transitionToScreen), иначе пузырь мелькнёт ещё поверх Mainscreen.
+    setTimeout(() => {
+      bubbleEl.classList.add('active');
+      setResultText(text, false);
+    }, CHANGE_SWAP_AT_MS + 80);
+  }
+
   function startGameWithDifficulty(mode, difficulty) {
+    const startMessage = buildModeStartMessage(mode, difficulty);
     currentGameMode = mode;
     setDifficulty(mode, difficulty);
     applyGameModeVisuals();
     updateDifficultyBadge();
     closeAllDifficultyPickers();
     transitionToScreen(flatmodeEl);
+    showModeStartMessage(startMessage);
+    pendingModeStartMessage = startMessage;
   }
 
   document.getElementById('modeFlatEasy').addEventListener('click', () => {
@@ -1495,36 +1579,55 @@
     startGameWithDifficulty(GAME_MODE_RAMP, DIFFICULTY_EASY);
   });
 
-  // ==== Переключатели-модификаторы ростера — просто вкл/выкл, картинка
-  // меняется местами (_on/_off), состояние сохраняется на будущее. Каждый
-  // жёстко привязан к своему режиму (не к currentGameMode) — иначе, если
-  // currentGameMode всё ещё указывает на другой режим с прошлой игры,
-  // переключение сразу после открытия picker'а читало/писало бы флаг не туда.
-  function setupModifierToggle(toggleName, buttonId, mode, imagePrefix) {
-    const img = document.querySelector('#' + buttonId + 'Visual img');
-    function sync() {
-      const on = getToggle(toggleName, mode);
-      img.src = imagePrefix + (on ? 'on' : 'off') + '.png?v=' + ASSET_VERSION;
-    }
-    document.getElementById(buttonId).addEventListener('click', () => {
-      setToggle(toggleName, mode, !getToggle(toggleName, mode));
-      sync();
-    });
-    return sync;
+  // ==== Переключатель Old School (только Flat) — просто вкл/выкл, картинка
+  // меняется местами (_on/_off), состояние сохраняется на будущее. Всегда
+  // привязан к GAME_MODE_FLAT явно (а не к currentGameMode) — иначе, если
+  // currentGameMode всё ещё указывает на Ramp с прошлой игры, переключение
+  // тут же после открытия picker'а Flat читало/писало бы флаг не туда. ====
+  const toggleOldschoolImg = document.querySelector('#toggleOldschoolVisual img');
+
+  function syncOldschoolToggleVisual() {
+    const on = getOldschool(GAME_MODE_FLAT);
+    toggleOldschoolImg.src = 'images/Button_mainmenu_flat_oldschool_' + (on ? 'on' : 'off') + '.png?v=' + ASSET_VERSION;
   }
 
-  const syncOldschoolToggleVisual = setupModifierToggle(
-    'oldschool', 'toggleOldschool', GAME_MODE_FLAT, 'images/Button_mainmenu_flat_oldschool_'
-  );
-  const syncBodyvarialToggleVisual = setupModifierToggle(
-    'bodyvarial', 'toggleBodyvarial', GAME_MODE_FLAT, 'images/Button_mainmenu_flat_bodyvarial_'
-  );
-  const syncAirtricksToggleVisual = setupModifierToggle(
-    'airtricks', 'toggleAirtricks', GAME_MODE_RAMP, 'images/Button_mainmenu_ramp_airtricks_'
-  );
+  document.getElementById('toggleOldschool').addEventListener('click', () => {
+    setOldschool(GAME_MODE_FLAT, !getOldschool(GAME_MODE_FLAT));
+    syncOldschoolToggleVisual();
+  });
+
+  // ==== Переключатель Body Varial (только Flat) — тот же принцип, что и Old
+  // School: просто вкл/выкл, добавляет свою пару _easy/_hard файлов. ====
+  const toggleBodyvarialImg = document.querySelector('#toggleBodyvarialVisual img');
+
+  function syncBodyvarialToggleVisual() {
+    const on = getBodyvarial(GAME_MODE_FLAT);
+    toggleBodyvarialImg.src = 'images/Button_mainmenu_flat_bodyvarial_' + (on ? 'on' : 'off') + '.png?v=' + ASSET_VERSION;
+  }
+
+  document.getElementById('toggleBodyvarial').addEventListener('click', () => {
+    setBodyvarial(GAME_MODE_FLAT, !getBodyvarial(GAME_MODE_FLAT));
+    syncBodyvarialToggleVisual();
+  });
 
   document.getElementById('modeRampHard').addEventListener('click', () => {
     startGameWithDifficulty(GAME_MODE_RAMP, DIFFICULTY_HARD);
+  });
+
+  // ==== Переключатель Air Tricks (только Ramp) — тот же принцип, что Old
+  // School/Body Varial у Flat: просто вкл/выкл, добавляет свою пару
+  // _easy/_hard файлов. Всегда привязан к GAME_MODE_RAMP явно, а не к
+  // currentGameMode — по той же причине, что и у Flat-переключателей. ====
+  const toggleAirtricksImg = document.querySelector('#toggleAirtricksVisual img');
+
+  function syncAirtricksToggleVisual() {
+    const on = getAirtricks(GAME_MODE_RAMP);
+    toggleAirtricksImg.src = 'images/Button_mainmenu_ramp_airtricks_' + (on ? 'on' : 'off') + '.png?v=' + ASSET_VERSION;
+  }
+
+  document.getElementById('toggleAirtricks').addEventListener('click', () => {
+    setAirtricks(GAME_MODE_RAMP, !getAirtricks(GAME_MODE_RAMP));
+    syncAirtricksToggleVisual();
   });
 
   // Street пока неактивен — обработчика клика намеренно нет
@@ -1588,20 +1691,21 @@
     btnInfoVisualEl.classList.toggle('visible', visible);
   }
 
-  // Имена всех переключателей-модификаторов ростера. Каждый ожидает в
-  // GAME_MODE_CONFIG ключи '<name>EasyFile'/'<name>HardFile' — если их нет
-  // у текущего режима (например, у Ramp нет oldschool/bodyvarial), модификатор
-  // просто не участвует в генерации для этого режима, даже если включён.
-  const TOGGLE_NAMES = ['oldschool', 'bodyvarial', 'airtricks'];
-
-  let easyTricks = [];   // список трюков Easy для текущего режима
-  let hardTricks = [];   // список трюков Hard для текущего режима (пустой в Easy)
-  let toggleTricks = {}; // { oldschool: { easy: [...], hard: [...] }, bodyvarial: {...}, ... }
+  let easyTricks = [];       // список трюков Easy для текущего режима (Flat или Ramp)
+  let hardTricks = [];       // список трюков Hard для текущего режима (пустой в Easy)
+  let oldschoolEasyTricks = []; // Flat, Old School ON — добавляется поверх easyTricks
+  let oldschoolHardTricks = []; // Flat, Old School ON + Hard — добавляется поверх hardTricks
+  let bodyvarialEasyTricks = []; // Flat, Body Varial ON — добавляется поверх easyTricks
+  let bodyvarialHardTricks = []; // Flat, Body Varial ON + Hard — добавляется поверх hardTricks
+  let airtricksEasyTricks = []; // Ramp, Air Tricks ON — добавляется поверх easyTricks
+  let airtricksHardTricks = []; // Ramp, Air Tricks ON + Hard — добавляется поверх hardTricks
   let howtoLinks = new Map(); // "название трюка" -> ссылка на обучающее видео (общий файл для всех режимов)
   let dataLoaded = false;
   let dataLoadedForMode = null;       // '<mode>' — режим, под который загружены списки
   let dataLoadedForDifficulty = null; // 'easy'/'hard' — сложность, под которую загружены
-  let dataLoadedForToggles = null;    // JSON включённых модификаторов, под которые загружены
+  let dataLoadedForOldschool = null;  // true/false — состояние Old School, под которое загружены
+  let dataLoadedForBodyvarial = null; // true/false — состояние Body Varial, под которое загружены
+  let dataLoadedForAirtricks = null;  // true/false — состояние Air Tricks, под которое загружены
 
   // Простой список трюков — один трюк на строку, без веса/сложности (теперь
   // сложность определяется тем, из какого ФАЙЛА трюк взят, см. Flatmode/Rampmode
@@ -1636,20 +1740,15 @@
   async function fetchTrickList(path) {
     if (!path) return [];
     const res = await fetch(path);
-    if (!res.ok) {
-      // Не молчим и не пытаемся распарсить тело ответа как список трюков —
-      // иначе HTML-страница ошибки (например, от GitHub Pages/CDN при 404
-      // или временном сбое) могла попасть в игру как будто это трюк.
-      throw new Error('Не удалось загрузить ' + path + ' (HTTP ' + res.status + ')');
-    }
     return parseTrickList(await res.text());
   }
 
   // Загружает списки трюков для текущего режима, сложности и включённых
-  // переключателей-модификаторов: каждый включённый модификатор добавляет
-  // свою пару _easy/_hard файлов поверх обычных списков (hard-файл — только
-  // если сложность Hard). Howto.txt общий один на все режимы, грузится один раз.
-  async function loadLists(mode, difficulty, enabledToggles) {
+  // переключателей-модификаторов (Old School, Body Varial — только Flat):
+  // каждый включённый модификатор добавляет свою пару _easy/_hard файлов
+  // поверх обычных списков (hard-файл — только если сложность Hard).
+  // Howto.txt общий один на все режимы, грузится один раз.
+  async function loadLists(mode, difficulty, oldschool, bodyvarial, airtricks) {
     const config = GAME_MODE_CONFIG[mode];
     dataLoaded = false;
 
@@ -1657,26 +1756,47 @@
       easyTricks = await fetchTrickList(config.easyFile);
       hardTricks = difficulty === DIFFICULTY_HARD ? await fetchTrickList(config.hardFile) : [];
 
-      let toggleTotal = 0;
-      const nextToggleTricks = {};
-      for (const name of TOGGLE_NAMES) {
-        const easyKey = name + 'EasyFile';
-        const hardKey = name + 'HardFile';
-        if (enabledToggles[name] && config[easyKey]) {
-          const easy = await fetchTrickList(config[easyKey]);
-          const hard = difficulty === DIFFICULTY_HARD ? await fetchTrickList(config[hardKey]) : [];
-          nextToggleTricks[name] = { easy, hard };
-          toggleTotal += easy.length + hard.length;
-        } else {
-          nextToggleTricks[name] = { easy: [], hard: [] };
-        }
+      if (oldschool && config.oldschoolEasyFile) {
+        oldschoolEasyTricks = await fetchTrickList(config.oldschoolEasyFile);
+        oldschoolHardTricks = difficulty === DIFFICULTY_HARD
+          ? await fetchTrickList(config.oldschoolHardFile)
+          : [];
+      } else {
+        oldschoolEasyTricks = [];
+        oldschoolHardTricks = [];
       }
-      toggleTricks = nextToggleTricks;
 
-      dataLoaded = (easyTricks.length + hardTricks.length + toggleTotal) > 0;
+      if (bodyvarial && config.bodyvarialEasyFile) {
+        bodyvarialEasyTricks = await fetchTrickList(config.bodyvarialEasyFile);
+        bodyvarialHardTricks = difficulty === DIFFICULTY_HARD
+          ? await fetchTrickList(config.bodyvarialHardFile)
+          : [];
+      } else {
+        bodyvarialEasyTricks = [];
+        bodyvarialHardTricks = [];
+      }
+
+      if (airtricks && config.airtricksEasyFile) {
+        airtricksEasyTricks = await fetchTrickList(config.airtricksEasyFile);
+        airtricksHardTricks = difficulty === DIFFICULTY_HARD
+          ? await fetchTrickList(config.airtricksHardFile)
+          : [];
+      } else {
+        airtricksEasyTricks = [];
+        airtricksHardTricks = [];
+      }
+
+      dataLoaded = (
+        easyTricks.length + hardTricks.length +
+        oldschoolEasyTricks.length + oldschoolHardTricks.length +
+        bodyvarialEasyTricks.length + bodyvarialHardTricks.length +
+        airtricksEasyTricks.length + airtricksHardTricks.length
+      ) > 0;
       dataLoadedForMode = mode;
       dataLoadedForDifficulty = difficulty;
-      dataLoadedForToggles = JSON.stringify(enabledToggles);
+      dataLoadedForOldschool = oldschool;
+      dataLoadedForBodyvarial = bodyvarial;
+      dataLoadedForAirtricks = airtricks;
     } catch (e) {
       console.error('Не удалось загрузить списки трюков для режима ' + mode + ':', e);
       dataLoaded = false;
@@ -1695,30 +1815,24 @@
     }
   }
 
-  // Собирает { oldschool: true/false, bodyvarial: true/false, ... } для
-  // текущего режима — используется и для загрузки, и для генерации.
-  function getEnabledToggles() {
-    const result = {};
-    for (const name of TOGGLE_NAMES) {
-      result[name] = getToggle(name, currentGameMode);
-    }
-    return result;
-  }
-
   // Загружает данные для currentGameMode/текущей сложности/переключателей,
   // только если они ещё не были загружены именно для этой комбинации
   // (переключение Flat <-> Ramp, Easy <-> Hard или любого модификатора
   // вкл/выкл туда-обратно не должно каждый раз заново дёргать сеть).
   async function ensureListsLoaded() {
     const difficulty = getFlatDifficulty();
-    const enabledToggles = getEnabledToggles();
+    const oldschool = getFlatOldschool();
+    const bodyvarial = getFlatBodyvarial();
+    const airtricks = getRampAirtricks();
     if (
       dataLoadedForMode === currentGameMode &&
       dataLoadedForDifficulty === difficulty &&
-      dataLoadedForToggles === JSON.stringify(enabledToggles) &&
+      dataLoadedForOldschool === oldschool &&
+      dataLoadedForBodyvarial === bodyvarial &&
+      dataLoadedForAirtricks === airtricks &&
       dataLoaded
     ) return;
-    await loadLists(currentGameMode, difficulty, enabledToggles);
+    await loadLists(currentGameMode, difficulty, oldschool, bodyvarial, airtricks);
   }
 
   // Генерация трюка теперь — просто случайный выбор из подходящего списка,
@@ -1726,11 +1840,12 @@
   // Никакого REROLL/веса/сложности-суммы больше нет — за это отвечает то,
   // в каком файле лежит трюк.
   function generateTrick() {
-    let pool = easyTricks.concat(hardTricks);
-    for (const name of TOGGLE_NAMES) {
-      const t = toggleTricks[name];
-      if (t) pool = pool.concat(t.easy, t.hard);
-    }
+    const pool = easyTricks.concat(
+      hardTricks,
+      oldschoolEasyTricks, oldschoolHardTricks,
+      bodyvarialEasyTricks, bodyvarialHardTricks,
+      airtricksEasyTricks, airtricksHardTricks
+    );
     if (pool.length === 0) return '';
     return pool[Math.floor(Math.random() * pool.length)];
   }
@@ -1864,19 +1979,23 @@
 
     tricklistEntries.forEach(entry => {
       if (entry.status === 'landed') landed++;
-      else failed++;
+      else if (entry.status === 'failed') failed++;
+      // 'info' — системное сообщение (например, старт режима), не трюк:
+      // не считается ни landed, ни failed.
 
       const row = document.createElement('div');
-      row.className = 'trick-entry';
+      row.className = 'trick-entry' + (entry.status === 'info' ? ' trick-entry-info' : '');
 
-      const icon = document.createElement('img');
-      icon.src = (entry.status === 'landed' ? 'images/Icon_landed.png' : 'images/Icon_failed.png') + '?v=' + ASSET_VERSION;
-      icon.alt = entry.status === 'landed' ? 'Засчитано' : 'Не засчитано';
+      if (entry.status !== 'info') {
+        const icon = document.createElement('img');
+        icon.src = (entry.status === 'landed' ? 'images/Icon_landed.png' : 'images/Icon_failed.png') + '?v=' + ASSET_VERSION;
+        icon.alt = entry.status === 'landed' ? 'Засчитано' : 'Не засчитано';
+        row.appendChild(icon);
+      }
 
       const span = document.createElement('span');
       span.textContent = entry.text;
 
-      row.appendChild(icon);
       row.appendChild(span);
       tricklistInner.appendChild(row);
     });
@@ -2020,10 +2139,14 @@
   // чтобы первый Roll не ждал сеть (Ramp подгрузится сам при выборе Easy/Hard).
   ensureListsLoaded();
 
-  // Кнопка Roll: первый бросок — прячет Roll, показывает кнопки-иконки после печати
+  // Кнопка Start Game: первый бросок — прячет Start Game, показывает кнопки-иконки после печати
   btn1El.addEventListener('click', () => {
     setActiveMode(GAME_MODE_CONFIG[currentGameMode].activeMode);
     setBtn1Visible(false);
+    if (pendingModeStartMessage) {
+      addTricklistEntry(pendingModeStartMessage, 'info');
+      pendingModeStartMessage = null;
+    }
     rollNextTrick();
   });
 
