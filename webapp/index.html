@@ -1727,41 +1727,62 @@
   // ==== Сообщение "режим начался" — показывается в пузыре при старте новой
   // игры (клик по Easy/Hard на Mainscreen) и затем попадает в лог трюков как
   // системная запись (без иконки landed/failed, см. addTricklistEntry). ====
+  // Собирает список в формате "A", "A and B" или "A, B and C" (Oxford-style,
+  // без запятой перед последним "and").
+  function joinWithAnd(items) {
+    if (items.length <= 1) return items.join('');
+    if (items.length === 2) return items[0] + ' and ' + items[1];
+    return items.slice(0, -1).join(', ') + ' and ' + items[items.length - 1];
+  }
+
+  function capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+
   function buildModeStartMessage(mode, difficulty, verb) {
     verb = verb || 'starts';
-    const difficultyLabel = difficulty.toUpperCase();
+    const difficultyLabel = capitalize(difficulty);
     let label;
-    const extras = [];
+    // "Стилевые" модификаторы (Oldschool, Body Varial, Ins and Outs, Air) —
+    // объединяются в одну фразу с общим суффиксом "Tricks" на конце
+    // (см. joinWithAnd + ' Tricks' ниже), а не перечисляются каждый со своим.
+    const modifiers = [];
 
     if (mode === GAME_MODE_FLAT) {
       label = 'Flatground';
-      if (getOldschool(GAME_MODE_FLAT)) extras.push('Old School tricks');
-      if (getBodyvarial(GAME_MODE_FLAT)) extras.push('Body Varials');
+      if (getOldschool(GAME_MODE_FLAT)) modifiers.push('Oldschool');
+      if (getBodyvarial(GAME_MODE_FLAT)) modifiers.push('Body Varial');
     } else if (mode === GAME_MODE_RAMP) {
       label = 'Ramp';
-      if (getAirtricks(GAME_MODE_RAMP)) extras.push('Air Tricks');
+      if (getAirtricks(GAME_MODE_RAMP)) modifiers.push('Air');
     } else if (mode === GAME_MODE_STREET) {
       label = 'Street';
-      const obstacles = STREET_OBSTACLES.filter(o => getStreetObstacle(o.key)).map(o => o.label);
-      if (obstacles.length === 0) {
+      if (getStreetOldschool()) modifiers.push('Oldschool');
+      if (getStreetInsandouts()) modifiers.push('Ins and Outs');
+
+      const selectedObstacles = STREET_OBSTACLES.filter(o => getStreetObstacle(o.key));
+      if (selectedObstacles.length === 0) {
         return label + ' ' + difficultyLabel + ' mode ' + verb + ', but no obstacles are selected — pick at least one.';
       }
-      if (obstacles.length === STREET_OBSTACLES.length) {
-        extras.push('all obstacles');
-      } else {
-        extras.push(obstacles.join(', '));
+      const obstaclesText = selectedObstacles.length === STREET_OBSTACLES.length
+        ? 'all obstacles'
+        : joinWithAnd(selectedObstacles.map(o => o.label));
+
+      let message = difficultyLabel + ' ' + label + ' mode ' + verb;
+      if (modifiers.length > 0) {
+        message += ' with ' + joinWithAnd(modifiers) + ' Tricks';
       }
-      if (getStreetOldschool()) extras.push('Old School tricks');
-      if (getStreetInsandouts()) extras.push('Ins and Outs');
-      return label + ' ' + difficultyLabel + ' mode ' + verb + ' with ' + extras.join(' and ') + '.';
+      message += ' on ' + obstaclesText;
+      return message + '.';
     } else {
       label = 'Game';
     }
 
-    if (extras.length === 0) {
-      return label + ' ' + difficultyLabel + ' mode ' + verb + ' without additional tricks.';
+    let message = difficultyLabel + ' ' + label + ' mode ' + verb;
+    if (modifiers.length > 0) {
+      message += ' with ' + joinWithAnd(modifiers) + ' Tricks';
     }
-    return label + ' ' + difficultyLabel + ' mode ' + verb + ' with additional ' + extras.join(' and ') + '.';
+    return message + '.';
   }
 
   // Сообщение о старте режима ждёт здесь до нажатия Start Game — в лог
