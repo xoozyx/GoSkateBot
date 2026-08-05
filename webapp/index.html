@@ -292,6 +292,11 @@
 
   .mode-button.disabled {
     cursor: default;
+    /* Отключаем сам hit-area от событий мыши, а не только клика — иначе
+       соседний :active-селектор (.fullcanvas-hitarea:active + .mode-button-visual)
+       всё равно сработает при нажатии и картинка "мигнёт" затемнением,
+       даже если обработчик клика ничего не делает. */
+    pointer-events: none;
   }
 
   /* "SELECT MODE" — декоративная анимация на весь канвас, под кнопками выбора режима. */
@@ -336,7 +341,7 @@
      через сиблинг-селектор, без лишнего JS. Не scale (сжался бы весь канвас
      208x306 целиком, а не только видимая кнопка) — вместо этого лёгкое
      затемнение, как обратная связь на нажатие. */
-  .fullcanvas-hitarea:active ~ .mode-button-visual {
+  .fullcanvas-hitarea:active + .mode-button-visual {
     opacity: 0.8;
   }
 
@@ -490,6 +495,88 @@
     height: 7.19%;
   }
 
+  /* Выбор сложности/препятствий для Street — показывается вместо Flat/Ramp
+     после нажатия Street. Позиции подобраны по фактическим непрозрачным
+     пикселям в PNG, как и у Flat/Ramp (см. bbox альфа-канала). */
+  #streetDifficultyPicker {
+    display: none;
+  }
+
+  #streetDifficultyPicker.visible {
+    display: block;
+  }
+
+  #toggleStreetOldschool {
+    left: 30.29%;
+    top: 14.05%;
+    width: 39.9%;
+    height: 7.19%;
+  }
+
+  #toggleStreetInsandouts {
+    left: 30.29%;
+    top: 21.24%;
+    width: 44.23%;
+    height: 7.19%;
+  }
+
+  /* Сетка препятствий 3x2: Manual Box/Kicker/Curb сверху, Stairs/Ledge/Rail снизу. */
+  #obstacleManualbox {
+    left: 30.29%;
+    top: 28.43%;
+    width: 11.54%;
+    height: 7.84%;
+  }
+
+  #obstacleKicker {
+    left: 43.75%;
+    top: 28.43%;
+    width: 11.54%;
+    height: 7.84%;
+  }
+
+  #obstacleCurb {
+    left: 57.21%;
+    top: 28.43%;
+    width: 11.54%;
+    height: 7.84%;
+  }
+
+  #obstacleStairs {
+    left: 30.29%;
+    top: 36.27%;
+    width: 11.54%;
+    height: 7.84%;
+  }
+
+  #obstacleLedge {
+    left: 43.75%;
+    top: 36.27%;
+    width: 11.54%;
+    height: 7.84%;
+  }
+
+  #obstacleRail {
+    left: 57.21%;
+    top: 36.27%;
+    width: 11.54%;
+    height: 7.84%;
+  }
+
+  #modeStreetEasy {
+    left: 30.29%;
+    top: 44.12%;
+    width: 19.23%;
+    height: 8.17%;
+  }
+
+  #modeStreetHard {
+    left: 50.96%;
+    top: 44.12%;
+    width: 19.23%;
+    height: 8.17%;
+  }
+
   /* ==== Речевой пузырь с результатом (Flatmode) ==== */
   #bubble {
     position: absolute;
@@ -601,7 +688,7 @@
     z-index: 4;
   }
 
-  .menu-button.fullcanvas-hitarea:active ~ .menu-button-visual {
+  .menu-button.fullcanvas-hitarea:active + .menu-button-visual {
     opacity: 0.8;
   }
 
@@ -766,7 +853,7 @@
     height: 8.5%;
   }
 
-  .judge-button.fullcanvas-hitarea:active ~ .judge-button-visual {
+  .judge-button.fullcanvas-hitarea:active + .judge-button-visual {
     opacity: 0.8;
   }
 
@@ -1064,7 +1151,7 @@
         <div class="mode-button-visual" id="modeRampVisual">
           <img src="images/Button_mainmenu_ramp.png?v=20260716a" alt="">
         </div>
-        <button class="mode-button disabled fullcanvas-hitarea" id="modeStreet" aria-label="Street" disabled></button>
+        <button class="mode-button enabled fullcanvas-hitarea" id="modeStreet" aria-label="Street"></button>
         <div class="mode-button-visual" id="modeStreetVisual">
           <img src="images/Button_mainmenu_street.png?v=20260716a" alt="">
         </div>
@@ -1106,6 +1193,52 @@
           <button class="mode-button enabled fullcanvas-hitarea" id="toggleAirtricks" aria-label="Air Tricks"></button>
           <div class="mode-button-visual" id="toggleAirtricksVisual">
             <img src="images/Button_mainmenu_ramp_airtricks_off.png?v=20260716a" alt="">
+          </div>
+        </div>
+
+        <div id="streetDifficultyPicker">
+          <div class="difficulty-picker-shadow">
+            <img src="images/Shadow_screen.png?v=20260716a" alt="">
+          </div>
+          <button class="mode-button enabled fullcanvas-hitarea" id="toggleStreetOldschool" aria-label="Old School"></button>
+          <div class="mode-button-visual" id="toggleStreetOldschoolVisual">
+            <img src="images/Button_mainmenu_street_oldschool_off.png?v=20260716a" alt="">
+          </div>
+          <button class="mode-button enabled fullcanvas-hitarea" id="toggleStreetInsandouts" aria-label="Ins and Outs"></button>
+          <div class="mode-button-visual" id="toggleStreetInsandoutsVisual">
+            <img src="images/Button_mainmenu_street_insandouts_off.png?v=20260716a" alt="">
+          </div>
+          <button class="mode-button enabled fullcanvas-hitarea" id="obstacleManualbox" aria-label="Manual Box"></button>
+          <div class="mode-button-visual" id="obstacleManualboxVisual">
+            <img src="images/Button_mainmenu_street_manualbox_on.png?v=20260716a" alt="">
+          </div>
+          <button class="mode-button enabled fullcanvas-hitarea" id="obstacleKicker" aria-label="Kicker"></button>
+          <div class="mode-button-visual" id="obstacleKickerVisual">
+            <img src="images/Button_mainmenu_street_kicker_on.png?v=20260716a" alt="">
+          </div>
+          <button class="mode-button enabled fullcanvas-hitarea" id="obstacleCurb" aria-label="Curb"></button>
+          <div class="mode-button-visual" id="obstacleCurbVisual">
+            <img src="images/Button_mainmenu_street_curb_on.png?v=20260716a" alt="">
+          </div>
+          <button class="mode-button enabled fullcanvas-hitarea" id="obstacleStairs" aria-label="Stairs"></button>
+          <div class="mode-button-visual" id="obstacleStairsVisual">
+            <img src="images/Button_mainmenu_street_stairs_on.png?v=20260716a" alt="">
+          </div>
+          <button class="mode-button enabled fullcanvas-hitarea" id="obstacleLedge" aria-label="Ledge"></button>
+          <div class="mode-button-visual" id="obstacleLedgeVisual">
+            <img src="images/Button_mainmenu_street_ledge_on.png?v=20260716a" alt="">
+          </div>
+          <button class="mode-button enabled fullcanvas-hitarea" id="obstacleRail" aria-label="Rail"></button>
+          <div class="mode-button-visual" id="obstacleRailVisual">
+            <img src="images/Button_mainmenu_street_rail_on.png?v=20260716a" alt="">
+          </div>
+          <button class="mode-button enabled fullcanvas-hitarea" id="modeStreetEasy" aria-label="Easy"></button>
+          <div class="mode-button-visual" id="modeStreetEasyVisual">
+            <img src="images/Button_mainmenu_street_easy.png?v=20260716a" alt="">
+          </div>
+          <button class="mode-button enabled fullcanvas-hitarea" id="modeStreetHard" aria-label="Hard"></button>
+          <div class="mode-button-visual" id="modeStreetHardVisual">
+            <img src="images/Button_mainmenu_street_hard.png?v=20260716a" alt="">
           </div>
         </div>
 
@@ -1265,7 +1398,7 @@
   }
 
   const ACTIVE_MODE_FLAT = 1;
-  // const ACTIVE_MODE_STREET = 2; // на будущее, когда появится режим Street
+  const ACTIVE_MODE_STREET = 2;
   const ACTIVE_MODE_RAMP = 3;
 
   // ==== Текущий игровой режим ('flat' или 'ramp') — определяет, какие данные
@@ -1273,6 +1406,7 @@
   // какой способ генерации трюков использовать. ====
   const GAME_MODE_FLAT = 'flat';
   const GAME_MODE_RAMP = 'ramp';
+  const GAME_MODE_STREET = 'street';
   let currentGameMode = GAME_MODE_FLAT;
 
   const GAME_MODE_CONFIG = {
@@ -1294,11 +1428,18 @@
       airtricksEasyFile: 'data/Rampmode_tricks_Airs_easy.txt',
       airtricksHardFile: 'data/Rampmode_tricks_Airs_hard.txt',
     },
+    [GAME_MODE_STREET]: {
+      activeMode: ACTIVE_MODE_STREET,
+      groundImage: 'images/Animation_street.png',
+      // У Street нет единой пары easy/hard файлов — список трюков собирается
+      // динамически из файлов на препятствие (см. STREET_OBSTACLES/loadStreetLists).
+    },
   };
 
   function getGameModeByActiveMode(activeMode) {
     if (activeMode === ACTIVE_MODE_RAMP) return GAME_MODE_RAMP;
     if (activeMode === ACTIVE_MODE_FLAT) return GAME_MODE_FLAT;
+    if (activeMode === ACTIVE_MODE_STREET) return GAME_MODE_STREET;
     return null;
   }
 
@@ -1398,6 +1539,58 @@
     return getAirtricks(currentGameMode);
   }
 
+  // ==== Street: препятствия (Curb/Kicker/Ledge/Manual Box/Rail/Stairs) —
+  // каждое можно включать/выключать независимо, ПО УМОЛЧАНИЮ ВСЕ ВКЛЮЧЕНЫ
+  // (иначе свежий игрок открывает Street и получает пустой список трюков).
+  // Только явно сохранённое "выключено" (0) отключает препятствие. ====
+  function getStreetObstacle(obstacleKey) {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_TOGGLE_PREFIX + 'obstacle_' + obstacleKey + '_' + GAME_MODE_STREET);
+      return raw === null ? true : raw === '1';
+    } catch (e) {
+      return true;
+    }
+  }
+  function setStreetObstacle(obstacleKey, enabled) {
+    setToggle('obstacle_' + obstacleKey, GAME_MODE_STREET, enabled);
+  }
+
+  // Old School и Ins and Outs (только Street) — как Old School/Body Varial у
+  // Flat: просто вкл/выкл, добавляют файлы поверх обычных списков per-препятствие.
+  function getStreetOldschool() {
+    return getOldschool(GAME_MODE_STREET);
+  }
+  function setStreetOldschool(enabled) {
+    setOldschool(GAME_MODE_STREET, enabled);
+  }
+  function getStreetInsandouts() {
+    return getToggle('insandouts', GAME_MODE_STREET);
+  }
+  function setStreetInsandouts(enabled) {
+    setToggle('insandouts', GAME_MODE_STREET, enabled);
+  }
+
+  // Препятствия Street: key — используется в id кнопок/hранилище, fileKey —
+  // используется в имени файла data/Streetmode_tricks_<fileKey>_*.txt (у Curb
+  // он исторически называется "slappy" — по названию трюков на бордюре — а
+  // не "curb"), supportsInsandouts — только у этих есть отдельная пара
+  // _insandouts_easy/_hard.txt файлов (Kicker и Stairs — нет, см. data/).
+  const STREET_OBSTACLES = [
+    { key: 'manualbox', label: 'Manual Box', fileKey: 'manualbox', supportsInsandouts: true },
+    { key: 'kicker', label: 'Kicker', fileKey: 'kicker', supportsInsandouts: false },
+    { key: 'curb', label: 'Curb', fileKey: 'slappy', supportsInsandouts: true },
+    { key: 'stairs', label: 'Stairs', fileKey: 'stairs', supportsInsandouts: false },
+    { key: 'ledge', label: 'Ledge', fileKey: 'ledge', supportsInsandouts: true },
+    { key: 'rail', label: 'Rail', fileKey: 'rail', supportsInsandouts: true },
+  ];
+
+  function streetFilePath(fileKey, variant, difficulty) {
+    const parts = ['Streetmode_tricks', fileKey];
+    if (variant) parts.push(variant);
+    parts.push(difficulty);
+    return 'data/' + parts.join('_') + '.txt';
+  }
+
   // ==== Навигация между экранами ====
   const logoScreen = document.getElementById('logoScreen');
   const mainscreenEl = document.getElementById('mainscreen');
@@ -1458,6 +1651,7 @@
   // кликабельна — назад возвращает отдельная кнопка Quit.
   const flatDifficultyPickerEl = document.getElementById('flatDifficultyPicker');
   const rampDifficultyPickerEl = document.getElementById('rampDifficultyPicker');
+  const streetDifficultyPickerEl = document.getElementById('streetDifficultyPicker');
   const modeFlatEl = document.getElementById('modeFlat');
   const modeFlatVisualEl = document.getElementById('modeFlatVisual');
   const modeRampEl = document.getElementById('modeRamp');
@@ -1470,6 +1664,7 @@
   function closeAllDifficultyPickers() {
     flatDifficultyPickerEl.classList.remove('visible');
     rampDifficultyPickerEl.classList.remove('visible');
+    streetDifficultyPickerEl.classList.remove('visible');
     mainscreenQuitEl.classList.remove('visible');
     mainscreenQuitVisualEl.classList.remove('visible');
     [modeFlatEl, modeFlatVisualEl, modeRampEl, modeRampVisualEl, modeStreetEl, modeStreetVisualEl].forEach((el) => {
@@ -1512,6 +1707,19 @@
     );
   });
 
+  document.getElementById('modeStreet').addEventListener('click', () => {
+    if (streetDifficultyPickerEl.classList.contains('visible')) return;
+    syncStreetOldschoolToggleVisual();
+    syncStreetInsandoutsToggleVisual();
+    syncAllStreetObstacleVisuals();
+    syncStreetModeButtons();
+    openDifficultyPicker(
+      streetDifficultyPickerEl,
+      [modeStreetEl, modeStreetVisualEl],
+      [modeFlatEl, modeRampEl]
+    );
+  });
+
   mainscreenQuitEl.addEventListener('click', () => {
     closeAllDifficultyPickers();
   });
@@ -1519,7 +1727,8 @@
   // ==== Сообщение "режим начался" — показывается в пузыре при старте новой
   // игры (клик по Easy/Hard на Mainscreen) и затем попадает в лог трюков как
   // системная запись (без иконки landed/failed, см. addTricklistEntry). ====
-  function buildModeStartMessage(mode, difficulty) {
+  function buildModeStartMessage(mode, difficulty, verb) {
+    verb = verb || 'starts';
     const difficultyLabel = difficulty.toUpperCase();
     let label;
     const extras = [];
@@ -1531,14 +1740,28 @@
     } else if (mode === GAME_MODE_RAMP) {
       label = 'Ramp';
       if (getAirtricks(GAME_MODE_RAMP)) extras.push('Air Tricks');
+    } else if (mode === GAME_MODE_STREET) {
+      label = 'Street';
+      const obstacles = STREET_OBSTACLES.filter(o => getStreetObstacle(o.key)).map(o => o.label);
+      if (obstacles.length === 0) {
+        return label + ' ' + difficultyLabel + ' mode ' + verb + ', but no obstacles are selected — pick at least one.';
+      }
+      if (obstacles.length === STREET_OBSTACLES.length) {
+        extras.push('all obstacles');
+      } else {
+        extras.push(obstacles.join(', '));
+      }
+      if (getStreetOldschool()) extras.push('Old School tricks');
+      if (getStreetInsandouts()) extras.push('Ins and Outs');
+      return label + ' ' + difficultyLabel + ' mode ' + verb + ' with ' + extras.join(' and ') + '.';
     } else {
       label = 'Game';
     }
 
     if (extras.length === 0) {
-      return label + ' ' + difficultyLabel + ' mode starts without additional tricks.';
+      return label + ' ' + difficultyLabel + ' mode ' + verb + ' without additional tricks.';
     }
-    return label + ' ' + difficultyLabel + ' mode starts with additional ' + extras.join(' and ') + '.';
+    return label + ' ' + difficultyLabel + ' mode ' + verb + ' with additional ' + extras.join(' and ') + '.';
   }
 
   // Сообщение о старте режима ждёт здесь до нажатия Start Game — в лог
@@ -1546,24 +1769,25 @@
   // трюком (см. btn1El.addEventListener ниже).
   let pendingModeStartMessage = null;
 
-  function showModeStartMessage(text) {
-    // Ждём, пока анимация смены экрана дорисует новый экран (см.
-    // transitionToScreen), иначе пузырь мелькнёт ещё поверх Mainscreen.
+  function showModeStartMessage(text, delayMs) {
+    // Ждём delayMs (для свежего старта — пока анимация смены экрана дорисует
+    // новый экран, см. transitionToScreen, иначе пузырь мелькнёт ещё поверх
+    // Mainscreen; для restart — экран не меняется, так что задержка минимальна).
     setTimeout(() => {
       bubbleEl.classList.add('active');
       setResultText(text, false);
-    }, CHANGE_SWAP_AT_MS + 80);
+    }, delayMs);
   }
 
   function startGameWithDifficulty(mode, difficulty) {
-    const startMessage = buildModeStartMessage(mode, difficulty);
+    const startMessage = buildModeStartMessage(mode, difficulty, 'starts');
     currentGameMode = mode;
     setDifficulty(mode, difficulty);
     applyGameModeVisuals();
     updateDifficultyBadge();
     closeAllDifficultyPickers();
     transitionToScreen(flatmodeEl);
-    showModeStartMessage(startMessage);
+    showModeStartMessage(startMessage, CHANGE_SWAP_AT_MS + 80);
     pendingModeStartMessage = startMessage;
   }
 
@@ -1630,7 +1854,114 @@
     syncAirtricksToggleVisual();
   });
 
-  // Street пока неактивен — обработчика клика намеренно нет
+  // ==== Street: Old School / Ins and Outs — те же переключатели-модификаторы,
+  // что и у Flat/Ramp, но добавляют файлы per-препятствие (см. loadStreetLists).
+  // Всегда привязаны к GAME_MODE_STREET явно, а не к currentGameMode — по той
+  // же причине, что и у остальных переключателей режимов. ====
+  const toggleStreetOldschoolImg = document.querySelector('#toggleStreetOldschoolVisual img');
+
+  function syncStreetOldschoolToggleVisual() {
+    const on = getStreetOldschool();
+    toggleStreetOldschoolImg.src = 'images/Button_mainmenu_street_oldschool_' + (on ? 'on' : 'off') + '.png?v=' + ASSET_VERSION;
+  }
+
+  document.getElementById('toggleStreetOldschool').addEventListener('click', () => {
+    setStreetOldschool(!getStreetOldschool());
+    syncStreetOldschoolToggleVisual();
+    syncStreetModeButtons();
+  });
+
+  const toggleStreetInsandoutsImg = document.querySelector('#toggleStreetInsandoutsVisual img');
+
+  function syncStreetInsandoutsToggleVisual() {
+    const on = getStreetInsandouts();
+    toggleStreetInsandoutsImg.src = 'images/Button_mainmenu_street_insandouts_' + (on ? 'on' : 'off') + '.png?v=' + ASSET_VERSION;
+  }
+
+  document.getElementById('toggleStreetInsandouts').addEventListener('click', () => {
+    setStreetInsandouts(!getStreetInsandouts());
+    syncStreetInsandoutsToggleVisual();
+    syncStreetModeButtons();
+  });
+
+  // ==== Street: препятствия — 6 независимых переключателей, каждый вкл/выкл
+  // добавляет/убирает свою пару _easy/_hard файлов целиком (плюс Old
+  // School/Ins and Outs варианты, если те тоже включены — см. loadStreetLists).
+  // По умолчанию (пока явно не выключены) все включены, см. getStreetObstacle. ====
+  const OBSTACLE_BUTTON_ID = {
+    manualbox: 'obstacleManualbox',
+    kicker: 'obstacleKicker',
+    curb: 'obstacleCurb',
+    stairs: 'obstacleStairs',
+    ledge: 'obstacleLedge',
+    rail: 'obstacleRail',
+  };
+
+  const obstacleImgs = {};
+  STREET_OBSTACLES.forEach((obstacle) => {
+    obstacleImgs[obstacle.key] = document.querySelector('#' + OBSTACLE_BUTTON_ID[obstacle.key] + 'Visual img');
+  });
+
+  function syncStreetObstacleVisual(obstacleKey) {
+    const on = getStreetObstacle(obstacleKey);
+    obstacleImgs[obstacleKey].src = 'images/Button_mainmenu_street_' + obstacleKey + '_' + (on ? 'on' : 'off') + '.png?v=' + ASSET_VERSION;
+  }
+
+  function syncAllStreetObstacleVisuals() {
+    STREET_OBSTACLES.forEach((obstacle) => syncStreetObstacleVisual(obstacle.key));
+  }
+
+  // ==== Street: Easy/Hard блокируются и становятся серыми, когда:
+  //  1) не выбрано вообще ни одного препятствия (генерировать нечего), или
+  //  2) выбран только Manual Box — трюков там слишком мало (4 easy / 2 hard,
+  //     и Old School не добавляет новых, см. data/) для полноценной генерации.
+  // Исключение из пункта 2: Manual Box + Ins and Outs — возвращает кнопки в
+  // обычное состояние (файл Manual Box Ins and Outs расценивается как
+  // самостоятельный набор, а не как "просто Manual Box"). Состояние Old
+  // School на это исключение не влияет. ====
+  const modeStreetEasyEl = document.getElementById('modeStreetEasy');
+  const modeStreetHardEl = document.getElementById('modeStreetHard');
+  const modeStreetEasyImg = document.querySelector('#modeStreetEasyVisual img');
+  const modeStreetHardImg = document.querySelector('#modeStreetHardVisual img');
+
+  function isStreetTooFewObstacles() {
+    const selected = STREET_OBSTACLES.filter(o => getStreetObstacle(o.key));
+    if (selected.length === 0) return true; // ни одного препятствия
+    if (selected.length === 1 && selected[0].key === 'manualbox') {
+      return !getStreetInsandouts(); // Manual Box + Ins and Outs — исключение
+    }
+    return false;
+  }
+
+  function syncStreetModeButtons() {
+    const grayedOut = isStreetTooFewObstacles();
+
+    modeStreetEasyImg.src = 'images/Button_mainmenu_street_easy' + (grayedOut ? '_gray' : '') + '.png?v=' + ASSET_VERSION;
+    modeStreetHardImg.src = 'images/Button_mainmenu_street_hard' + (grayedOut ? '_gray' : '') + '.png?v=' + ASSET_VERSION;
+
+    [modeStreetEasyEl, modeStreetHardEl].forEach((el) => {
+      el.classList.toggle('disabled', grayedOut);
+      el.classList.toggle('enabled', !grayedOut);
+    });
+  }
+
+  STREET_OBSTACLES.forEach((obstacle) => {
+    document.getElementById(OBSTACLE_BUTTON_ID[obstacle.key]).addEventListener('click', () => {
+      setStreetObstacle(obstacle.key, !getStreetObstacle(obstacle.key));
+      syncStreetObstacleVisual(obstacle.key);
+      syncStreetModeButtons();
+    });
+  });
+
+  modeStreetEasyEl.addEventListener('click', () => {
+    if (isStreetTooFewObstacles()) return;
+    startGameWithDifficulty(GAME_MODE_STREET, DIFFICULTY_EASY);
+  });
+
+  modeStreetHardEl.addEventListener('click', () => {
+    if (isStreetTooFewObstacles()) return;
+    startGameWithDifficulty(GAME_MODE_STREET, DIFFICULTY_HARD);
+  });
 
   // ==== Генератор трюков (Flatmode/Rampmode) ====
   const resultEl = document.getElementById('result');
@@ -1802,17 +2133,76 @@
       dataLoaded = false;
     }
 
-    // Howto.txt грузим один раз (одинаковый для всех режимов и сложностей).
-    if (howtoLinks.size === 0) {
-      try {
-        const howtoRes = await fetch('data/Howto.txt');
-        if (howtoRes.ok) {
-          howtoLinks = parseReplacements(await howtoRes.text());
-        }
-      } catch (e) {
-        console.warn('Файл data/Howto.txt не найден — кнопка Info будет искать в Google.');
+    await ensureHowtoLoaded();
+  }
+
+  // Howto.txt грузим один раз (одинаковый для всех режимов и сложностей,
+  // включая Street) — общий хелпер, чтобы не дублировать между loadLists и
+  // loadStreetLists.
+  async function ensureHowtoLoaded() {
+    if (howtoLinks.size > 0) return;
+    try {
+      const howtoRes = await fetch('data/Howto.txt');
+      if (howtoRes.ok) {
+        howtoLinks = parseReplacements(await howtoRes.text());
       }
+    } catch (e) {
+      console.warn('Файл data/Howto.txt не найден — кнопка Info будет искать в Google.');
     }
+  }
+
+  // ==== Street: список трюков собирается динамически из файлов на
+  // препятствие (в отличие от Flat/Ramp с фиксированной парой easy/hard).
+  // Загружаем/агрегируем заново только если изменилась "подпись" выбора —
+  // сложность + набор включённых препятствий + Old School/Ins and Outs. ====
+  let streetPool = [];
+  let streetDataLoaded = false;
+  let streetDataLoadedSignature = null;
+
+  function getStreetSelectionSignature(difficulty) {
+    const obstacleBits = STREET_OBSTACLES.map(o => (getStreetObstacle(o.key) ? '1' : '0')).join('');
+    return difficulty + '|' + obstacleBits + '|' + (getStreetOldschool() ? '1' : '0') + '|' + (getStreetInsandouts() ? '1' : '0');
+  }
+
+  async function loadStreetLists(difficulty) {
+    streetDataLoaded = false;
+    const oldschool = getStreetOldschool();
+    const insandouts = getStreetInsandouts();
+    const signature = getStreetSelectionSignature(difficulty);
+
+    try {
+      let pool = [];
+      for (const obstacle of STREET_OBSTACLES) {
+        if (!getStreetObstacle(obstacle.key)) continue;
+
+        pool = pool.concat(await fetchTrickList(streetFilePath(obstacle.fileKey, null, DIFFICULTY_EASY)));
+        if (difficulty === DIFFICULTY_HARD) {
+          pool = pool.concat(await fetchTrickList(streetFilePath(obstacle.fileKey, null, DIFFICULTY_HARD)));
+        }
+
+        if (oldschool) {
+          pool = pool.concat(await fetchTrickList(streetFilePath(obstacle.fileKey, 'oldschool', DIFFICULTY_EASY)));
+          if (difficulty === DIFFICULTY_HARD) {
+            pool = pool.concat(await fetchTrickList(streetFilePath(obstacle.fileKey, 'oldschool', DIFFICULTY_HARD)));
+          }
+        }
+
+        if (insandouts && obstacle.supportsInsandouts) {
+          pool = pool.concat(await fetchTrickList(streetFilePath(obstacle.fileKey, 'insandouts', DIFFICULTY_EASY)));
+          if (difficulty === DIFFICULTY_HARD) {
+            pool = pool.concat(await fetchTrickList(streetFilePath(obstacle.fileKey, 'insandouts', DIFFICULTY_HARD)));
+          }
+        }
+      }
+      streetPool = pool;
+      streetDataLoaded = pool.length > 0;
+      streetDataLoadedSignature = signature;
+    } catch (e) {
+      console.error('Не удалось загрузить списки трюков для Street:', e);
+      streetDataLoaded = false;
+    }
+
+    await ensureHowtoLoaded();
   }
 
   // Загружает данные для currentGameMode/текущей сложности/переключателей,
@@ -1820,6 +2210,14 @@
   // (переключение Flat <-> Ramp, Easy <-> Hard или любого модификатора
   // вкл/выкл туда-обратно не должно каждый раз заново дёргать сеть).
   async function ensureListsLoaded() {
+    if (currentGameMode === GAME_MODE_STREET) {
+      const difficulty = getFlatDifficulty();
+      const signature = getStreetSelectionSignature(difficulty);
+      if (streetDataLoaded && streetDataLoadedSignature === signature) return;
+      await loadStreetLists(difficulty);
+      return;
+    }
+
     const difficulty = getFlatDifficulty();
     const oldschool = getFlatOldschool();
     const bodyvarial = getFlatBodyvarial();
@@ -1835,11 +2233,25 @@
     await loadLists(currentGameMode, difficulty, oldschool, bodyvarial, airtricks);
   }
 
+  // Данные готовы для generateTrick() под ТЕКУЩИЙ режим/сложность/переключатели
+  // прямо сейчас — используется в rollNextTrick(), чтобы решить, ждать ли
+  // ensureListsLoaded() перед первой генерацией.
+  function isDataReadyForCurrentMode() {
+    if (currentGameMode === GAME_MODE_STREET) {
+      return streetDataLoaded && streetDataLoadedSignature === getStreetSelectionSignature(getFlatDifficulty());
+    }
+    return dataLoaded && dataLoadedForMode === currentGameMode;
+  }
+
   // Генерация трюка теперь — просто случайный выбор из подходящего списка,
-  // собранного из easy/hard + любых включённых модификаторов (см. loadLists).
-  // Никакого REROLL/веса/сложности-суммы больше нет — за это отвечает то,
-  // в каком файле лежит трюк.
+  // собранного из easy/hard + любых включённых модификаторов (см. loadLists
+  // для Flat/Ramp, loadStreetLists для Street). Никакого REROLL/веса/
+  // сложности-суммы больше нет — за это отвечает то, в каком файле лежит трюк.
   function generateTrick() {
+    if (currentGameMode === GAME_MODE_STREET) {
+      if (streetPool.length === 0) return '';
+      return streetPool[Math.floor(Math.random() * streetPool.length)];
+    }
     const pool = easyTricks.concat(
       hardTricks,
       oldschoolEasyTricks, oldschoolHardTricks,
@@ -2099,12 +2511,12 @@
     judgeButtonsEl.classList.remove('visible');
     setRetryVisible(false);
 
-    if (!dataLoaded || dataLoadedForMode !== currentGameMode) {
+    if (!isDataReadyForCurrentMode()) {
       setResultText('Списки трюков ещё загружаются...', false);
       bubbleEl.classList.add('active');
       await ensureListsLoaded();
 
-      if (!dataLoaded || dataLoadedForMode !== currentGameMode) {
+      if (!isDataReadyForCurrentMode()) {
         // Не получилось — показываем Retry вместо Roll/Landed/Failed, а в
         // пузыре вместо "загружается" — понятное сообщение об ошибке, и
         // пузырь НЕ прячем, чтобы сообщение оставалось видно рядом с Retry.
@@ -2237,10 +2649,15 @@
   }
 
   // Restart: сбрасывает текущую игру (тот же режим и сложность), не выходя
-  // на Mainscreen — просто снова экран "готов к Roll".
+  // на Mainscreen — просто снова экран "готов к Roll". Показывает то же
+  // сообщение, что и при свежем старте, но с "restarts" вместо "starts" —
+  // экран при этом не переключается, так что задержка перед показом минимальна.
   function doRestart() {
+    const restartMessage = buildModeStartMessage(currentGameMode, getFlatDifficulty(), 'restarts');
     resetGameState();
     hideQuitConfirm();
+    showModeStartMessage(restartMessage, 80);
+    pendingModeStartMessage = restartMessage;
   }
 
   btn2El.addEventListener('click', () => {
