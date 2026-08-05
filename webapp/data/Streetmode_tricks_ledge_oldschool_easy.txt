@@ -1,48 +1,28 @@
-Boardslide on Ledge
-Fakie Boardslide on Ledge
-FS Boardslide on Ledge
-Fakie FS Boardslide on Ledge
-Noseslide on Ledge
-Fakie Noseslide on Ledge
-FS Noseslide on Ledge
-Fakie FS Noseslide on Ledge
-Tailslide on Ledge
-Fakie Tailslide on Ledge
-50-50 on Ledge
-Fakie 50-50 on Ledge
-BS 50-50 on Ledge
-Fakie BS 50-50 on Ledge
-5.0 on Ledge
-Fakie 5.0 on Ledge
-BS 5.0 on Ledge
-Fakie BS 5.0 on Ledge
-Nosegrind on Ledge
-Fakie Nosegrind on Ledge
-BS Nosegrind on Ledge
-Fakie BS Nosegrind on Ledge
-Crooked on Ledge
-Fakie Crooked on Ledge
-FS Crooked on Ledge
-Fakie FS Crooked on Ledge
-Suski on Ledge
-Fakie Suski on Ledge
-BS Suski on Ledge
-Fakie BS Suski on Ledge
-Salad on Ledge
-Fakie Salad on Ledge
-FS Salad on Ledge
-Fakie FS Salad on Ledge
-Smith on Ledge
-Fakie Smith on Ledge
-Feeble on Ledge
-Fakie Feeble on Ledge
-FS Feeble on Ledge
-Fakie FS Feeble on Ledge
-Losi on Ledge
-Fakie Losi on Ledge
-BS Losi on Ledge
-Fakie BS Losi on Ledge
-Willy on Ledge
-Fakie Willy on Ledge
-FS Willy on Ledge
-Fakie FS Willy on Ledge
+Boneless to Boardslide on Ledge
+Boneless to FS Boardslide on Ledge
+Boneless to Lipslide on Ledge
+Boneless to BS Lipslide on Ledge
+Boneless to Noseslide on Ledge
+Boneless to FS Noseslide on Ledge
+Boneless to Tailslide on Ledge
+Boneless to BS Tailslide on Ledge
+Boneless to Bluntslide on Ledge
+Boneless to FS Bluntslide on Ledge
+Boneless to 50-50 on Ledge
+Boneless to BS 50-50 on Ledge
+Boneless to 5.0 on Ledge
+Boneless to BS 5.0 on Ledge
+No Comply to Boardslide on Ledge
+No Comply to FS Boardslide on Ledge
+No Comply to Lipslide on Ledge
+No Comply to BS Lipslide on Ledge
+No Comply to Noseslide on Ledge
+No Comply to FS Noseslide on Ledge
+No Comply to Tailslide on Ledge
+No Comply to BS Tailslide on Ledge
+No Comply to Bluntslide on Ledge
+No Comply to FS Bluntslide on Ledge
+No Comply to 50-50 on Ledge
+No Comply to BS 50-50 on Ledge
+No Comply to 5.0 on Ledge
+No Comply to BS 5.0 on Ledge

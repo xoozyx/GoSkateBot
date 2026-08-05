@@ -1,80 +1,52 @@
-Switch Boardslide on Ledge
-Nollie Boardslide on Ledge
-Switch FS Boardslide on Ledge
-Nollie FS Boardslide on Ledge
-Lipslide on Ledge
-Fakie Lipslide on Ledge
-Switch Lipslide on Ledge
-Nollie Lipslide on Ledge
-BS Lipslide on Ledge
-Fakie BS Lipslide on Ledge
-Switch BS Lipslide on Ledge
-Nollie BS Lipslide on Ledge
-Switch Noseslide on Ledge
-Nollie Noseslide on Ledge
-Switch FS Noseslide on Ledge
-Nollie FS Noseslide on Ledge
-Switch Tailslide on Ledge
-Nollie Tailslide on Ledge
-BS Tailslide on Ledge
-Fakie BS Tailslide on Ledge
-Switch BS Tailslide on Ledge
-Nollie BS Tailslide on Ledge
-Bluntslide on Ledge
-Fakie Bluntslide on Ledge
-Switch Bluntslide on Ledge
-Nollie Bluntslide on Ledge
-FS Bluntslide on Ledge
-Fakie FS Bluntslide on Ledge
-Switch FS Bluntslide on Ledge
-Nollie FS Bluntslide on Ledge
-Noseblunt on Ledge
-Fakie Noseblunt on Ledge
-Switch Noseblunt on Ledge
-Nollie Noseblunt on Ledge
-BS Noseblunt on Ledge
-Fakie BS Noseblunt on Ledge
-Switch BS Noseblunt on Ledge
-Nollie BS Noseblunt on Ledge
-Switch 50-50 on Ledge
-Nollie 50-50 on Ledge
-Switch BS 50-50 on Ledge
-Nollie BS 50-50 on Ledge
-Switch 5.0 on Ledge
-Nollie 5.0 on Ledge
-Switch BS 5.0 on Ledge
-Nollie BS 5.0 on Ledge
-Switch Nosegrind on Ledge
-Nollie Nosegrind on Ledge
-Switch BS Nosegrind on Ledge
-Nollie BS Nosegrind on Ledge
-Switch Crooked on Ledge
-Nollie Crooked on Ledge
-Switch FS Crooked on Ledge
-Nollie FS Crooked on Ledge
-Switch Suski on Ledge
-Nollie Suski on Ledge
-Switch BS Suski on Ledge
-Nollie BS Suski on Ledge
-Switch Salad on Ledge
-Nollie Salad on Ledge
-Switch FS Salad on Ledge
-Nollie FS Salad on Ledge
-Switch Smith on Ledge
-Nollie Smith on Ledge
-BS Smith on Ledge
-Fakie BS Smith on Ledge
-Switch BS Smith on Ledge
-Nollie BS Smith on Ledge
-Switch Feeble on Ledge
-Nollie Feeble on Ledge
-Switch FS Feeble on Ledge
-Nollie FS Feeble on Ledge
-Switch Losi on Ledge
-Nollie Losi on Ledge
-Switch BS Losi on Ledge
-Nollie BS Losi on Ledge
-Switch Willy on Ledge
-Nollie Willy on Ledge
-Switch FS Willy on Ledge
-Nollie FS Willy on Ledge
+Switch Boneless to Boardslide on Ledge
+Switch Boneless to FS Boardslide on Ledge
+Switch Boneless to Lipslide on Ledge
+Switch Boneless to BS Lipslide on Ledge
+Switch Boneless to Noseslide on Ledge
+Switch Boneless to FS Noseslide on Ledge
+Switch Boneless to Tailslide on Ledge
+Switch Boneless to BS Tailslide on Ledge
+Switch Boneless to Bluntslide on Ledge
+Switch Boneless to FS Bluntslide on Ledge
+Boneless to Noseblunt on Ledge
+Switch Boneless to Noseblunt on Ledge
+Boneless to BS Noseblunt on Ledge
+Switch Boneless to BS Noseblunt on Ledge
+Switch Boneless to 50-50 on Ledge
+Switch Boneless to BS 50-50 on Ledge
+Switch Boneless to 5.0 on Ledge
+Switch Boneless to BS 5.0 on Ledge
+Switch No Comply to Boardslide on Ledge
+Switch No Comply to FS Boardslide on Ledge
+Switch No Comply to Lipslide on Ledge
+Switch No Comply to BS Lipslide on Ledge
+Darkslide on Ledge
+Fakie Darkslide on Ledge
+Switch Darkslide on Ledge
+Nollie Darkslide on Ledge
+FS Darkslide on Ledge
+Fakie FS Darkslide on Ledge
+Switch FS Darkslide on Ledge
+Nollie FS Darkslide on Ledge
+Switch No Comply to Noseslide on Ledge
+Switch No Comply to FS Noseslide on Ledge
+Switch No Comply to Tailslide on Ledge
+Switch No Comply to BS Tailslide on Ledge
+Switch No Comply to Bluntslide on Ledge
+Switch No Comply to FS Bluntslide on Ledge
+No Comply to Noseblunt on Ledge
+Switch No Comply to Noseblunt on Ledge
+No Comply to BS Noseblunt on Ledge
+Switch No Comply to BS Noseblunt on Ledge
+Switch No Comply to 50-50 on Ledge
+Switch No Comply to BS 50-50 on Ledge
+Switch No Comply to 5.0 on Ledge
+Switch No Comply to BS 5.0 on Ledge
+Darkslide on Ledge
+Fakie Darkslide on Ledge
+Switch Darkslide on Ledge
+Nollie Darkslide on Ledge
+FS Darkslide on Ledge
+Fakie FS Darkslide on Ledge
+Switch FS Darkslide on Ledge
+Nollie FS Darkslide on Ledge

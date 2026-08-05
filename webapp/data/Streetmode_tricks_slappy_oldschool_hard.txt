@@ -1,17 +1,17 @@
-Switch Slappy 50-50
-Switch Slappy BS 50-50
-Switch Slappy 5.0
-Switch Slappy BS 5.0
-Slappy Nosegrind
-Switch Slappy Nosegrind
-Slappy BS Nosegrind
-Switch Slappy BS Nosegrind
-Switch Slappy Feeble
-Switch Slappy FS Feeble
-Switch Slappy Smith
-Switch Slappy BS Smith
-Switch Slappy Crooked
-Slappy FS Crooked
-Switch Slappy FS Crooked
-Slappy Bluntslide
-Switch Slappy Bluntslide
+Switch No Comply to Slappy 50-50
+Switch No Comply to Slappy BS 50-50
+Switch No Comply to Slappy Noseslide
+Switch No Comply to Slappy FS Noseslide
+Switch No Comply to Slappy Boardslide
+Switch No Comply to Slappy FS Boardslide
+Switch No Comply to Slappy 5.0
+Switch No Comply to Slappy BS 5.0
+Switch No Comply to Slappy Nosegrind
+Switch No Comply to Slappy BS Nosegrind
+Switch No Comply to Slappy Feeble
+Switch No Comply to Slappy FS Feeble
+Switch No Comply to Slappy Smith
+Switch No Comply to Slappy BS Smith
+Switch No Comply to Slappy Crooked
+Switch No Comply to Slappy FS Crooked
+Switch No Comply to Slappy Bluntslide

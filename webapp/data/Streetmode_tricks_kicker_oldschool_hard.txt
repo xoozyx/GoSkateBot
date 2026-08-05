@@ -1,76 +1,11 @@
-Fakie from Kicker
-Nollie from Kicker
-Fakie FS 180 from Kicker
-Nollie FS 180 from Kicker
-Fakie Half Cab from Kicker
-Switch BS 180 from Kicker
-Nollie BS 180 from Kicker
-FS 360 Ollie from Kicker
-Fakie FS 360 from Kicker
-Switch FS 360 from Kicker
-Nollie FS 360 from Kicker
-BS 360 Ollie from Kicker
-Fakie Full Cab from Kicker
-Switch BS 360 from Kicker
-Nollie BS 360 from Kicker
-Fakie Kickflip from Kicker
-Switch Kickflip from Kicker
-Nollie Kickflip from Kicker
-Fakie Heelflip from Kicker
-Switch Heelflip from Kicker
-Nollie Heelflip from Kicker
-Fakie Pop Shove-It from Kicker
-Switch Pop Shove-It from Kicker
-Fakie FS Pop Shove-It from Kicker
-Switch FS Pop Shove-It from Kicker
-Fakie Varial Kickflip from Kicker
-Switch Varial Kickflip from Kicker
-Nollie Varial Kickflip from Kicker
-Varial Heelflip from Kicker
-Fakie Varial Heelflip from Kicker
-Switch Varial Heelflip from Kicker
-Nollie Varial Heelflip from Kicker
-Hard Flip from Kicker
-Fakie Hard Flip from Kicker
-Switch Hard Flip from Kicker
-Nollie Hard Flip from Kicker
-Inward Heelflip from Kicker
-Fakie Inward Heelflip from Kicker
-Switch Inward Heelflip from Kicker
-Nollie Inward Heelflip from Kicker
-Fakie Half Cab Flip from Kicker
-Switch Backside Flip from Kicker
-Nollie Backside Flip from Kicker
-Frontside Flip from Kicker
-Fakie Frontside Flip from Kicker
-Switch Frontside Flip from Kicker
-Nollie Frontside Flip from Kicker
-Backside Heelflip from Kicker
-Fakie Half Cab Heelflip from Kicker
-Switch Backside Heelflip from Kicker
-Nollie Backside Heelflip from Kicker
-Frontside Heelflip from Kicker
-Fakie Frontside Heelflip from Kicker
-Switch Frontside Heelflip from Kicker
-Nollie Frontside Heelflip from Kicker
-Fakie 360 Flip from Kicker
-Switch 360 Flip from Kicker
-Nollie 360 Flip from Kicker
-Bigflip from Kicker
-Fakie Bigflip from Kicker
-Switch Bigflip from Kicker
-Nollie Bigflip from Kicker
-Laser Flip from Kicker
-Fakie Laser Flip from Kicker
-Switch Laser Flip from Kicker
-Nollie Laser Flip from Kicker
-Big Heelflip from Kicker
-Fakie Big Heelflip from Kicker
-Switch Big Heelflip from Kicker
-Nollie Big Heelflip from Kicker
-Fakie Bigspin from Kicker
-Switch Bigspin from Kicker
-FS Bigspin from Kicker
-Fakie FS Bigspin from Kicker
-Switch FS Bigspin from Kicker
-Nollie FS Bigspin from Kicker
+Switch Caveman from Kicker
+Switch No Comply from Kicker
+FS 180 Switch No Comply from Kicker
+Switch Boneless from Kicker
+FS 180 Switch Boneless from Kicker
+BS 180 Boneless from Kicker
+BS 180 Switch Boneless from Kicker
+Switch Early Grab from Kicker
+FS 180 Switch Early Grab from Kicker
+BS 180 Early Grab from Kicker
+BS 180 Switch Early Grab from Kicker

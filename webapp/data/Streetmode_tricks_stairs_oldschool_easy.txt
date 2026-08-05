@@ -1,30 +1,8 @@
-Ollie from Stairs
-Fakie from Stairs
-Switch Ollie from Stairs
-Nollie from Stairs
-FS 180 Ollie from Stairs
-Fakie FS 180 from Stairs
-Switch FS 180 from Stairs
-Nollie FS 180 from Stairs
-BS 180 Ollie from Stairs
-Fakie Half Cab from Stairs
-Switch BS 180 from Stairs
-Nollie BS 180 from Stairs
-Kickflip from Stairs
-Fakie Kickflip from Stairs
-Heelflip from Stairs
-Pop Shove-It from Stairs
-Fakie Pop Shove-It from Stairs
-Nollie Pop Shove-It from Stairs
-FS Pop Shove-It from Stairs
-Fakie FS Pop Shove-It from Stairs
-Nollie FS Pop Shove-It from Stairs
-Varial Kickflip from Stairs
-Varial Heelflip from Stairs
-Backside Flip from Stairs
-Fakie Half Cab Flip from Stairs
-360 Flip from Stairs
-Bigspin from Stairs
-Fakie Bigspin from Stairs
-Nollie Bigspin from Stairs
-Fakie FS Bigspin from Stairs
+Firecracker from Stairs
+Caveman from Stairs
+No Comply from Stairs
+FS 180 No Comply from Stairs
+Boneless from Stairs
+FS 180 Boneless from Stairs
+Early Grab from Stairs
+FS 180 Early Grab from Stairs
