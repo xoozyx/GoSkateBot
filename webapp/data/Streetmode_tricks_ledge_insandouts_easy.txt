@@ -1,48 +1,33 @@
-Boardslide on Ledge
-Fakie Boardslide on Ledge
-FS Boardslide on Ledge
-Fakie FS Boardslide on Ledge
-Noseslide on Ledge
-Fakie Noseslide on Ledge
-FS Noseslide on Ledge
-Fakie FS Noseslide on Ledge
-Tailslide on Ledge
-Fakie Tailslide on Ledge
-50-50 on Ledge
-Fakie 50-50 on Ledge
-BS 50-50 on Ledge
-Fakie BS 50-50 on Ledge
-5.0 on Ledge
-Fakie 5.0 on Ledge
-BS 5.0 on Ledge
-Fakie BS 5.0 on Ledge
-Nosegrind on Ledge
-Fakie Nosegrind on Ledge
-BS Nosegrind on Ledge
-Fakie BS Nosegrind on Ledge
-Crooked on Ledge
-Fakie Crooked on Ledge
-FS Crooked on Ledge
-Fakie FS Crooked on Ledge
-Suski on Ledge
-Fakie Suski on Ledge
-BS Suski on Ledge
-Fakie BS Suski on Ledge
-Salad on Ledge
-Fakie Salad on Ledge
-FS Salad on Ledge
-Fakie FS Salad on Ledge
-Smith on Ledge
-Fakie Smith on Ledge
-Feeble on Ledge
-Fakie Feeble on Ledge
-FS Feeble on Ledge
-Fakie FS Feeble on Ledge
-Losi on Ledge
-Fakie Losi on Ledge
-BS Losi on Ledge
-Fakie BS Losi on Ledge
-Willy on Ledge
-Fakie Willy on Ledge
-FS Willy on Ledge
-Fakie FS Willy on Ledge
+Boardslide Shove-It Out on Ledge
+Boardslide to Fakie on Ledge
+FS Boardslide to Fakie on Ledge
+Noseslide Shove-It Out on Ledge
+Noseslide to Fakie on Ledge
+FS Noseslide Shove-It Out on Ledge
+FS Noseslide to Fakie on Ledge
+Tailslide Shove-It Out on Ledge
+Tailslide to Fakie on Ledge
+50-50 FS 180 Out on Ledge
+50-50 FS Shove-It Out on Ledge
+50-50 Flip Out on Ledge
+BS 50-50 BS 180 Out on Ledge
+BS 50-50 BS Shove-It Out on Ledge
+5.0 FS 180 Out on Ledge
+5.0 FS Shove-It Out on Ledge
+BS 5.0 BS 180 Out on Ledge
+BS 5.0 BS Shove-It Out on Ledge
+FS 180 to Switch 50-50 on Ledge
+FS 180 to Switch 5.0 on Ledge
+Fakie FS 180 to 50-50 on Ledge
+Fakie FS 180 to 5.0 on Ledge
+BS 180 to Switch BS 50-50 on Ledge
+Fakie Half Cab to BS 50-50 on Ledge
+Pop Shove-It to 50-50 on Ledge
+Pop Shove-It to 5.0 on Ledge
+Fakie Pop Shove-It to Switch 50-50 on Ledge
+Kickflip to FS Boardslide on Ledge
+Kickflip to FS Noseslide on Ledge
+Kickflip to 50-50 on Ledge
+Kickflip to BS 50-50 on Ledge
+Fakie Half Cab Flip to Boardslide on Ledge
+Fakie Half Cab Flip to Noseslide on Ledge

@@ -1,80 +1,83 @@
-Switch Boardslide on Ledge
-Nollie Boardslide on Ledge
-Switch FS Boardslide on Ledge
-Nollie FS Boardslide on Ledge
-Lipslide on Ledge
-Fakie Lipslide on Ledge
-Switch Lipslide on Ledge
-Nollie Lipslide on Ledge
-BS Lipslide on Ledge
-Fakie BS Lipslide on Ledge
-Switch BS Lipslide on Ledge
-Nollie BS Lipslide on Ledge
-Switch Noseslide on Ledge
-Nollie Noseslide on Ledge
-Switch FS Noseslide on Ledge
-Nollie FS Noseslide on Ledge
-Switch Tailslide on Ledge
-Nollie Tailslide on Ledge
-BS Tailslide on Ledge
-Fakie BS Tailslide on Ledge
-Switch BS Tailslide on Ledge
-Nollie BS Tailslide on Ledge
-Bluntslide on Ledge
-Fakie Bluntslide on Ledge
-Switch Bluntslide on Ledge
-Nollie Bluntslide on Ledge
-FS Bluntslide on Ledge
-Fakie FS Bluntslide on Ledge
-Switch FS Bluntslide on Ledge
-Nollie FS Bluntslide on Ledge
-Noseblunt on Ledge
-Fakie Noseblunt on Ledge
-Switch Noseblunt on Ledge
-Nollie Noseblunt on Ledge
-BS Noseblunt on Ledge
-Fakie BS Noseblunt on Ledge
-Switch BS Noseblunt on Ledge
-Nollie BS Noseblunt on Ledge
-Switch 50-50 on Ledge
-Nollie 50-50 on Ledge
-Switch BS 50-50 on Ledge
-Nollie BS 50-50 on Ledge
-Switch 5.0 on Ledge
-Nollie 5.0 on Ledge
-Switch BS 5.0 on Ledge
-Nollie BS 5.0 on Ledge
-Switch Nosegrind on Ledge
-Nollie Nosegrind on Ledge
-Switch BS Nosegrind on Ledge
-Nollie BS Nosegrind on Ledge
-Switch Crooked on Ledge
-Nollie Crooked on Ledge
-Switch FS Crooked on Ledge
-Nollie FS Crooked on Ledge
-Switch Suski on Ledge
-Nollie Suski on Ledge
-Switch BS Suski on Ledge
-Nollie BS Suski on Ledge
-Switch Salad on Ledge
-Nollie Salad on Ledge
-Switch FS Salad on Ledge
-Nollie FS Salad on Ledge
-Switch Smith on Ledge
-Nollie Smith on Ledge
-BS Smith on Ledge
-Fakie BS Smith on Ledge
-Switch BS Smith on Ledge
-Nollie BS Smith on Ledge
-Switch Feeble on Ledge
-Nollie Feeble on Ledge
-Switch FS Feeble on Ledge
-Nollie FS Feeble on Ledge
-Switch Losi on Ledge
-Nollie Losi on Ledge
-Switch BS Losi on Ledge
-Nollie BS Losi on Ledge
-Switch Willy on Ledge
-Nollie Willy on Ledge
-Switch FS Willy on Ledge
-Nollie FS Willy on Ledge
+FS Boardslide Shove-It Out on Ledge
+Lipslide Shove-It Out on Ledge
+Lipslide to Fakie on Ledge
+BS Lipslide Shove-It Out on Ledge
+BS Lipslide to Fakie on Ledge
+Noseslide Flip Out on Ledge
+Noseslide HeelFlip Out on Ledge
+FS Noseslide Flip Out on Ledge
+FS Noseslide HeelFlip Out on Ledge
+Tailslide Flip Out on Ledge
+Tailslide HeelFlip Out on Ledge
+BS Tailslide Shove-It Out on Ledge
+BS Tailslide Flip Out on Ledge
+BS Tailslide HeelFlip Out on Ledge
+BS Tailslide to Fakie on Ledge
+BS 50-50 Heelflip Out on Ledge
+5.0 Flip Out on Ledge
+BS 5.0 Heelflip Out on Ledge
+Nosegrind FS 180 Out on Ledge
+Nosegrind FS Shove-It Out on Ledge
+Nosegrind Flip Out on Ledge
+BS Nosegrind BS 180 Out on Ledge
+BS Nosegrind BS Shove-It Out on Ledge
+BS Nosegrind Heelflip Out on Ledge
+FS Crooked FS 180 Out on Ledge
+FS Crooked FS Shove-It Out on Ledge
+FS Crooked Flip Out on Ledge
+Crooked BS 180 Out on Ledge
+Crooked BS Shove-It Out on Ledge
+Crooked Heelflip Out on Ledge
+Smith FS 180 Out on Ledge
+Smith FS Shove-It Out on Ledge
+Smith Flip Out on Ledge
+BS Smith BS 180 Out on Ledge
+BS Smith BS Shove-It Out on Ledge
+BS Smith Heelflip Out on Ledge
+FS Feeble FS 180 Out on Ledge
+FS Feeble FS Shove-It Out on Ledge
+FS Feeble Flip Out on Ledge
+Feeble BS 180 Out on Ledge
+Feeble BS Shove-It Out on Ledge
+Feeble Heelflip Out on Ledge
+FS 180 to Switch Nosegrind on Ledge
+Switch FS 180 to 50-50 on Ledge
+Switch FS 180 to 5.0 on Ledge
+Switch FS 180 to Nosegrind on Ledge
+Nollie FS 180 to Switch 50-50 on Ledge
+Nollie FS 180 to Switch 5.0 on Ledge
+Nollie FS 180 to Switch Nosegrind on Ledge
+Fakie FS 180 to Nosegrind on Ledge
+BS 180 to Switch BS 5.0 on Ledge
+BS 180 to Switch BS Nosegrind on Ledge
+Switch BS 180 to BS 50-50 on Ledge
+Switch BS 180 to BS 5.0 on Ledge
+Switch BS 180 to BS Nosegrind on Ledge
+Nollie BS 180 to Switch BS 50-50 on Ledge
+Nollie BS 180 to Switch BS 5.0 on Ledge
+Nollie BS 180 to Switch BS Nosegrind on Ledge
+Fakie Half Cab to BS 5.0 on Ledge
+Fakie Half Cab to BS Nosegrind on Ledge
+Pop Shove-It to Nosegrind on Ledge
+Fakie Pop Shove-It to Switch 5.0 on Ledge
+Fakie Pop Shove-It to Switch Nosegrind on Ledge
+FS Pop Shove-It to BS 50-50 on Ledge
+FS Pop Shove-It to BS 5.0 on Ledge
+FS Pop Shove-It to BS Nosegrind on Ledge
+Fakie FS Pop Shove-It to Switch BS 50-50 on Ledge
+Fakie FS Pop Shove-It to Switch BS 5.0 on Ledge
+Fakie FS Pop Shove-It to Switch BS Nosegrind on Ledge
+Kickflip to Boardslide on Ledge
+Kickflip to Noseslide on Ledge
+Kickflip to 5.0 on Ledge
+Kickflip to BS 5.0 on Ledge
+Kickflip to Nosegrind on Ledge
+Kickflip to BS Nosegrind on Ledge
+Kickflip to FS Crooked on Ledge
+Kickflip to Crooked on Ledge
+Kickflip to Smith on Ledge
+Kickflip to BS Smith on Ledge
+Kickflip to FS Feeble on Ledge
+Kickflip to Feeble on Ledge
+Fakie FS Flip to FS Boardslide on Ledge
+Fakie FS Flip to FS Noseslide on Ledge

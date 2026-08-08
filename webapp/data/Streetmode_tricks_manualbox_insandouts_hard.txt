@@ -1,3 +1,71 @@
-Switch Manual
-Fakie Manual 
-Nollie to Nose Manual
+Manual Flip Out
+Switch Manual Flip Out
+Fakie to Switch Manual Flip Out
+Nollie to Manual Flip Out
+Nose Manual Flip Out
+Switch to Fakie Manual Flip Out
+Fakie Manual Flip Out
+Nollie to Nose Manual Flip Out
+Manual Heelflip Out
+Switch Manual Heelflip Out
+Fakie to Switch Manual Heelflip Out
+Nollie to Manual Heelflip Out
+Nose Manual Heelflip Out
+Switch to Fakie Manual Heelflip Out
+Fakie Manual Heelflip Out
+Nollie to Nose Manual Heelflip Out
+Switch Manual Shove-It Out
+Nollie to Manual Shove-It Out
+Switch to Fakie Manual Shove-It Out
+Nollie to Nose Manual Shove-It Out
+Switch Manual FS Shove-It Out
+Nollie to Manual FS Shove-It Out
+Switch to Fakie Manual FS Shove-It Out
+Nollie to Nose Manual FS Shove-It Out
+Switch Manual FS 180 Out
+Nollie to Manual FS 180 Out
+Switch to Fakie Manual FS 180 Out
+Nollie to Nose Manual FS 180 Out
+Switch Manual BS 180 Out
+Nollie to Manual BS 180 Out
+Switch to Fakie Manual BS 180 Out
+Nollie to Nose Manual BS 180 Out
+Switch Kickflip to Manual
+Fakie Kickflip to Switch Manual
+Nollie Kickflip to Manual
+Kickflip to Nose Manual
+Switch Kickflip to Fakie Manual
+Fakie Kickflip to Fakie Manual
+Nollie Kickflip to Nose Manual
+Heelflip to Manual
+Switch Heelflip to Manual
+Fakie Heelflip to Switch Manual
+Nollie Heelflip to Manual
+Heelflip to Nose Manual
+Switch Heelflip to Fakie Manual
+Fakie Heelflip to Fakie Manual
+Nollie Heelflip to Nose Manual
+Switch Pop Shove-It to Manual
+Nollie Pop Shove-It to Manual
+Nollie Pop Shove-It to Nose Manual
+Switch Pop Shove-It to Fakie Manual
+FS Pop Shove-It to Manual
+Switch FS Pop Shove-It to Manual
+Fakie FS Pop Shove-It to Switch Manual
+Nollie FS Pop Shove-It to Manual
+FS Pop Shove-It to Nose Manual
+Switch FS Pop Shove-It to Fakie Manual
+Fakie FS Pop Shove-It to Fakie Manual
+Nollie FS Pop Shove-It to Nose Manual
+Switch FS 180 to Manual
+Nollie FS 180 to Switch Manual
+Switch FS 180 to Nose Manual
+Nollie FS 180 to Fakie Manual
+BS 180 to Switch Manual
+Switch BS 180 to Manual
+Fakie BS 180 to Manual
+Nollie BS 180 to Switch Manual
+BS 180 to Fakie Manual
+Switch BS 180 to Nose Manual
+Fakie BS 180 to Nose Manual
+Nollie BS 180 to Fakie Manual

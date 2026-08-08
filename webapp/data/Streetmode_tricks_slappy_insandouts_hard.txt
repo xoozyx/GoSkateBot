@@ -1,17 +1,54 @@
-Switch Slappy 50-50
-Switch Slappy BS 50-50
-Switch Slappy 5.0
-Switch Slappy BS 5.0
-Slappy Nosegrind
-Switch Slappy Nosegrind
-Slappy BS Nosegrind
-Switch Slappy BS Nosegrind
-Switch Slappy Feeble
-Switch Slappy FS Feeble
-Switch Slappy Smith
-Switch Slappy BS Smith
-Switch Slappy Crooked
-Slappy FS Crooked
-Switch Slappy FS Crooked
-Slappy Bluntslide
-Switch Slappy Bluntslide
+Switch Slappy 50-50 Switch FS 180 Out
+Slappy 50-50 Flip Out
+Switch Slappy 50-50 Switch Flip Out
+Switch Slappy 50-50 Switch FS Shove-It Out
+Switch Slappy BS 50-50 Switch BS 180 Out
+Slappy BS 50-50 Heelflip Out
+Switch Slappy BS 50-50 Switch Heelflip Out
+Switch Slappy BS 50-50 Switch Shove-It Out
+Slappy Noseslide Flip Out
+Switch Slappy Noseslide Flip Out
+Slappy Noseslide Heelflip Out
+Switch Slappy Noseslide Heelflip Out
+Slappy FS Noseslide Flip Out
+Switch Slappy FS Noseslide Flip Out
+Slappy FS Noseslide Heelflip Out
+Switch Slappy FS Noseslide Heelflip Out
+Switch Slappy Boardslide Shove-It Out
+Switch Slappy FS Boardslide Shove-It Out
+Switch Slappy 5.0 Switch FS 180 Out
+Switch Slappy 5.0 Shove-It Out
+Switch Slappy BS 5.0 Switch BS 180 Out
+Switch Slappy BS 5.0 Shove-It Out
+Slappy Nosegrind FS 180 Out
+Switch Slappy Nosegrind Switch FS 180 Out
+Slappy Nosegrind Shove-It Out
+Switch Slappy Nosegrind Shove-It Out
+Slappy BS Nosegrind BS 180 Out
+Switch Slappy BS Nosegrind Switch BS 180 Out
+Slappy BS Nosegrind Shove-It Out
+Switch Slappy BS Nosegrind Shove-It Out
+Switch Slappy Feeble Switch BS 180 Out
+Switch Slappy Feeble Shove-It Out
+Slappy Feeble Heelflip Out
+Switch Slappy Feeble Switch Heelflip Out
+Switch Slappy FS Feeble Switch FS 180 Out
+Switch Slappy FS Feeble Switch FS Shove-It Out
+Slappy FS Feeble Flip Out
+Switch Slappy FS Feeble Switch Flip Out
+Switch Slappy Smith Switch FS 180 Out
+Slappy Smith FS Shove-It Out
+Switch Slappy Smith Switch FS Shove-It Out
+Slappy Smith Flip Out
+Switch Slappy Smith Switch Flip Out
+Switch Slappy BS Smith Switch BS 180 Out
+Slappy BS Smith Shove-It Out
+Switch Slappy BS Smith Switch Shove-It Out
+Slappy BS Smith Heelflip Out
+Switch Slappy BS Smith Switch Heelflip Out
+Switch Slappy Crooked Switch BS 180 Out
+Switch Slappy Crooked Shove-It Out
+Slappy FS Crooked FS 180 Out
+Switch Slappy FS Crooked Switch FS 180 Out
+Slappy FS Crooked Shove-It Out
+Switch Slappy FS Crooked Shove-It Out

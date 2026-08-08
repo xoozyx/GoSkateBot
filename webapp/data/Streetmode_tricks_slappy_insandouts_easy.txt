@@ -1,17 +1,22 @@
-Slappy 50-50
-Slappy BS 50-50
-Slappy Noseslide
-Switch Slappy Noseslide
-Slappy FS Noseslide
-Switch Slappy FS Noseslide
-Slappy Boardslide
-Switch Slappy Boardslide
-Slappy FS Boardslide
-Switch Slappy FS Boardslide
-Slappy 5.0
-Slappy BS 5.0
-Slappy Feeble
-Slappy FS Feeble
-Slappy Smith
-Slappy BS Smith
-Slappy Crooked
+Slappy 50-50 FS 180 Out
+Slappy 50-50 FS Shove-It Out
+Slappy BS 50-50 BS 180 Out
+Slappy BS 50-50 Shove-It Out
+Slappy Noseslide Shove-It Out
+Switch Slappy Noseslide Shove-It Out
+Slappy FS Noseslide Shove-It Out
+Switch Slappy FS Noseslide Shove-It Out
+Slappy Boardslide Shove-It Out
+Slappy FS Boardslide Shove-It Out
+Slappy 5.0 FS 180 Out
+Slappy 5.0 Shove-It Out
+Slappy BS 5.0 BS 180 Out
+Slappy BS 5.0 Shove-It Out
+Slappy Feeble BS 180 Out
+Slappy Feeble Shove-It Out
+Slappy FS Feeble FS 180 Out
+Slappy FS Feeble FS Shove-It Out
+Slappy Smith FS 180 Out
+Slappy BS Smith BS 180 Out
+Slappy Crooked BS 180 Out
+Slappy Crooked Shove-It Out
