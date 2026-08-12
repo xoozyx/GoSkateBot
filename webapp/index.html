@@ -986,7 +986,8 @@
   }
 
   /* ==== Versus (2 игрока): отдельная строка счётчиков в шапке лога вместо
-     обычной — с раздельными landed/failed на каждого игрока. Видна только
+     обычной — с раздельными landed/failed на каждого игрока, P2 отдельной
+     строкой ПОД P1 (а не рядом), поэтому колонкой, а не рядом. Видна только
      когда у #tricklist есть класс versus-mode (см. syncVersusModeClass). ==== */
   .trick-stats.single-only {
     display: flex;
@@ -994,7 +995,9 @@
 
   .trick-stats.versus-only {
     display: none;
-    gap: 10px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
   }
 
   #tricklist.versus-mode .trick-stats.single-only {
@@ -2589,12 +2592,8 @@
   const skateLettersImg2 = document.getElementById('skateLettersImg2');
   const difficultyBadgeImg = document.getElementById('difficultyBadgeImg');
 
-  function updateDifficultyBadge() {
-    const hard = getFlatDifficulty() === DIFFICULTY_HARD;
-    // Versus (2 Player): свой бейдж сложности (images/versus mode/) вместо обычного.
-    const image = isVersusActive()
-      ? (hard ? 'versus%20mode/Difficulty_hard_versusmode.png' : 'versus%20mode/Difficulty_easy_versusmode.png')
-      : (hard ? 'Difficulty_hard.png' : 'Difficulty_easy.png');
+    function updateDifficultyBadge() {
+    const image = getFlatDifficulty() === DIFFICULTY_HARD ? 'Difficulty_hard.png' : 'Difficulty_easy.png';
     difficultyBadgeImg.src = 'images/' + image + '?v=' + ASSET_VERSION;
   }
 
