@@ -436,6 +436,26 @@
     display: block;
   }
 
+  /* Переключатели-радио сверху пикера Flat: слева — выбор количества игроков
+     (Single/Versus), справа — выбор режима (Arcade/Classic). Как и Old
+     School/Body Varial ниже — это ОДНА кнопка на каждый выбор, картинка
+     просто подменяется между двумя состояниями (а не две раздельные кнопки),
+     bbox взят из альфа-канала самих PNG (обе картинки состояния занимают
+     один и тот же прямоугольник). */
+  #togglePlayerSelect {
+    left: 30.29%;
+    top: 13.4%;
+    width: 18.27%;
+    height: 7.19%;
+  }
+
+  #toggleModeSelect {
+    left: 50%;
+    top: 13.4%;
+    width: 19.23%;
+    height: 7.19%;
+  }
+
   #modeFlatEasy {
     left: 30.29%;
     top: 32.03%;
@@ -965,6 +985,33 @@
     color: #d8e8d0;
   }
 
+  /* ==== Versus (2 игрока): отдельная строка счётчиков в шапке лога вместо
+     обычной — с раздельными landed/failed на каждого игрока. Видна только
+     когда у #tricklist есть класс versus-mode (см. syncVersusModeClass). ==== */
+  .trick-stats.single-only {
+    display: flex;
+  }
+
+  .trick-stats.versus-only {
+    display: none;
+    gap: 10px;
+  }
+
+  #tricklist.versus-mode .trick-stats.single-only {
+    display: none;
+  }
+
+  #tricklist.versus-mode .trick-stats.versus-only {
+    display: flex;
+  }
+
+  .player-label {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    color: #f4d35e;
+    margin-right: 1px;
+  }
+
   /* Реальная кликабельная область — по фактическим непрозрачным пикселям в PNG,
      иначе полноразмерная прозрачная кнопка перекрывала бы клики по всему остальному
      на экране Flatmode (Coach, Flatground, кнопки Roll/Landed/Failed и т.д.) */
@@ -1045,6 +1092,24 @@
     width: 100%;
     height: 100%;
     image-rendering: pixelated;
+  }
+
+  /* ==== Versus (2 Player): второй ряд букв SKATE (Player 2) — оба изображения
+     (images/versus mode/Letters_skate_player1_*.png и player2_*.png) уже
+     нарисованы художником в СВОИХ непересекающихся строках одного и того же
+     208x306 канваса (см. bbox альфа-канала: player1 — верхняя строка, ровно
+     там же, где в single-режиме рисуется первая половина Letters_*.png;
+     player2 — нижняя), поэтому оба слоя просто накладываются друг на друга
+     через position:absolute и остаются видны ПОСТОЯННО, без переключения по
+     ходу. Показывается только когда у #tricklist есть класс versus-mode. */
+  #skateLetters #skateLettersImg2 {
+    position: absolute;
+    inset: 0;
+    display: none;
+  }
+
+  #tricklist.versus-mode #skateLetters #skateLettersImg2 {
+    display: block;
   }
 
   #tricklistInner {
@@ -1159,6 +1224,14 @@
         <div id="flatDifficultyPicker">
           <div class="difficulty-picker-shadow">
             <img src="images/Shadow_screen.png?v=20260716a" alt="">
+          </div>
+          <button class="mode-button enabled fullcanvas-hitarea" id="togglePlayerSelect" aria-label="Single / Versus"></button>
+          <div class="mode-button-visual" id="togglePlayerSelectVisual">
+            <img src="images/Button_mainmenu_flat_playerselect_single.png?v=20260716a" alt="">
+          </div>
+          <button class="mode-button enabled fullcanvas-hitarea" id="toggleModeSelect" aria-label="Arcade / Classic"></button>
+          <div class="mode-button-visual" id="toggleModeSelectVisual">
+            <img src="images/Button_mainmenu_flat_modeselect_classic.png?v=20260716a" alt="">
           </div>
           <button class="mode-button enabled fullcanvas-hitarea" id="modeFlatEasy" aria-label="Easy"></button>
           <div class="mode-button-visual" id="modeFlatEasyVisual">
@@ -1294,7 +1367,7 @@
 
         <div id="tricklist">
           <div id="tricklistHeader">
-            <div class="trick-stats">
+            <div class="trick-stats single-only">
               <div class="trick-stat">
                 <img src="images/Icon_landed.png?v=20260716a" alt="Засчитано">
                 <span id="landedCount">0</span>
@@ -1304,12 +1377,29 @@
                 <span id="failedCount">0</span>
               </div>
             </div>
+            <div class="trick-stats versus-only">
+              <div class="trick-stat">
+                <span class="player-label">P1</span>
+                <img src="images/Icon_landed.png?v=20260716a" alt="Засчитано">
+                <span id="landedCount1">0</span>
+                <img src="images/Icon_failed.png?v=20260716a" alt="Не засчитано">
+                <span id="failedCount1">0</span>
+              </div>
+              <div class="trick-stat">
+                <span class="player-label">P2</span>
+                <img src="images/Icon_landed.png?v=20260716a" alt="Засчитано">
+                <span id="landedCount2">0</span>
+                <img src="images/Icon_failed.png?v=20260716a" alt="Не засчитано">
+                <span id="failedCount2">0</span>
+              </div>
+            </div>
           </div>
           <div id="difficultyBadge">
             <img id="difficultyBadgeImg" src="images/Difficulty_easy.png?v=20260716a" alt="">
           </div>
           <div id="skateLetters">
             <img id="skateLettersImg" src="images/Letters_null.png?v=20260716a" alt="SKATE">
+            <img id="skateLettersImg2" src="images/versus%20mode/Letters_skate_player2_null.png?v=20260716a" alt="Player 2 SKATE">
           </div>
           <button id="logToggleBtn" aria-label="Развернуть лог"></button>
           <div id="logToggleVisual">
@@ -1443,6 +1533,49 @@
     return null;
   }
 
+  // ==== Versus (2 Player Flatground): флаги активной игры — сохраняются
+  // вместе с STORAGE_KEY_ACTIVE_MODE, чтобы при возврате в незавершённую игру
+  // (см. заставку) снова открылся именно versus-режим, с тем же ходом.
+  // ВАЖНО: объявлено здесь, ДО currentIsVersus/currentTurn ниже — они читают
+  // эти функции синхронно при самом первом проходе скрипта, и если бы эти
+  // функции (точнее константы STORAGE_KEY_VERSUS_* внутри них) были объявлены
+  // позже по файлу, обращение к ним словило бы TDZ ReferenceError, который
+  // try/catch внутри тихо проглотил бы, вернув false/1 вместо реального
+  // сохранённого состояния. ====
+  const STORAGE_KEY_VERSUS_ACTIVE = 'goskate_versusActive';
+  const STORAGE_KEY_VERSUS_TURN = 'goskate_versusTurn';
+
+  function getVersusActiveFlag() {
+    try {
+      return localStorage.getItem(STORAGE_KEY_VERSUS_ACTIVE) === '1';
+    } catch (e) {
+      return false;
+    }
+  }
+  function setVersusActiveFlag(enabled) {
+    try {
+      localStorage.setItem(STORAGE_KEY_VERSUS_ACTIVE, enabled ? '1' : '0');
+    } catch (e) {
+      console.warn('Не удалось сохранить флаг Versus:', e);
+    }
+  }
+
+  function getVersusTurnFlag() {
+    try {
+      const raw = parseInt(localStorage.getItem(STORAGE_KEY_VERSUS_TURN), 10);
+      return raw === 2 ? 2 : 1;
+    } catch (e) {
+      return 1;
+    }
+  }
+  function setVersusTurnFlag(turn) {
+    try {
+      localStorage.setItem(STORAGE_KEY_VERSUS_TURN, String(turn));
+    } catch (e) {
+      console.warn('Не удалось сохранить текущий ход Versus:', e);
+    }
+  }
+
   // Определяем режим СРАЗУ, синхронно, а не только в setTimeout заставки —
   // иначе renderTricklist() (который вызывается сразу при загрузке скрипта,
   // до того как заставка успеет отработать) применит правила Flat даже если
@@ -1450,6 +1583,18 @@
   {
     const resumedMode = getGameModeByActiveMode(getActiveMode());
     if (resumedMode) currentGameMode = resumedMode;
+  }
+
+  // ==== Versus (2 Player Flatground): состояние текущей игры — тоже нужно
+  // синхронно ДО первого renderTricklist() (см. ниже), иначе он посчитает
+  // landed/failed по одиночным правилам вместо посчёта на двух игроков и
+  // неправильно определит game over/победителя при возврате в игру. ====
+  let currentIsVersus = currentGameMode === GAME_MODE_FLAT && getVersusActiveFlag();
+  let currentTurn = getVersusTurnFlag();
+  let pendingVersusTrick = null;
+
+  function isVersusActive() {
+    return currentGameMode === GAME_MODE_FLAT && currentIsVersus;
   }
 
   // ==== Сложность (Easy/Hard) — своя для каждого режима, сохраняется вместе
@@ -1537,6 +1682,52 @@
   }
   function getRampAirtricks() {
     return getAirtricks(currentGameMode);
+  }
+
+  // ==== Flat: переключатели-радио "Single / Versus" и "Arcade / Classic" —
+  // тот же принцип single-кнопки с двумя состояниями, что и Old School/Body
+  // Varial, просто хранят строку вместо true/false. Player Select реально
+  // влияет на игру (см. ниже 2 Player Mode), Mode Select пока ни на что не
+  // влияет — только меняет картинку туда-обратно, как попросил пользователь. ====
+  const STORAGE_KEY_PLAYER_SELECT = 'goskate_flat_playerSelect';
+  const STORAGE_KEY_MODE_SELECT = 'goskate_flat_modeSelect';
+  const PLAYER_SELECT_SINGLE = 'single';
+  const PLAYER_SELECT_VERSUS = 'versus';
+  const MODE_SELECT_CLASSIC = 'classic';
+  const MODE_SELECT_ARCADE = 'arcade';
+
+  function getPlayerSelect() {
+    try {
+      return localStorage.getItem(STORAGE_KEY_PLAYER_SELECT) === PLAYER_SELECT_VERSUS
+        ? PLAYER_SELECT_VERSUS
+        : PLAYER_SELECT_SINGLE;
+    } catch (e) {
+      return PLAYER_SELECT_SINGLE;
+    }
+  }
+  function setPlayerSelect(value) {
+    try {
+      localStorage.setItem(STORAGE_KEY_PLAYER_SELECT, value);
+    } catch (e) {
+      console.warn('Не удалось сохранить Player Select:', e);
+    }
+  }
+
+  function getModeSelect() {
+    try {
+      return localStorage.getItem(STORAGE_KEY_MODE_SELECT) === MODE_SELECT_ARCADE
+        ? MODE_SELECT_ARCADE
+        : MODE_SELECT_CLASSIC;
+    } catch (e) {
+      return MODE_SELECT_CLASSIC;
+    }
+  }
+  function setModeSelect(value) {
+    try {
+      localStorage.setItem(STORAGE_KEY_MODE_SELECT, value);
+    } catch (e) {
+      console.warn('Не удалось сохранить Mode Select:', e);
+    }
   }
 
   // ==== Street: препятствия (Curb/Kicker/Ledge/Manual Box/Rail/Stairs) —
@@ -1690,6 +1881,8 @@
     if (flatDifficultyPickerEl.classList.contains('visible')) return;
     syncOldschoolToggleVisual();
     syncBodyvarialToggleVisual();
+    syncPlayerSelectToggleVisual();
+    syncModeSelectToggleVisual();
     openDifficultyPicker(
       flatDifficultyPickerEl,
       [modeFlatEl, modeFlatVisualEl],
@@ -1739,7 +1932,7 @@
     return str.charAt(0).toUpperCase() + str.slice(1);
   }
 
-  function buildModeStartMessage(mode, difficulty, verb) {
+  function buildModeStartMessage(mode, difficulty, verb, isVersus) {
     verb = verb || 'starts';
     const difficultyLabel = capitalize(difficulty);
     let label;
@@ -1747,6 +1940,10 @@
     // объединяются в одну фразу с общим суффиксом "Tricks" на конце
     // (см. joinWithAnd + ' Tricks' ниже), а не перечисляются каждый со своим.
     const modifiers = [];
+    // Versus (2 Player, только Flat) — вставляется между "mode starts" и
+    // "with ..." отдельным куском, а не модификатором, т.к. это не про
+    // трюки, а про сам режим игры (сколько игроков).
+    const versusPart = (mode === GAME_MODE_FLAT && isVersus) ? ' for 2 players' : '';
 
     if (mode === GAME_MODE_FLAT) {
       label = 'Flatground';
@@ -1778,7 +1975,7 @@
       label = 'Game';
     }
 
-    let message = difficultyLabel + ' ' + label + ' mode ' + verb;
+    let message = difficultyLabel + ' ' + label + ' mode ' + verb + versusPart;
     if (modifiers.length > 0) {
       message += ' with ' + joinWithAnd(modifiers) + ' Tricks';
     }
@@ -1801,9 +1998,22 @@
   }
 
   function startGameWithDifficulty(mode, difficulty) {
-    const startMessage = buildModeStartMessage(mode, difficulty, 'starts');
+    // Versus (2 Player) — выбирается через Player Select на пикере Flat, и
+    // реально применяется только к Flat (Ramp/Street всегда single). Считаем
+    // ДО построения сообщения — иначе оно бы отражало ещё СТАРОЕ состояние
+    // currentIsVersus (от предыдущей игры), а не новое.
+    const wantVersus = mode === GAME_MODE_FLAT && getPlayerSelect() === PLAYER_SELECT_VERSUS;
+    const startMessage = buildModeStartMessage(mode, difficulty, 'starts', wantVersus);
     currentGameMode = mode;
     setDifficulty(mode, difficulty);
+
+    currentIsVersus = wantVersus;
+    setVersusActiveFlag(currentIsVersus);
+    currentTurn = 1;
+    setVersusTurnFlag(1);
+    pendingVersusTrick = null;
+    syncVersusModeClass();
+
     applyGameModeVisuals();
     updateDifficultyBadge();
     closeAllDifficultyPickers();
@@ -1853,6 +2063,37 @@
   document.getElementById('toggleBodyvarial').addEventListener('click', () => {
     setBodyvarial(GAME_MODE_FLAT, !getBodyvarial(GAME_MODE_FLAT));
     syncBodyvarialToggleVisual();
+  });
+
+  // ==== Переключатель Player Select (Single / Versus, только Flat) — тот же
+  // принцип, что Old School/Body Varial: одна кнопка, картинка меняется между
+  // двумя состояниями. В отличие от Mode Select, реально влияет на игру —
+  // читается один раз в startGameWithDifficulty() при нажатии Easy/Hard. ====
+  const togglePlayerSelectImg = document.querySelector('#togglePlayerSelectVisual img');
+
+  function syncPlayerSelectToggleVisual() {
+    const versus = getPlayerSelect() === PLAYER_SELECT_VERSUS;
+    togglePlayerSelectImg.src = 'images/Button_mainmenu_flat_playerselect_' + (versus ? 'versus' : 'single') + '.png?v=' + ASSET_VERSION;
+  }
+
+  document.getElementById('togglePlayerSelect').addEventListener('click', () => {
+    setPlayerSelect(getPlayerSelect() === PLAYER_SELECT_VERSUS ? PLAYER_SELECT_SINGLE : PLAYER_SELECT_VERSUS);
+    syncPlayerSelectToggleVisual();
+  });
+
+  // ==== Переключатель Mode Select (Arcade / Classic, только Flat) — пока
+  // ничего не меняет в самой игре, просто переключает картинку и сохраняет
+  // выбор на будущее. ====
+  const toggleModeSelectImg = document.querySelector('#toggleModeSelectVisual img');
+
+  function syncModeSelectToggleVisual() {
+    const arcade = getModeSelect() === MODE_SELECT_ARCADE;
+    toggleModeSelectImg.src = 'images/Button_mainmenu_flat_modeselect_' + (arcade ? 'arcade' : 'classic') + '.png?v=' + ASSET_VERSION;
+  }
+
+  document.getElementById('toggleModeSelect').addEventListener('click', () => {
+    setModeSelect(getModeSelect() === MODE_SELECT_ARCADE ? MODE_SELECT_CLASSIC : MODE_SELECT_ARCADE);
+    syncModeSelectToggleVisual();
   });
 
   document.getElementById('modeRampHard').addEventListener('click', () => {
@@ -2345,10 +2586,15 @@
   let tricklistEntries = loadFromStorage(STORAGE_KEY_TRICKLIST, []); // [{text, status}], новые в начале
 
   const skateLettersImg = document.getElementById('skateLettersImg');
+  const skateLettersImg2 = document.getElementById('skateLettersImg2');
   const difficultyBadgeImg = document.getElementById('difficultyBadgeImg');
 
   function updateDifficultyBadge() {
-    const image = getFlatDifficulty() === DIFFICULTY_HARD ? 'Difficulty_hard.png' : 'Difficulty_easy.png';
+    const hard = getFlatDifficulty() === DIFFICULTY_HARD;
+    // Versus (2 Player): свой бейдж сложности (images/versus mode/) вместо обычного.
+    const image = isVersusActive()
+      ? (hard ? 'versus%20mode/Difficulty_hard_versusmode.png' : 'versus%20mode/Difficulty_easy_versusmode.png')
+      : (hard ? 'Difficulty_hard.png' : 'Difficulty_easy.png');
     difficultyBadgeImg.src = 'images/' + image + '?v=' + ASSET_VERSION;
   }
 
@@ -2383,13 +2629,17 @@
     return getFlatDifficulty() === DIFFICULTY_HARD ? GAME_OVER_FAILS_HARD : GAME_OVER_FAILS_EASY;
   }
 
-  function updateSkateLetters(failedCount) {
+  function stageForFails(failedCount) {
     const stages = getSkateStages();
     let stage = stages[0];
     for (const s of stages) {
       if (failedCount >= s.threshold) stage = s;
     }
-    skateLettersImg.src = 'images/' + stage.image + '?v=' + ASSET_VERSION;
+    return stage;
+  }
+
+  function updateSkateLetters(failedCount) {
+    skateLettersImg.src = 'images/' + stageForFails(failedCount).image + '?v=' + ASSET_VERSION;
   }
 
   function triggerGameOver() {
@@ -2405,14 +2655,67 @@
     setBtn1Visible(false);
   }
 
+  // ==== Versus (2 Player Flatground): по трюку каждый игрок ходит отдельно,
+  // поэтому SKATE-буквы и Game Over считаются раздельно на каждого — первый,
+  // кто набирает полное слово SKATE, проигрывает, а в пузыре объявляется
+  // победитель (второй игрок). ====
+  const landedCount1El = document.getElementById('landedCount1');
+  const failedCount1El = document.getElementById('failedCount1');
+  const landedCount2El = document.getElementById('landedCount2');
+  const failedCount2El = document.getElementById('failedCount2');
+  let versusFailed = { 1: 0, 2: 0 };
+
+  // Картинка букв SKATE конкретного игрока (images/versus mode/) — суффикс
+  // (null/s/sk/ska/skat/skate) берём из тех же порогов, что и для single, а
+  // не дублируем их отдельным списком.
+  function versusLetterSrc(player, failedCount) {
+    const suffix = stageForFails(failedCount).image.replace('Letters_', '').replace('.png', '');
+    return 'images/versus%20mode/Letters_skate_player' + player + '_' + suffix + '.png?v=' + ASSET_VERSION;
+  }
+
+  // Центральный слот #skateLetters (тот же, что у single) в versus-режиме
+  // показывает буквы ИГРОКА, чей сейчас ход — чтобы было видно, кто рискует
+  // проиграть прямо сейчас.
+  // Показываются ПОСТОЯННО оба ряда сразу (Player 1 сверху, Player 2 снизу —
+  // см. bbox альфа-канала в комментарии у CSS #skateLettersImg2), а не по
+  // очереди в зависимости от текущего хода — сложности читать прогресс
+  // только активного игрока, попросили показывать обоих одновременно.
+  function refreshCentralLetters() {
+    if (!isVersusActive()) return;
+    skateLettersImg.src = versusLetterSrc(1, versusFailed[1]);
+    skateLettersImg2.src = versusLetterSrc(2, versusFailed[2]);
+  }
+
+  function triggerVersusGameOver(winner) {
+    if (isGameOver) return;
+    isGameOver = true;
+    bubbleEl.classList.remove('active');
+    resultEl.textContent = '';
+    setTimeout(() => {
+      setResultText('Player ' + winner + ' wins!', false);
+      bubbleEl.classList.add('active');
+    }, 120);
+    judgeButtonsEl.classList.remove('visible');
+    setBtn1Visible(false);
+  }
+
   function renderTricklist() {
     tricklistInner.innerHTML = '';
     let landed = 0;
     let failed = 0;
+    const landedByPlayer = { 1: 0, 2: 0 };
+    const failedByPlayer = { 1: 0, 2: 0 };
 
     tricklistEntries.forEach(entry => {
-      if (entry.status === 'landed') landed++;
-      else if (entry.status === 'failed') failed++;
+      if (entry.status === 'landed') {
+        landed++;
+        if (entry.player === 1) landedByPlayer[1]++;
+        else if (entry.player === 2) landedByPlayer[2]++;
+      } else if (entry.status === 'failed') {
+        failed++;
+        if (entry.player === 1) failedByPlayer[1]++;
+        else if (entry.player === 2) failedByPlayer[2]++;
+      }
       // 'info' — системное сообщение (например, старт режима), не трюк:
       // не считается ни landed, ни failed.
 
@@ -2433,18 +2736,39 @@
       tricklistInner.appendChild(row);
     });
 
-    landedCountEl.textContent = landed;
-    failedCountEl.textContent = failed;
-    updateSkateLetters(failed);
     updateDifficultyBadge();
 
-    if (failed >= getGameOverFails()) {
-      triggerGameOver();
+    if (isVersusActive()) {
+      versusFailed = failedByPlayer;
+      landedCount1El.textContent = landedByPlayer[1];
+      failedCount1El.textContent = failedByPlayer[1];
+      landedCount2El.textContent = landedByPlayer[2];
+      failedCount2El.textContent = failedByPlayer[2];
+      refreshCentralLetters();
+
+      if (!isGameOver) {
+        const overFails = getGameOverFails();
+        if (failedByPlayer[1] >= overFails) {
+          triggerVersusGameOver(2);
+        } else if (failedByPlayer[2] >= overFails) {
+          triggerVersusGameOver(1);
+        }
+      }
+    } else {
+      landedCountEl.textContent = landed;
+      failedCountEl.textContent = failed;
+      updateSkateLetters(failed);
+
+      if (failed >= getGameOverFails()) {
+        triggerGameOver();
+      }
     }
   }
 
-  function addTricklistEntry(text, status) {
-    tricklistEntries.unshift({ text, status }); // новая запись — наверх списка
+  function addTricklistEntry(text, status, player) {
+    const entry = { text, status };
+    if (player === 1 || player === 2) entry.player = player;
+    tricklistEntries.unshift(entry); // новая запись — наверх списка
     saveToStorage(STORAGE_KEY_TRICKLIST, tricklistEntries);
     renderTricklist();
   }
@@ -2473,20 +2797,80 @@
     setLogExpanded(!logExpanded);
   });
 
+  // Меняет анимацию земли/рампы и подгружает данные для currentGameMode.
+  // Вызывается при возобновлении незавершённой игры и при старте новой (Easy/Hard).
+  const flatgroundImg = document.querySelector('#flatground img');
+
+  // ==== Versus (2 Player Flatground): свои картинки скейтера/тренера/пузыря/
+  // кнопок Landed-Failed на каждого игрока (см. images/versus mode/) —
+  // подменяются поверх обычных Flat-картинок на время хода игрока, и
+  // возвращаются к обычным при выходе из versus (resetPlayerVisuals).
+  // ВАЖНО: объявлено здесь, ДО блока восстановления незавершённой игры ниже
+  // (он уже на этом шаге может вызвать applyPlayerVisuals для незавершённого
+  // versus-раунда) — иначе получили бы ReferenceError (TDZ) на flatgroundImg
+  // и остальных константах. ====
+  const coachImg = document.querySelector('#coach img');
+  const bubbleImg = document.querySelector('#bubble img');
+  const btnLandedImg = document.querySelector('#btnLandedVisual img');
+  const btnFailedImg = document.querySelector('#btnFailedVisual img');
+
+  function syncVersusModeClass() {
+    // tricklistEl объявлен чуть выше по файлу (см. "Лог засчитанных/незасчитанных трюков").
+    tricklistEl.classList.toggle('versus-mode', isVersusActive());
+  }
+
+  function resetPlayerVisuals() {
+    coachImg.src = 'images/Animation_coach.png?v=' + ASSET_VERSION;
+    bubbleImg.src = 'images/Text_bubble.png?v=' + ASSET_VERSION;
+    btnLandedImg.src = 'images/Button_landed.png?v=' + ASSET_VERSION;
+    btnFailedImg.src = 'images/Button_failed.png?v=' + ASSET_VERSION;
+  }
+
+  function applyPlayerVisuals(player) {
+    if (!isVersusActive()) return;
+    flatgroundImg.src = 'images/versus%20mode/Animation_flatmode_player' + player + '.png?v=' + ASSET_VERSION;
+    coachImg.src = 'images/versus%20mode/Animation_coach_player' + player + '.png?v=' + ASSET_VERSION;
+    bubbleImg.src = player === 2
+      ? 'images/versus%20mode/Text_bubble_player2.png?v=' + ASSET_VERSION
+      : 'images/Text_bubble.png?v=' + ASSET_VERSION;
+    btnLandedImg.src = 'images/versus%20mode/Button_landed_player' + player + '.png?v=' + ASSET_VERSION;
+    btnFailedImg.src = 'images/versus%20mode/Button_failed_player' + player + '.png?v=' + ASSET_VERSION;
+  }
+
+  // Название трюка БЕЗ префикса "Player N try." — то, что реально ищет кнопка
+  // Info (в howto.txt / гуглом). В single-режиме совпадает с текстом пузыря,
+  // в versus — пузырь показывает "Player N try. <трюк>", а тут остаётся сам трюк.
+  let currentDisplayedTrick = '';
+
+  function buildVersusTrickMessage(player, trick) {
+    return 'Player ' + player + ' try. ' + trick;
+  }
+
   // Показываем последний сгенерированный результат сразу при открытии Flatmode.
   // Если трюк уже ждёт оценки — сразу показываем кнопки-иконки вместо Roll.
-  // Если игра уже была завершена (15 ошибок) — вместо этого сразу показываем Game over.
+  // Если игра уже была завершена (15 ошибок / кто-то из игроков — вся SKATE)
+  // — вместо этого сразу показываем Game over (см. renderTricklist() выше,
+  // которая уже вызвала triggerGameOver/triggerVersusGameOver при первом рендере).
   if (isGameOver) {
-    triggerGameOver();
+    if (!isVersusActive()) triggerGameOver();
   } else {
     const lastResult = loadFromStorage(STORAGE_KEY_LAST, '');
     console.log('[GoSkate debug] restore check — isGameOver:', isGameOver, 'lastResult:', JSON.stringify(lastResult));
     if (lastResult) {
+      currentDisplayedTrick = lastResult;
       bubbleEl.classList.add('active');
       setBtn1Visible(false);
-      setResultText(lastResult, true, () => {
-        judgeButtonsEl.classList.add('visible');
-      });
+      if (isVersusActive()) {
+        pendingVersusTrick = lastResult;
+        applyPlayerVisuals(currentTurn);
+        setResultText(buildVersusTrickMessage(currentTurn, lastResult), true, () => {
+          judgeButtonsEl.classList.add('visible');
+        });
+      } else {
+        setResultText(lastResult, true, () => {
+          judgeButtonsEl.classList.add('visible');
+        });
+      }
       console.log('[GoSkate debug] restored bubble/result, hid btn1');
     } else {
       console.log('[GoSkate debug] no lastResult found — leaving btn1 visible');
@@ -2553,18 +2937,92 @@
 
     setTimeout(() => {
       bubbleEl.classList.add('active');
-      setResultText(generateUniqueTrick(), true, () => {
+      currentDisplayedTrick = generateUniqueTrick();
+      setResultText(currentDisplayedTrick, true, () => {
         judgeButtonsEl.classList.add('visible');
       });
     }, 120);
   }
 
-  // Меняет анимацию земли/рампы и подгружает данные для currentGameMode.
-  // Вызывается при возобновлении незавершённой игры и при старте новой (Easy/Hard).
-  const flatgroundImg = document.querySelector('#flatground img');
+  // ==== Versus (2 Player Flatground) — трюк генерируется ОДИН раз на раунд,
+  // затем оба игрока пробуют его по очереди (сперва Player 1, потом Player 2
+  // с тем же трюком), см. описание в задаче. startVersusRound() генерирует
+  // новый трюк и открывает ход Player 1; continueVersusRound() либо передаёт
+  // ход Player 2 (тот же трюк), либо, если уже ходил Player 2, начинает
+  // новый раунд с новым трюком. ====
+  async function startVersusRound() {
+    if (isGameOver) return;
+    bubbleEl.classList.remove('active');
+    resultEl.textContent = '';
+    judgeButtonsEl.classList.remove('visible');
+    setRetryVisible(false);
 
+    if (!isDataReadyForCurrentMode()) {
+      setResultText('Списки трюков ещё загружаются...', false);
+      bubbleEl.classList.add('active');
+      await ensureListsLoaded();
+
+      if (!isDataReadyForCurrentMode()) {
+        setResultText('Connection problem, please try again later', false);
+        bubbleEl.classList.add('active');
+        setBtn1Visible(false);
+        setRetryVisible(true);
+        return;
+      }
+    }
+
+    currentTurn = 1;
+    setVersusTurnFlag(1);
+    applyPlayerVisuals(1);
+
+    setTimeout(() => {
+      bubbleEl.classList.add('active');
+      const trick = generateUniqueTrick();
+      pendingVersusTrick = trick;
+      currentDisplayedTrick = trick;
+      refreshCentralLetters();
+      setResultText(buildVersusTrickMessage(1, trick), true, () => {
+        judgeButtonsEl.classList.add('visible');
+      });
+    }, 120);
+  }
+
+  function continueVersusRound() {
+    if (isGameOver) return;
+
+    if (currentTurn === 1) {
+      currentTurn = 2;
+      setVersusTurnFlag(2);
+      applyPlayerVisuals(2);
+      refreshCentralLetters();
+
+      bubbleEl.classList.remove('active');
+      resultEl.textContent = '';
+      judgeButtonsEl.classList.remove('visible');
+
+      setTimeout(() => {
+        bubbleEl.classList.add('active');
+        currentDisplayedTrick = pendingVersusTrick;
+        setResultText(buildVersusTrickMessage(2, pendingVersusTrick), true, () => {
+          judgeButtonsEl.classList.add('visible');
+        });
+      }, 120);
+    } else {
+      startVersusRound();
+    }
+  }
+
+  // Меняет анимацию земли/рампы и подгружает данные для currentGameMode
+  // (сами константы flatgroundImg/coachImg/bubbleImg/btnLandedImg/btnFailedImg
+  // и функции syncVersusModeClass/resetPlayerVisuals/applyPlayerVisuals
+  // объявлены выше, перед блоком восстановления незавершённой игры — см. комментарий там).
   function applyGameModeVisuals() {
     flatgroundImg.src = GAME_MODE_CONFIG[currentGameMode].groundImage + '?v=' + ASSET_VERSION;
+    resetPlayerVisuals();
+    syncVersusModeClass();
+    if (isVersusActive()) {
+      applyPlayerVisuals(currentTurn);
+    }
     ensureListsLoaded();
   }
 
@@ -2580,16 +3038,33 @@
       addTricklistEntry(pendingModeStartMessage, 'info');
       pendingModeStartMessage = null;
     }
-    rollNextTrick();
+    if (isVersusActive()) {
+      startVersusRound();
+    } else {
+      rollNextTrick();
+    }
   });
 
-  // Кнопки "засчитано / не засчитано": записывают текущий трюк в лог и сразу кидают следующий
+  // Кнопки "засчитано / не засчитано": записывают текущий трюк в лог и сразу
+  // кидают следующий — в versus-режиме текст уже содержит "Player N try. ..."
+  // (см. buildVersusTrickMessage), лог записывает его как есть, с меткой
+  // игрока, и передаёт ход дальше вместо генерации нового трюка сразу.
   document.getElementById('btnLanded').addEventListener('click', () => {
+    if (isVersusActive()) {
+      if (resultEl.textContent) addTricklistEntry(resultEl.textContent, 'landed', currentTurn);
+      if (!isGameOver) continueVersusRound();
+      return;
+    }
     if (resultEl.textContent) addTricklistEntry(resultEl.textContent, 'landed');
     rollNextTrick();
   });
 
   document.getElementById('btnFailed').addEventListener('click', () => {
+    if (isVersusActive()) {
+      if (resultEl.textContent) addTricklistEntry(resultEl.textContent, 'failed', currentTurn);
+      if (!isGameOver) continueVersusRound();
+      return;
+    }
     if (resultEl.textContent) addTricklistEntry(resultEl.textContent, 'failed');
     rollNextTrick();
   });
@@ -2599,7 +3074,11 @@
   btnRetryEl.addEventListener('click', () => {
     setRetryVisible(false);
     setBtn1Visible(true);
-    rollNextTrick();
+    if (isVersusActive()) {
+      startVersusRound();
+    } else {
+      rollNextTrick();
+    }
   });
 
   // Кнопка 2: показывает подтверждение вместо немедленного выхода
@@ -2649,6 +3128,13 @@
     recentResults = [];
     tricklistEntries = [];
     isGameOver = false;
+    // Versus: и Quit, и Restart возвращают игру к "готов к ходу Player 1" —
+    // Restart намеренно сохраняет currentIsVersus как есть (см. doRestart),
+    // Quit сбрасывает его отдельно уже ПОСЛЕ этого вызова (см. doQuit).
+    currentTurn = 1;
+    setVersusTurnFlag(1);
+    pendingVersusTrick = null;
+    currentDisplayedTrick = '';
     renderTricklist();
 
     // Прячем пузырь/текст и возвращаем кнопку Start Game на место, сворачиваем лог,
@@ -2660,11 +3146,20 @@
     setBtn1Visible(true);
     setRetryVisible(false);
     setLogExpanded(false);
+
+    // Возвращаем скейтера/тренера/пузырь/кнопки к обычному виду, а если
+    // versus остаётся активным (Restart) — сразу показываем Player 1, чтобы
+    // не мелькал обычный скейтер до повторного нажатия Start Game.
+    resetPlayerVisuals();
+    if (isVersusActive()) applyPlayerVisuals(1);
   }
 
   function doQuit() {
     setActiveMode(0);
     resetGameState();
+    currentIsVersus = false;
+    setVersusActiveFlag(false);
+    syncVersusModeClass();
     hideQuitConfirm();
     transitionToScreen(mainscreenEl);
   }
@@ -2674,7 +3169,7 @@
   // сообщение, что и при свежем старте, но с "restarts" вместо "starts" —
   // экран при этом не переключается, так что задержка перед показом минимальна.
   function doRestart() {
-    const restartMessage = buildModeStartMessage(currentGameMode, getFlatDifficulty(), 'restarts');
+    const restartMessage = buildModeStartMessage(currentGameMode, getFlatDifficulty(), 'restarts', isVersusActive());
     resetGameState();
     hideQuitConfirm();
     showModeStartMessage(restartMessage, 80);
@@ -2701,7 +3196,9 @@
   // (из howto.txt соответствующего режима), либо, если ссылки нет,
   // поисковый запрос в Google "How to <трюк> on a skateboard".
   btnInfoEl.addEventListener('click', () => {
-    const trick = resultEl.textContent.trim();
+    // currentDisplayedTrick — трюк БЕЗ префикса "Player N try." (в versus
+    // resultEl.textContent содержит этот префикс и не подошёл бы для поиска).
+    const trick = currentDisplayedTrick.trim();
     if (!trick) return;
     const url = howtoLinks.get(trick);
     if (url) {
