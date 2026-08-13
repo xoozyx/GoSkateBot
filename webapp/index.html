@@ -441,7 +441,26 @@
      School/Body Varial ниже — это ОДНА кнопка на каждый выбор, картинка
      просто подменяется между двумя состояниями (а не две раздельные кнопки),
      bbox взят из альфа-канала самих PNG (обе картинки состояния занимают
-     один и тот же прямоугольник). */
+     один и тот же прямоугольник).
+
+     z-index: кнопка режима (Flat/Ramp/Street), которая открыла свой пикер,
+     поднимается через .above-picker-shadow до z-index:3 (см. выше), чтобы
+     остаться полностью видимой (не притемняться тенью, как две другие). Но
+     эта же картинка (Button_mainmenu_flat/ramp/street.png) визуально
+     перекрывала бы Single/Versus и Arcade/Classic под ней — они по
+     умолчанию на z-index:1 (.mode-button-visual). Поднимаем все 6 таких
+     переключателей (Flat/Ramp/Street × Player Select/Mode Select) выше — и
+     кликабельную область, и картинку — чтобы они всегда были и видны, и
+     кликабельны поверх картинки режима. */
+  #togglePlayerSelect, #togglePlayerSelectVisual,
+  #toggleModeSelect, #toggleModeSelectVisual,
+  #toggleRampPlayerSelect, #toggleRampPlayerSelectVisual,
+  #toggleRampModeSelect, #toggleRampModeSelectVisual,
+  #toggleStreetPlayerSelect, #toggleStreetPlayerSelectVisual,
+  #toggleStreetModeSelect, #toggleStreetModeSelectVisual {
+    z-index: 4;
+  }
+
   #togglePlayerSelect {
     left: 30.29%;
     top: 12.42%;
@@ -1636,16 +1655,17 @@
     if (resumedMode) currentGameMode = resumedMode;
   }
 
-  // ==== Versus (2 Player Flatground): состояние текущей игры — тоже нужно
-  // синхронно ДО первого renderTricklist() (см. ниже), иначе он посчитает
-  // landed/failed по одиночным правилам вместо посчёта на двух игроков и
-  // неправильно определит game over/победителя при возврате в игру. ====
-  let currentIsVersus = currentGameMode === GAME_MODE_FLAT && getVersusActiveFlag();
+  // ==== Versus (2 Player): состояние текущей игры — теперь работает для всех
+  // трёх режимов (Flat/Ramp/Street), не только Flat. Синхронно ДО первого
+  // renderTricklist() (см. ниже), иначе он посчитает landed/failed по
+  // одиночным правилам вместо посчёта на двух игроков и неправильно
+  // определит game over/победителя при возврате в игру. ====
+  let currentIsVersus = getVersusActiveFlag();
   let currentTurn = getVersusTurnFlag();
   let pendingVersusTrick = null;
 
   function isVersusActive() {
-    return currentGameMode === GAME_MODE_FLAT && currentIsVersus;
+    return currentIsVersus;
   }
 
   // ==== Сложность (Easy/Hard) — своя для каждого режима, сохраняется вместе
@@ -1944,8 +1964,8 @@
   document.getElementById('modeRamp').addEventListener('click', () => {
     if (rampDifficultyPickerEl.classList.contains('visible')) return;
     syncAirtricksToggleVisual();
-    syncRampPlayerSelectToggleVisual();
-    syncRampModeSelectToggleVisual();
+    rampPlayerSelectToggle.sync();
+    rampModeSelectToggle.sync();
     openDifficultyPicker(
       rampDifficultyPickerEl,
       [modeRampEl, modeRampVisualEl],
@@ -1959,8 +1979,8 @@
     syncStreetInsandoutsToggleVisual();
     syncAllStreetObstacleVisuals();
     syncStreetModeButtons();
-    syncStreetPlayerSelectToggleVisual();
-    syncStreetModeSelectToggleVisual();
+    streetPlayerSelectToggle.sync();
+    streetModeSelectToggle.sync();
     openDifficultyPicker(
       streetDifficultyPickerEl,
       [modeStreetEl, modeStreetVisualEl],
@@ -1995,10 +2015,11 @@
     // объединяются в одну фразу с общим суффиксом "Tricks" на конце
     // (см. joinWithAnd + ' Tricks' ниже), а не перечисляются каждый со своим.
     const modifiers = [];
-    // Versus (2 Player, только Flat) — вставляется между "mode starts" и
-    // "with ..." отдельным куском, а не модификатором, т.к. это не про
-    // трюки, а про сам режим игры (сколько игроков).
-    const versusPart = (mode === GAME_MODE_FLAT && isVersus) ? ' for 2 players' : '';
+    // Versus (2 Player) — вставляется между "mode starts" и "with ..."
+    // отдельным куском для ЛЮБОГО режима (Flat/Ramp/Street), а не
+    // модификатором, т.к. это не про трюки, а про сам режим игры (сколько
+    // игроков).
+    const versusPart = isVersus ? ' for 2 players' : '';
 
     if (mode === GAME_MODE_FLAT) {
       label = 'Flatground';
@@ -2020,7 +2041,7 @@
         ? 'all obstacles'
         : joinWithAnd(selectedObstacles.map(o => o.label));
 
-      let message = difficultyLabel + ' ' + label + ' mode ' + verb;
+      let message = difficultyLabel + ' ' + label + ' mode ' + verb + versusPart;
       if (modifiers.length > 0) {
         message += ' with ' + joinWithAnd(modifiers) + ' Tricks';
       }
@@ -2053,11 +2074,12 @@
   }
 
   function startGameWithDifficulty(mode, difficulty) {
-    // Versus (2 Player) — выбирается через Player Select на пикере Flat, и
-    // реально применяется только к Flat (Ramp/Street всегда single). Считаем
-    // ДО построения сообщения — иначе оно бы отражало ещё СТАРОЕ состояние
-    // currentIsVersus (от предыдущей игры), а не новое.
-    const wantVersus = mode === GAME_MODE_FLAT && getPlayerSelect() === PLAYER_SELECT_VERSUS;
+    // Versus (2 Player) — выбирается через Player Select на пикере
+    // соответствующего режима (Flat/Ramp/Street — у каждого свой переключатель,
+    // см. getPlayerSelectForMode). Считаем ДО построения сообщения — иначе
+    // оно бы отражало ещё СТАРОЕ состояние currentIsVersus (от предыдущей
+    // игры), а не новое.
+    const wantVersus = getPlayerSelectForMode(mode) === PLAYER_SELECT_VERSUS;
     const startMessage = buildModeStartMessage(mode, difficulty, 'starts', wantVersus);
     currentGameMode = mode;
     setDifficulty(mode, difficulty);
@@ -2151,12 +2173,12 @@
     syncModeSelectToggleVisual();
   });
 
-  // ==== Переключатели Player Select/Mode Select для Ramp и Street — та же
-  // картина, что Flat Mode Select: чисто визуальные, ни на что в игре не
-  // влияют, просто запоминают выбор. Единая функция-фабрика вместо 4 копий
-  // одного и того же кода (сравните с Flat выше, где Player Select ещё и
-  // реально включает versus — здесь такой логики нет, ни для Ramp, ни для
-  // Street 2-player режим пока не реализован). ====
+  // ==== Переключатели Player Select/Mode Select для Ramp и Street. Mode
+  // Select — чисто визуальный (как у Flat), ни на что не влияет. Player
+  // Select — теперь РЕАЛЬНО включает versus (см. getPlayerSelectForMode()
+  // ниже, читается в startGameWithDifficulty), так же как у Flat, просто
+  // через свой отдельный ключ в localStorage на каждый режим. Единая
+  // функция-фабрика вместо 4 копий одного и того же кода хранения+картинки. ====
   function setupCosmeticSelectToggle(storageKey, buttonId, imagePrefix, offValue, onValue) {
     const img = document.querySelector('#' + buttonId + 'Visual img');
 
@@ -2183,21 +2205,29 @@
       sync();
     });
 
-    return sync;
+    return { sync, get };
   }
 
-  const syncRampPlayerSelectToggleVisual = setupCosmeticSelectToggle(
+  const rampPlayerSelectToggle = setupCosmeticSelectToggle(
     'goskate_ramp_playerSelect', 'toggleRampPlayerSelect', 'Button_mainmenu_ramp_modeselect_', 'single', 'versus'
   );
-  const syncRampModeSelectToggleVisual = setupCosmeticSelectToggle(
+  const rampModeSelectToggle = setupCosmeticSelectToggle(
     'goskate_ramp_modeSelect', 'toggleRampModeSelect', 'Button_mainmenu_ramp_modeselect_', 'classic', 'arcade'
   );
-  const syncStreetPlayerSelectToggleVisual = setupCosmeticSelectToggle(
+  const streetPlayerSelectToggle = setupCosmeticSelectToggle(
     'goskate_street_playerSelect', 'toggleStreetPlayerSelect', 'Button_mainmenu_street_playerselect_', 'single', 'versus'
   );
-  const syncStreetModeSelectToggleVisual = setupCosmeticSelectToggle(
+  const streetModeSelectToggle = setupCosmeticSelectToggle(
     'goskate_street_modeSelect', 'toggleStreetModeSelect', 'Button_mainmenu_street_modeselect_', 'classic', 'arcade'
   );
+
+  // Какое значение Player Select читать при старте игры — своё на каждый режим.
+  function getPlayerSelectForMode(mode) {
+    if (mode === GAME_MODE_FLAT) return getPlayerSelect();
+    if (mode === GAME_MODE_RAMP) return rampPlayerSelectToggle.get();
+    if (mode === GAME_MODE_STREET) return streetPlayerSelectToggle.get();
+    return PLAYER_SELECT_SINGLE;
+  }
 
   document.getElementById('modeRampHard').addEventListener('click', () => {
     startGameWithDifficulty(GAME_MODE_RAMP, DIFFICULTY_HARD);
@@ -2931,7 +2961,15 @@
 
   function applyPlayerVisuals(player) {
     if (!isVersusActive()) return;
-    flatgroundImg.src = 'images/versus%20mode/Animation_flatmode_player' + player + '.png?v=' + ASSET_VERSION;
+    // Скейтер/сцена (flatgroundImg) — свои картинки на игрока есть только у
+    // Flat (images/versus mode/Animation_flatmode_player1/2.png). У Ramp и
+    // Street таких вариантов пока нет, так что там сцена остаётся обычной
+    // (Animation_ramp.png / Animation_street.png, см. applyGameModeVisuals) —
+    // а тренер/пузырь/кнопки Landed-Failed общие для всех режимов, меняются
+    // как обычно.
+    if (currentGameMode === GAME_MODE_FLAT) {
+      flatgroundImg.src = 'images/versus%20mode/Animation_flatmode_player' + player + '.png?v=' + ASSET_VERSION;
+    }
     coachImg.src = 'images/versus%20mode/Animation_coach_player' + player + '.png?v=' + ASSET_VERSION;
     bubbleImg.src = player === 2
       ? 'images/versus%20mode/Text_bubble_player2.png?v=' + ASSET_VERSION
