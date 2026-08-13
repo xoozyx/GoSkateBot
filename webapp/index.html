@@ -478,16 +478,23 @@
   }
 
   #optionsMusicVolume {
-    left: 25.96%;
+    left: 29.81%;
     top: 15.03%;
-    width: 48.56%;
+    width: 40.38%;
     height: 7.84%;
   }
 
   #optionsSoundVolume {
-    left: 25.96%;
+    left: 29.81%;
     top: 23.2%;
-    width: 48.56%;
+    width: 40.38%;
+    height: 7.84%;
+  }
+
+  #optionsBackground {
+    left: 29.81%;
+    top: 31.37%;
+    width: 40.38%;
     height: 7.84%;
   }
 
@@ -1296,7 +1303,7 @@
 <body>
   <div id="app">
     <div id="consoleBackground">
-      <img src="images/console/Background.png?v=20260716a" alt="">
+      <img id="consoleBackgroundImg" src="images/console/Background_0.png?v=20260716a" alt="">
     </div>
     <div id="consoleFrame">
       <div id="consoleFrameInner">
@@ -1501,6 +1508,11 @@
         <button class="mode-button enabled fullcanvas-hitarea" id="optionsSoundVolume" aria-label="Sound effects volume"></button>
         <div class="mode-button-visual" id="optionsSoundVolumeVisual">
           <img src="images/options/Button_options_sound_3.png?v=20260716a" alt="">
+        </div>
+
+        <button class="mode-button enabled fullcanvas-hitarea" id="optionsBackground" aria-label="Background"></button>
+        <div class="mode-button-visual" id="optionsBackgroundVisual">
+          <img src="images/options/Button_options_background_0.png?v=20260716a" alt="">
         </div>
       </div>
     </div>
@@ -2155,6 +2167,7 @@
     obstacleRail: 'toggle',
     optionsMusicVolume: 'toggle',
     optionsSoundVolume: 'toggle',
+    optionsBackground: 'toggle',
     btnLanded: 'landed',
     btnFailed: 'failed',
     btn2: 'back',
@@ -2653,6 +2666,47 @@
   });
 
   syncOptionsVolumeVisuals();
+
+  // ==== Карусель фона (Background_0/1.png): тот же принцип, что у громкости
+  // (карусель, +1 по клику, заворачивает по кругу), только вариантов всего
+  // два и меняет не звук, а картинку #consoleBackground — а он ОБЩИЙ для
+  // всех экранов (Mainscreen/Options/Flatmode — лежит вне .screen, см. CSS),
+  // поэтому смена фона в Options applies сразу везде, не только тут. ====
+  const STORAGE_KEY_BACKGROUND = 'goskate_background';
+  const BACKGROUND_COUNT = 2; // Background_0.png / Background_1.png
+  const consoleBackgroundImgEl = document.getElementById('consoleBackgroundImg');
+  const optionsBackgroundImg = document.querySelector('#optionsBackgroundVisual img');
+
+  function getBackgroundLevel() {
+    try {
+      return localStorage.getItem(STORAGE_KEY_BACKGROUND) === '1' ? 1 : 0;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  function applyBackgroundLevel(level) {
+    consoleBackgroundImgEl.src = 'images/console/Background_' + level + '.png?v=' + ASSET_VERSION;
+    optionsBackgroundImg.src = 'images/options/Button_options_background_' + level + '.png?v=' + ASSET_VERSION;
+  }
+
+  function setBackgroundLevel(level) {
+    const wrapped = ((level % BACKGROUND_COUNT) + BACKGROUND_COUNT) % BACKGROUND_COUNT;
+    try {
+      localStorage.setItem(STORAGE_KEY_BACKGROUND, String(wrapped));
+    } catch (e) { /* не критично, просто не запомним между сессиями */ }
+    applyBackgroundLevel(wrapped);
+    return wrapped;
+  }
+
+  document.getElementById('optionsBackground').addEventListener('click', () => {
+    setBackgroundLevel(getBackgroundLevel() + 1);
+  });
+
+  // Применяем сохранённый фон сразу при загрузке (не дожидаясь захода в Options) —
+  // и на #consoleBackground (сразу видно на заставке/Mainscreen), и на самой
+  // кнопке-карусели (чтобы Options при открытии сразу показывал верную картинку).
+  applyBackgroundLevel(getBackgroundLevel());
 
   document.getElementById('modeFlat').addEventListener('click', () => {
     if (flatDifficultyPickerEl.classList.contains('visible')) return;
