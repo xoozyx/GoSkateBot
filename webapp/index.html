@@ -441,6 +441,56 @@
     z-index: 3;
   }
 
+  /* Кнопка Options на Mainscreen занимает тот же угол, что и Quit/Back —
+     они взаимоисключающие: Options видна на обычном главном экране, прячется,
+     когда открыт пикер Flat/Ramp/Street (тогда там же появляется Quit), и
+     появляется обратно при закрытии пикера (см. openDifficultyPicker/
+     closeAllDifficultyPickers). Класс тот же .visible-принцип, что у Quit,
+     просто по умолчанию видна, а не наоборот. */
+  #mainscreenOptions, #mainscreenOptionsVisual {
+    display: block;
+  }
+
+  #mainscreenOptions.picker-open, #mainscreenOptionsVisual.picker-open {
+    display: none;
+  }
+
+  #mainscreenOptions {
+    left: 78.37%;
+    top: 8.5%;
+    width: 9.13%;
+    height: 8.82%;
+    z-index: 3;
+  }
+
+  #mainscreenOptionsVisual {
+    z-index: 3;
+  }
+
+  /* ==== Options screen: Quit (тот же верхний правый угол, что и везде),
+     плюс две "карусельных" кнопки громкости — картинка сама показывает
+     текущий уровень (0-5), никакого отдельного индикатора не нужно. ==== */
+  #optionsQuit {
+    left: 78.37%;
+    top: 8.5%;
+    width: 9.13%;
+    height: 8.82%;
+  }
+
+  #optionsMusicVolume {
+    left: 25.96%;
+    top: 15.03%;
+    width: 48.56%;
+    height: 7.84%;
+  }
+
+  #optionsSoundVolume {
+    left: 25.96%;
+    top: 23.2%;
+    width: 48.56%;
+    height: 7.84%;
+  }
+
   #modeFlat {
     left: 30.29%;
     top: 15.69%;
@@ -1427,6 +1477,31 @@
         <div class="mode-button-visual" id="mainscreenQuitVisual">
           <img src="images/Button_quit.png?v=20260716a" alt="">
         </div>
+
+        <button class="mode-button enabled fullcanvas-hitarea" id="mainscreenOptions" aria-label="Options"></button>
+        <div class="mode-button-visual" id="mainscreenOptionsVisual">
+          <img src="images/options/Button_options.png?v=20260716a" alt="">
+        </div>
+      </div>
+    </div>
+
+    <!-- ==== Options: громкость музыки/эффектов + выход в Mainscreen ==== -->
+    <div id="optionsscreen" class="screen">
+      <div class="device">
+        <button class="mode-button enabled fullcanvas-hitarea" id="optionsQuit" aria-label="Назад"></button>
+        <div class="mode-button-visual" id="optionsQuitVisual">
+          <img src="images/Button_quit.png?v=20260716a" alt="">
+        </div>
+
+        <button class="mode-button enabled fullcanvas-hitarea" id="optionsMusicVolume" aria-label="Music volume"></button>
+        <div class="mode-button-visual" id="optionsMusicVolumeVisual">
+          <img src="images/options/Button_options_music_3.png?v=20260716a" alt="">
+        </div>
+
+        <button class="mode-button enabled fullcanvas-hitarea" id="optionsSoundVolume" aria-label="Sound effects volume"></button>
+        <div class="mode-button-visual" id="optionsSoundVolumeVisual">
+          <img src="images/options/Button_options_sound_3.png?v=20260716a" alt="">
+        </div>
       </div>
     </div>
 
@@ -1576,6 +1651,10 @@
   // см. unlock() ниже). ====
   const SoundEngine = (function () {
     const STORAGE_KEY_MUTED = 'goskate_muted';
+    const STORAGE_KEY_MUSIC_VOLUME = 'goskate_musicVolume';
+    const STORAGE_KEY_SFX_VOLUME = 'goskate_sfxVolume';
+    const BASE_MUSIC_GAIN = 0.18; // громкость на максимальном уровне карусели (5)
+    const BASE_SFX_GAIN = 0.35;
     let ctx = null;
     let sfxGain = null;
     let musicGain = null;
@@ -1585,6 +1664,20 @@
       muted = localStorage.getItem(STORAGE_KEY_MUTED) === '1';
     } catch (e) { /* localStorage недоступен — считаем, что звук включён */ }
 
+    // ==== Громкость музыки/эффектов — "карусель" 0..5 с экрана Options
+    // (Button_options_music_N.png/Button_options_sound_N.png). Отдельно от
+    // общего mute (♪/✕) — тот глушит всё разом, это же задаёт относительный
+    // уровень каждого канала. 3 из 5 — разумное значение по умолчанию для
+    // тех, кто ни разу не открывал Options. ====
+    let musicVolumeLevel = 3;
+    let sfxVolumeLevel = 3;
+    try {
+      const mv = parseInt(localStorage.getItem(STORAGE_KEY_MUSIC_VOLUME), 10);
+      if (mv >= 0 && mv <= 5) musicVolumeLevel = mv;
+      const sv = parseInt(localStorage.getItem(STORAGE_KEY_SFX_VOLUME), 10);
+      if (sv >= 0 && sv <= 5) sfxVolumeLevel = sv;
+    } catch (e) { /* не критично — останутся значения по умолчанию */ }
+
     let musicWanted = false; // хотим ли играть музыку прямо сейчас (мы на Mainscreen)
     let musicGeneration = 0; // растёт при каждом stop/start — отменяет "протухшие" setTimeout из прошлого цикла
     let musicTimer = null;
@@ -1593,17 +1686,25 @@
 
     let noiseBuffer = null; // общий шумовой буфер для snare/hihat в барабанной партии (см. ниже)
 
+    // Применяет текущие уровни громкости к уже созданным gain-узлам —
+    // вызывается и сразу после их создания в ensureContext(), и при каждом
+    // изменении уровня (см. setMusicVolume/setSfxVolume), чтобы звук менялся
+    // "на лету", без пересоздания контекста.
+    function applyVolumeGains() {
+      if (musicGain) musicGain.gain.value = BASE_MUSIC_GAIN * (musicVolumeLevel / 5);
+      if (sfxGain) sfxGain.gain.value = BASE_SFX_GAIN * (sfxVolumeLevel / 5);
+    }
+
     function ensureContext() {
       if (ctx) return ctx;
       const AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return null;
       ctx = new AC();
       sfxGain = ctx.createGain();
-      sfxGain.gain.value = 0.35;
       sfxGain.connect(ctx.destination);
       musicGain = ctx.createGain();
-      musicGain.gain.value = 0.18; // музыка тише эффектов, фон не должен мешать
       musicGain.connect(ctx.destination);
+      applyVolumeGains(); // выставляет реальные .value для обоих узлов по сохранённым уровням
 
       // Один короткий буфер белого шума на весь плеер — переиспользуется для
       // каждого удара snare/hihat (создавать новый на каждый удар незачем).
@@ -1957,6 +2058,47 @@
       }
     }
 
+    // ==== Карусель громкости (Options): 0..5, вызывается кнопками
+    // Button_options_music_N/Button_options_sound_N. Меняет реальную
+    // громкость сразу (см. applyVolumeGains), а не только сохранённое число. ====
+    function wrapLevel(v) {
+      return ((v % 6) + 6) % 6; // 5 -> 0 (карусель), -1 -> 5 на всякий случай
+    }
+
+    function getMusicVolume() {
+      return musicVolumeLevel;
+    }
+
+    function setMusicVolume(level) {
+      musicVolumeLevel = wrapLevel(level);
+      try {
+        localStorage.setItem(STORAGE_KEY_MUSIC_VOLUME, String(musicVolumeLevel));
+      } catch (e) { /* не критично, просто не запомним между сессиями */ }
+      applyVolumeGains();
+      return musicVolumeLevel;
+    }
+
+    function cycleMusicVolume() {
+      return setMusicVolume(musicVolumeLevel + 1);
+    }
+
+    function getSfxVolume() {
+      return sfxVolumeLevel;
+    }
+
+    function setSfxVolume(level) {
+      sfxVolumeLevel = wrapLevel(level);
+      try {
+        localStorage.setItem(STORAGE_KEY_SFX_VOLUME, String(sfxVolumeLevel));
+      } catch (e) { /* не критично, просто не запомним между сессиями */ }
+      applyVolumeGains();
+      return sfxVolumeLevel;
+    }
+
+    function cycleSfxVolume() {
+      return setSfxVolume(sfxVolumeLevel + 1);
+    }
+
     // Первый клик/тач в любом месте страницы — разблокирует AudioContext
     // (без этого браузеры молча глушат звук до жеста пользователя).
     document.addEventListener('pointerdown', unlock, { once: true, capture: true });
@@ -1973,7 +2115,11 @@
     startMusic('hiphop');
     unlock();
 
-    return { play, unlock, startMusic, stopMusic, setSlowdown, isMuted, setMuted };
+    return {
+      play, unlock, startMusic, stopMusic, setSlowdown, isMuted, setMuted,
+      getMusicVolume, setMusicVolume, cycleMusicVolume,
+      getSfxVolume, setSfxVolume, cycleSfxVolume,
+    };
   })();
 
   // Единая точка входа для звука кнопок: слушаем клики на всём документе
@@ -2007,10 +2153,13 @@
     obstacleStairs: 'toggle',
     obstacleLedge: 'toggle',
     obstacleRail: 'toggle',
+    optionsMusicVolume: 'toggle',
+    optionsSoundVolume: 'toggle',
     btnLanded: 'landed',
     btnFailed: 'failed',
     btn2: 'back',
     mainscreenQuit: 'back',
+    optionsQuit: 'back',
     btnQuitBack: 'back',
     btnQuitConfirm: 'back',
   };
@@ -2346,18 +2495,20 @@
   const logoScreen = document.getElementById('logoScreen');
   const mainscreenEl = document.getElementById('mainscreen');
   const flatmodeEl = document.getElementById('flatmode');
+  const optionsscreenEl = document.getElementById('optionsscreen');
   const changeOverlay = document.getElementById('changeOverlay');
   const changeScreenImg = document.getElementById('changeScreenImg');
 
   const appEl = document.getElementById('app');
 
   function showScreen(el) {
-    [mainscreenEl, flatmodeEl].forEach(s => s.classList.remove('active'));
+    [mainscreenEl, flatmodeEl, optionsscreenEl].forEach(s => s.classList.remove('active'));
     el.classList.add('active');
     appEl.classList.toggle('zoomed', el === flatmodeEl);
-    // Хип-хоп на Mainscreen, сёрф-панк во время игры — музыка не
+    // Хип-хоп на Mainscreen и Options (тот же фон/музыка, что и главный
+    // экран — попросили явно), сёрф-панк во время игры — музыка не
     // выключается, просто переключается на другой трек.
-    SoundEngine.startMusic(el === mainscreenEl ? 'hiphop' : 'punk');
+    SoundEngine.startMusic(el === flatmodeEl ? 'punk' : 'hiphop');
   }
 
   // ==== Заставка (Intro_screen.png): 15 кадров по 83мс = 1245мс на один проигрыш.
@@ -2414,6 +2565,8 @@
   const modeStreetVisualEl = document.getElementById('modeStreetVisual');
   const mainscreenQuitEl = document.getElementById('mainscreenQuit');
   const mainscreenQuitVisualEl = document.getElementById('mainscreenQuitVisual');
+  const mainscreenOptionsEl = document.getElementById('mainscreenOptions');
+  const mainscreenOptionsVisualEl = document.getElementById('mainscreenOptionsVisual');
 
   // ==== Переключатель звука (♪ / ✕) — общий на музыку и все SFX сразу,
   // состояние персистентное (см. SoundEngine.setMuted). ====
@@ -2439,6 +2592,8 @@
     streetDifficultyPickerEl.classList.remove('visible');
     mainscreenQuitEl.classList.remove('visible');
     mainscreenQuitVisualEl.classList.remove('visible');
+    mainscreenOptionsEl.classList.remove('picker-open');
+    mainscreenOptionsVisualEl.classList.remove('picker-open');
     [modeFlatEl, modeFlatVisualEl, modeRampEl, modeRampVisualEl, modeStreetEl, modeStreetVisualEl].forEach((el) => {
       el.classList.remove('mode-picker-hidden', 'above-picker-shadow');
     });
@@ -2454,9 +2609,50 @@
     pickerEl.classList.add('visible');
     mainscreenQuitEl.classList.add('visible');
     mainscreenQuitVisualEl.classList.add('visible');
+    mainscreenOptionsEl.classList.add('picker-open');
+    mainscreenOptionsVisualEl.classList.add('picker-open');
     ownButtons.forEach((el) => el.classList.add('above-picker-shadow', 'mode-picker-hidden'));
     otherButtons.forEach((el) => el.classList.add('mode-picker-hidden'));
   }
+
+  // ==== Options: открывается с Mainscreen кнопкой Button_options.png (тот же
+  // угол, что и Quit/Back — см. CSS), закрывается своим Quit обратно на
+  // Mainscreen. Фон и музыка те же, что у Mainscreen — ничего специально
+  // переключать не нужно, showScreen() уже даёт Options трек 'hiphop'. ====
+  mainscreenOptionsEl.addEventListener('click', () => {
+    if (flatDifficultyPickerEl.classList.contains('visible')
+      || rampDifficultyPickerEl.classList.contains('visible')
+      || streetDifficultyPickerEl.classList.contains('visible')) return;
+    syncOptionsVolumeVisuals();
+    transitionToScreen(optionsscreenEl);
+  });
+
+  document.getElementById('optionsQuit').addEventListener('click', () => {
+    transitionToScreen(mainscreenEl);
+  });
+
+  // ==== Карусель громкости: показывает текущий уровень 0..5 картинкой,
+  // по клику прибавляет 1 и заворачивает 5 -> 0 (SoundEngine.cycleMusicVolume/
+  // cycleSfxVolume уже сами оборачивают и применяют громкость "на лету"). ====
+  const optionsMusicVolumeImg = document.querySelector('#optionsMusicVolumeVisual img');
+  const optionsSoundVolumeImg = document.querySelector('#optionsSoundVolumeVisual img');
+
+  function syncOptionsVolumeVisuals() {
+    optionsMusicVolumeImg.src = 'images/options/Button_options_music_' + SoundEngine.getMusicVolume() + '.png?v=' + ASSET_VERSION;
+    optionsSoundVolumeImg.src = 'images/options/Button_options_sound_' + SoundEngine.getSfxVolume() + '.png?v=' + ASSET_VERSION;
+  }
+
+  document.getElementById('optionsMusicVolume').addEventListener('click', () => {
+    SoundEngine.cycleMusicVolume();
+    syncOptionsVolumeVisuals();
+  });
+
+  document.getElementById('optionsSoundVolume').addEventListener('click', () => {
+    SoundEngine.cycleSfxVolume();
+    syncOptionsVolumeVisuals();
+  });
+
+  syncOptionsVolumeVisuals();
 
   document.getElementById('modeFlat').addEventListener('click', () => {
     if (flatDifficultyPickerEl.classList.contains('visible')) return;
