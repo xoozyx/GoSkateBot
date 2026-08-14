@@ -393,42 +393,6 @@
     display: block;
   }
 
-  /* Переключатель звука — единственная не-пиксель-артовая кнопка в игре
-     (нет готовой картинки под неё), поэтому просто текстовый глиф в кружке,
-     тем же ретро-шрифтом, что и остальной интерфейс. Только на Mainscreen —
-     настройка общая на оба экрана (хранится в localStorage, см. SoundEngine). */
-  #soundToggle {
-    position: absolute;
-    left: 2.5%;
-    top: 8.5%;
-    width: 9.13%;
-    height: 8.82%;
-    z-index: 5;
-    box-sizing: border-box;
-    border: none;
-    border-radius: 50%;
-    background: rgba(20, 20, 30, 0.45);
-    color: #f4f4f4;
-    font-family: 'Press Start 2P', monospace;
-    font-size: 11px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    line-height: 1;
-    cursor: pointer;
-    transition: transform 0.08s ease, opacity 0.08s ease;
-  }
-
-  #soundToggle:active {
-    transform: scale(0.9);
-    opacity: 0.8;
-  }
-
-  #soundToggle.muted {
-    color: #b7b7b7;
-  }
-
   #mainscreenQuit {
     left: 78.37%;
     top: 8.5%;
@@ -477,23 +441,38 @@
     height: 8.82%;
   }
 
+  #optionsAnimation {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    image-rendering: pixelated;
+    z-index: 0;
+  }
+
+  #optionsAnimation img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+  }
+
   #optionsMusicVolume {
     left: 29.81%;
-    top: 15.03%;
+    top: 18.95%;
     width: 40.38%;
     height: 7.84%;
   }
 
   #optionsSoundVolume {
     left: 29.81%;
-    top: 23.2%;
+    top: 27.12%;
     width: 40.38%;
     height: 7.84%;
   }
 
   #optionsBackground {
     left: 29.81%;
-    top: 31.37%;
+    top: 35.29%;
     width: 40.38%;
     height: 7.84%;
   }
@@ -863,6 +842,28 @@
     height: 9.15%;
   }
 
+  /* ==== Arcade: ставки вместо Start Game, три кнопки в ряд на месте одной. ==== */
+  #betBtn50 {
+    left: 15.87%;
+    top: 33.66%;
+    width: 22.6%;
+    height: 9.15%;
+  }
+
+  #betBtn100 {
+    left: 38.94%;
+    top: 33.66%;
+    width: 22.6%;
+    height: 9.15%;
+  }
+
+  #betBtn500 {
+    left: 62.02%;
+    top: 33.66%;
+    width: 22.6%;
+    height: 9.15%;
+  }
+
   /* Retry — показывается вместо Roll/Landed/Failed, когда списки трюков не
      удалось загрузить (обрыв связи и т.п.). Не показывается одновременно с
      Landed/Failed, чтобы нельзя было случайно записать в лог служебное
@@ -1152,6 +1153,20 @@
     display: flex;
   }
 
+  /* ==== Arcade: та же строка, что у single (landed/failed), плюс третий
+     стат — банк skatebucks с иконкой текущего "тира" (см. updateArcadeBucksDisplay). ==== */
+  .trick-stats.arcade-only {
+    display: none;
+  }
+
+  #tricklist.arcade-mode .trick-stats.single-only {
+    display: none;
+  }
+
+  #tricklist.arcade-mode .trick-stats.arcade-only {
+    display: flex;
+  }
+
   .player-label {
     font-family: 'Press Start 2P', monospace;
     font-size: 8px;
@@ -1259,6 +1274,25 @@
     display: block;
   }
 
+  /* ==== Arcade: значок skatebucks в том же центральном слоте, что и буквы
+     SKATE — переключается на versus-mode-подобный класс arcade-mode, letters
+     при этом скрываются (см. .single-only/.versus-only ниже, тот же принцип
+     для #skateLettersImg тоже нужен явно, т.к. по умолчанию он ВСЕГДА виден). ==== */
+  #skateLetters #skatebucksImg {
+    position: absolute;
+    inset: 0;
+    display: none;
+  }
+
+  #tricklist.arcade-mode #skateLetters #skatebucksImg {
+    display: block;
+  }
+
+  #tricklist.arcade-mode #skateLetters #skateLettersImg,
+  #tricklist.arcade-mode #skateLetters #skateLettersImg2 {
+    display: none;
+  }
+
   #tricklistInner {
     position: absolute;
     inset: 0;
@@ -1352,7 +1386,6 @@
     <!-- ==== Mainscreen: выбор режима игры ==== -->
     <div id="mainscreen" class="screen">
       <div class="device">
-        <button id="soundToggle" aria-label="Sound on/off">♪</button>
         <div id="selectModeLabel">
           <img src="images/Animation_select_mode.png?v=20260716a" alt="">
         </div>
@@ -1495,6 +1528,10 @@
     <!-- ==== Options: громкость музыки/эффектов + выход в Mainscreen ==== -->
     <div id="optionsscreen" class="screen">
       <div class="device">
+        <div id="optionsAnimation">
+          <img src="images/options/Animation_options.png?v=20260716a" alt="">
+        </div>
+
         <button class="mode-button enabled fullcanvas-hitarea" id="optionsQuit" aria-label="Назад"></button>
         <div class="mode-button-visual" id="optionsQuitVisual">
           <img src="images/Button_quit.png?v=20260716a" alt="">
@@ -1543,6 +1580,22 @@
           <img src="images/Button_startgame.png?v=20260716a" alt="">
         </div>
 
+        <!-- ==== Arcade: ставки вместо Start Game — та же позиция на экране,
+             три отдельные кнопки вместо одной, видимость каждой зависит ещё и
+             от того, хватает ли банка (см. setBetButtonsVisible). ==== -->
+        <button class="menu-button fullcanvas-hitarea" id="betBtn50" aria-label="Bet 50"></button>
+        <div class="menu-button-visual" id="betBtn50Visual">
+          <img src="images/arcade/Bet_50.png?v=20260716a" alt="">
+        </div>
+        <button class="menu-button fullcanvas-hitarea" id="betBtn100" aria-label="Bet 100"></button>
+        <div class="menu-button-visual" id="betBtn100Visual">
+          <img src="images/arcade/Bet_100.png?v=20260716a" alt="">
+        </div>
+        <button class="menu-button fullcanvas-hitarea" id="betBtn500" aria-label="Bet 500"></button>
+        <div class="menu-button-visual" id="betBtn500Visual">
+          <img src="images/arcade/Bet_500.png?v=20260716a" alt="">
+        </div>
+
         <button class="menu-button fullcanvas-hitarea" id="btnRetry" aria-label="Повторить"></button>
         <div class="menu-button-visual" id="btnRetryVisual">
           <img src="images/Button_retry.png?v=20260716a" alt="">
@@ -1587,6 +1640,20 @@
                 <span id="failedCount2">0</span>
               </div>
             </div>
+            <div class="trick-stats arcade-only">
+              <div class="trick-stat">
+                <img src="images/Icon_landed.png?v=20260716a" alt="Засчитано">
+                <span id="arcadeLandedCount">0</span>
+              </div>
+              <div class="trick-stat">
+                <img src="images/Icon_failed.png?v=20260716a" alt="Не засчитано">
+                <span id="arcadeFailedCount">0</span>
+              </div>
+              <div class="trick-stat">
+                <img id="arcadeBucksIcon" src="images/arcade/Skatebucks_1.png?v=20260716a" alt="Skatebucks">
+                <span id="arcadeBucksAmount">100</span>
+              </div>
+            </div>
           </div>
           <div id="difficultyBadge">
             <img id="difficultyBadgeImg" src="images/Difficulty_easy.png?v=20260716a" alt="">
@@ -1594,6 +1661,7 @@
           <div id="skateLetters">
             <img id="skateLettersImg" src="images/Letters_null.png?v=20260716a" alt="SKATE">
             <img id="skateLettersImg2" src="images/versus%20mode/Letters_skate_player2_null.png?v=20260716a" alt="Player 2 SKATE">
+            <img id="skatebucksImg" src="images/arcade/Skatebucks_1.png?v=20260716a" alt="Skatebucks">
           </div>
           <button id="logToggleBtn" aria-label="Развернуть лог"></button>
           <div id="logToggleVisual">
@@ -1671,10 +1739,17 @@
     let sfxGain = null;
     let musicGain = null;
     let unlocked = false;
+    // Раньше глушилось отдельной кнопкой ♪/✕ на Mainscreen — её убрали (она
+    // визуально накладывалась на скруглённый угол консоли, плюс полностью
+    // дублировала Options: уровень 0 там уже даёт настоящую тишину). muted
+    // сохранён внутри на будущее, но больше не читается из localStorage и не
+    // включается нигде в интерфейсе — если оставить старое сохранённое "было
+    // заглушено", человек с прошлой версии навсегда остался бы без звука без
+    // единой кнопки это исправить, раз в Options такого переключателя нет.
     let muted = false;
     try {
-      muted = localStorage.getItem(STORAGE_KEY_MUTED) === '1';
-    } catch (e) { /* localStorage недоступен — считаем, что звук включён */ }
+      localStorage.removeItem(STORAGE_KEY_MUTED);
+    } catch (e) { /* не критично */ }
 
     // ==== Громкость музыки/эффектов — "карусель" 0..5 с экрана Options
     // (Button_options_music_N.png/Button_options_sound_N.png). Отдельно от
@@ -2147,6 +2222,9 @@
     modeStreetEasy: 'confirm',
     modeStreetHard: 'confirm',
     btn1: 'confirm',
+    betBtn50: 'confirm',
+    betBtn100: 'confirm',
+    betBtn500: 'confirm',
     btnQuitRestart: 'confirm',
     togglePlayerSelect: 'toggle',
     toggleModeSelect: 'toggle',
@@ -2317,6 +2395,82 @@
 
   function isVersusActive() {
     return currentIsVersus;
+  }
+
+  // ==== Arcade mode: "skatebucks" вместо букв SKATE — банк 100 на старте,
+  // ставки Bet_50/100/500 вместо Button_startgame. Работает для любого из
+  // трёх режимов (Flat/Ramp/Street — переключается своим Mode Select у
+  // каждого, см. getModeSelectForMode), но НЕ вместе с Versus: если у режима
+  // одновременно Player Select=Versus и Mode Select=Arcade, побеждает Versus
+  // (ставки на двух игроков с одним банком не описаны в задаче) — см.
+  // wantArcade в startGameWithDifficulty. Персистентность — тот же принцип,
+  // что у Versus (синхронно здесь, до первого renderTricklist() ниже). ====
+  const STORAGE_KEY_ARCADE_ACTIVE = 'goskate_arcadeActive';
+  const STORAGE_KEY_SKATEBUCKS = 'goskate_skatebucks';
+  const STORAGE_KEY_PENDING_BET = 'goskate_pendingBet';
+  const ARCADE_START_BUCKS = 100;
+  const ARCADE_MIN_BET = 50;
+  const ARCADE_WELCOME_MESSAGE = 'Welcome to Arcade mode! Make a bet for next trick and try to not loose all your skatebucks at once.';
+
+  function getArcadeActiveFlag() {
+    try {
+      return localStorage.getItem(STORAGE_KEY_ARCADE_ACTIVE) === '1';
+    } catch (e) {
+      return false;
+    }
+  }
+  function setArcadeActiveFlag(enabled) {
+    try {
+      localStorage.setItem(STORAGE_KEY_ARCADE_ACTIVE, enabled ? '1' : '0');
+    } catch (e) {
+      console.warn('Не удалось сохранить флаг Arcade:', e);
+    }
+  }
+
+  function getSkatebucksFlag() {
+    try {
+      const raw = parseInt(localStorage.getItem(STORAGE_KEY_SKATEBUCKS), 10);
+      return isNaN(raw) ? ARCADE_START_BUCKS : raw;
+    } catch (e) {
+      return ARCADE_START_BUCKS;
+    }
+  }
+  function setSkatebucksFlag(amount) {
+    try {
+      localStorage.setItem(STORAGE_KEY_SKATEBUCKS, String(amount));
+    } catch (e) {
+      console.warn('Не удалось сохранить skatebucks:', e);
+    }
+  }
+
+  // Ставка на трюк, который сейчас "в полёте" (сгенерирован, но ещё не
+  // оценён Landed/Failed) — null между раундами, когда ждём следующую ставку.
+  // Персистентная: отличает на резюме "ждём оценку уже сгенерированного
+  // трюка" от "ждём следующую ставку" — lastResult (STORAGE_KEY_LAST) сам по
+  // себе для этого не годится, он не чистится после оценки трюка.
+  function getPendingBetFlag() {
+    try {
+      const raw = parseInt(localStorage.getItem(STORAGE_KEY_PENDING_BET), 10);
+      return isNaN(raw) ? null : raw;
+    } catch (e) {
+      return null;
+    }
+  }
+  function setPendingBetFlag(amount) {
+    try {
+      if (amount == null) localStorage.removeItem(STORAGE_KEY_PENDING_BET);
+      else localStorage.setItem(STORAGE_KEY_PENDING_BET, String(amount));
+    } catch (e) {
+      console.warn('Не удалось сохранить текущую ставку Arcade:', e);
+    }
+  }
+
+  let currentIsArcade = getArcadeActiveFlag();
+  let skatebucks = getSkatebucksFlag();
+  let pendingBetAmount = getPendingBetFlag();
+
+  function isArcadeActive() {
+    return currentIsArcade;
   }
 
   // ==== Сложность (Easy/Hard) — своя для каждого режима, сохраняется вместе
@@ -2581,24 +2735,6 @@
   const mainscreenOptionsEl = document.getElementById('mainscreenOptions');
   const mainscreenOptionsVisualEl = document.getElementById('mainscreenOptionsVisual');
 
-  // ==== Переключатель звука (♪ / ✕) — общий на музыку и все SFX сразу,
-  // состояние персистентное (см. SoundEngine.setMuted). ====
-  const soundToggleEl = document.getElementById('soundToggle');
-
-  function syncSoundToggleVisual() {
-    const muted = SoundEngine.isMuted();
-    soundToggleEl.textContent = muted ? '✕' : '♪';
-    soundToggleEl.classList.toggle('muted', muted);
-    soundToggleEl.setAttribute('aria-label', muted ? 'Turn sound on' : 'Turn sound off');
-  }
-
-  soundToggleEl.addEventListener('click', () => {
-    SoundEngine.setMuted(!SoundEngine.isMuted());
-    syncSoundToggleVisual();
-  });
-
-  syncSoundToggleVisual();
-
   function closeAllDifficultyPickers() {
     flatDifficultyPickerEl.classList.remove('visible');
     rampDifficultyPickerEl.classList.remove('visible');
@@ -2673,13 +2809,14 @@
   // всех экранов (Mainscreen/Options/Flatmode — лежит вне .screen, см. CSS),
   // поэтому смена фона в Options applies сразу везде, не только тут. ====
   const STORAGE_KEY_BACKGROUND = 'goskate_background';
-  const BACKGROUND_COUNT = 2; // Background_0.png / Background_1.png
+  const BACKGROUND_COUNT = 3; // Background_0.png / Background_1.png / Background_2.png
   const consoleBackgroundImgEl = document.getElementById('consoleBackgroundImg');
   const optionsBackgroundImg = document.querySelector('#optionsBackgroundVisual img');
 
   function getBackgroundLevel() {
     try {
-      return localStorage.getItem(STORAGE_KEY_BACKGROUND) === '1' ? 1 : 0;
+      const v = parseInt(localStorage.getItem(STORAGE_KEY_BACKGROUND), 10);
+      return v >= 0 && v < BACKGROUND_COUNT ? v : 0;
     } catch (e) {
       return 0;
     }
@@ -2840,7 +2977,13 @@
     // оно бы отражало ещё СТАРОЕ состояние currentIsVersus (от предыдущей
     // игры), а не новое.
     const wantVersus = getPlayerSelectForMode(mode) === PLAYER_SELECT_VERSUS;
-    const startMessage = buildModeStartMessage(mode, difficulty, 'starts', wantVersus);
+    // Arcade — свой Mode Select у каждого режима (см. getModeSelectForMode).
+    // НЕ работает одновременно с Versus (ставки на банк одного игрока не
+    // определены для 2 игроков) — если оба выставлены разом, Versus побеждает.
+    const wantArcade = !wantVersus && getModeSelectForMode(mode) === MODE_SELECT_ARCADE;
+    const startMessage = wantArcade
+      ? ARCADE_WELCOME_MESSAGE
+      : buildModeStartMessage(mode, difficulty, 'starts', wantVersus);
     currentGameMode = mode;
     setDifficulty(mode, difficulty);
 
@@ -2851,8 +2994,44 @@
     pendingVersusTrick = null;
     syncVersusModeClass();
 
+    currentIsArcade = wantArcade;
+    setArcadeActiveFlag(currentIsArcade);
+    if (currentIsArcade) {
+      skatebucks = ARCADE_START_BUCKS;
+      setSkatebucksFlag(skatebucks);
+    }
+    pendingBetAmount = null;
+    setPendingBetFlag(null);
+    syncArcadeModeClass();
+
     applyGameModeVisuals();
     updateDifficultyBadge();
+
+    // Буквы SKATE (в versus — сразу оба ряда) / банк skatebucks (в arcade)
+    // должны показывать актуальное значение с самого появления экрана, а не
+    // только после первого renderTricklist() (он случится лишь при нажатии
+    // Start Game/ставки) — иначе до этого момента видна картинка, оставшаяся
+    // от ПРЕДЫДУЩЕЙ игры/режима: отсюда был баг с "половиной букв"/наложением
+    // при переключении single <-> versus (тот же класс бага возможен и здесь).
+    if (currentIsVersus) {
+      versusFailed = { 1: 0, 2: 0 };
+      refreshCentralLetters();
+    } else if (currentIsArcade) {
+      updateArcadeBucksDisplay();
+    } else {
+      updateSkateLetters(0);
+    }
+
+    // Arcade: ставки вместо Start Game — сама кнопка "начать" тут не нужна,
+    // первая же ставка одновременно и начинает игру, и кидает первый трюк.
+    if (currentIsArcade) {
+      setBtn1Visible(false);
+      setBetButtonsVisible(true);
+    } else {
+      setBtn1Visible(true);
+      setBetButtonsVisible(false);
+    }
+
     closeAllDifficultyPickers();
     transitionToScreen(flatmodeEl);
     showModeStartMessage(startMessage, CHANGE_SWAP_AT_MS + 80);
@@ -2987,6 +3166,16 @@
     if (mode === GAME_MODE_RAMP) return rampPlayerSelectToggle.get();
     if (mode === GAME_MODE_STREET) return streetPlayerSelectToggle.get();
     return PLAYER_SELECT_SINGLE;
+  }
+
+  // То же самое, но для Mode Select (Classic/Arcade) — своя картинка-переключатель
+  // на каждый режим, читаем через её же .get(), кроме Flat (у него отдельные
+  // именованные getModeSelect/setModeSelect, см. выше).
+  function getModeSelectForMode(mode) {
+    if (mode === GAME_MODE_FLAT) return getModeSelect();
+    if (mode === GAME_MODE_RAMP) return rampModeSelectToggle.get();
+    if (mode === GAME_MODE_STREET) return streetModeSelectToggle.get();
+    return MODE_SELECT_CLASSIC;
   }
 
   document.getElementById('modeRampHard').addEventListener('click', () => {
@@ -3484,10 +3673,10 @@
 
   function updateDifficultyBadge() {
     const hard = getFlatDifficulty() === DIFFICULTY_HARD;
-    // Versus (2 Player): свой бейдж сложности (images/versus mode/) вместо обычного.
-    const image = isVersusActive()
-      ? (hard ? 'versus%20mode/Difficulty_hard_versusmode.png' : 'versus%20mode/Difficulty_easy_versusmode.png')
-      : (hard ? 'Difficulty_hard.png' : 'Difficulty_easy.png');
+    // Раньше в versus использовался отдельный бейдж (images/versus mode/
+    // Difficulty_*_versusmode.png) — теперь и там, и в single используется
+    // один и тот же обычный Difficulty_easy.png/Difficulty_hard.png.
+    const image = hard ? 'Difficulty_hard.png' : 'Difficulty_easy.png';
     difficultyBadgeImg.src = 'images/' + image + '?v=' + ASSET_VERSION;
   }
 
@@ -3547,6 +3736,163 @@
     }, 120);
     judgeButtonsEl.classList.remove('visible');
     setBtn1Visible(false);
+  }
+
+  // ==== Arcade: банк skatebucks вместо букв SKATE, ставки вместо Landed/
+  // Failed-цикла с автогенерацией. Иконка банка (центральный слот, тот же,
+  // что у SKATE-букв) переключается по трём "тирам" достатка — только
+  // визуальный флюр, актуальное число живёт в шапке лога (arcadeBucksAmount). ====
+  const betBtn50El = document.getElementById('betBtn50');
+  const betBtn50VisualEl = document.getElementById('betBtn50Visual');
+  const betBtn100El = document.getElementById('betBtn100');
+  const betBtn100VisualEl = document.getElementById('betBtn100Visual');
+  const betBtn500El = document.getElementById('betBtn500');
+  const betBtn500VisualEl = document.getElementById('betBtn500Visual');
+  const skatebucksImg = document.getElementById('skatebucksImg');
+  const arcadeBucksIconEl = document.getElementById('arcadeBucksIcon');
+  const arcadeBucksAmountEl = document.getElementById('arcadeBucksAmount');
+  const arcadeLandedCountEl = document.getElementById('arcadeLandedCount');
+  const arcadeFailedCountEl = document.getElementById('arcadeFailedCount');
+
+  const BET_BUTTONS = [
+    { amount: 50, el: betBtn50El, visual: betBtn50VisualEl },
+    { amount: 100, el: betBtn100El, visual: betBtn100VisualEl },
+    { amount: 500, el: betBtn500El, visual: betBtn500VisualEl },
+  ];
+
+  // Показывает только те ставки, которые реально по карману — если банк,
+  // скажем, 70, из трёх кнопок останется только Bet_50 (специальных
+  // "неактивных" картинок под остальные две не было прислано, поэтому прячем
+  // целиком, а не тускним, как раньше с Easy/Hard на Street).
+  function setBetButtonsVisible(visible) {
+    BET_BUTTONS.forEach(({ amount, el, visual }) => {
+      const show = visible && amount <= skatebucks;
+      const display = show ? '' : 'none';
+      el.style.display = display;
+      visual.style.display = display;
+    });
+  }
+
+  function arcadeBucksTier(amount) {
+    if (amount >= 2500) return 3;
+    if (amount >= 500) return 2;
+    return 1;
+  }
+
+  function updateArcadeBucksDisplay() {
+    const tierSrc = 'images/arcade/Skatebucks_' + arcadeBucksTier(skatebucks) + '.png?v=' + ASSET_VERSION;
+    skatebucksImg.src = tierSrc;
+    arcadeBucksIconEl.src = tierSrc;
+    arcadeBucksAmountEl.textContent = skatebucks;
+  }
+
+  function syncArcadeModeClass() {
+    tricklistEl.classList.toggle('arcade-mode', isArcadeActive());
+  }
+
+  function triggerArcadeGameOver() {
+    if (isGameOver) return;
+    isGameOver = true;
+    SoundEngine.setSlowdown(1.9, 0.82); // "теряющая питание пластинка" — темп и тон проседают
+    bubbleEl.classList.remove('active');
+    resultEl.textContent = '';
+    setTimeout(() => {
+      setResultText('Game over! You ran out of skatebucks.', false);
+      bubbleEl.classList.add('active');
+    }, 120);
+    judgeButtonsEl.classList.remove('visible');
+    setBetButtonsVisible(false);
+    setBtn1Visible(false);
+  }
+
+  // Общая генерация трюка для Arcade — та же механика, что у rollNextTrick(),
+  // только текст пузыря заканчивается ставкой, а не сразу голым названием
+  // трюка (см. описание задачи). Ставка уже списана к этому моменту (см.
+  // placeBet), тут только генерируем и показываем.
+  async function rollArcadeTrick() {
+    if (isGameOver) return;
+    bubbleEl.classList.remove('active');
+    resultEl.textContent = '';
+    judgeButtonsEl.classList.remove('visible');
+    setRetryVisible(false);
+
+    if (!isDataReadyForCurrentMode()) {
+      setResultText('Списки трюков ещё загружаются...', false);
+      bubbleEl.classList.add('active');
+      await ensureListsLoaded();
+
+      if (!isDataReadyForCurrentMode()) {
+        setResultText('Connection problem, please try again later', false);
+        bubbleEl.classList.add('active');
+        setBetButtonsVisible(false);
+        setRetryVisible(true);
+        return;
+      }
+    }
+
+    setTimeout(() => {
+      bubbleEl.classList.add('active');
+      const trick = generateUniqueTrick();
+      currentDisplayedTrick = trick;
+      const message = trick + '. Your bet is ' + pendingBetAmount + ' skatebucks.';
+      setResultText(message, true, () => {
+        judgeButtonsEl.classList.add('visible');
+      });
+    }, 120);
+  }
+
+  // Нажатие одной из ставок: списывает банк сразу, логирует отложенное
+  // приветственное сообщение (если это первая ставка новой игры — тот же
+  // приём, что у btn1El для классического режима), кидает трюк.
+  function placeBet(amount) {
+    if (isGameOver) return;
+    if (amount > skatebucks) return; // на случай гонки кликов — кнопка и так должна быть скрыта
+    setActiveMode(GAME_MODE_CONFIG[currentGameMode].activeMode);
+    pendingBetAmount = amount;
+    setPendingBetFlag(amount);
+    skatebucks -= amount;
+    setSkatebucksFlag(skatebucks);
+    updateArcadeBucksDisplay();
+    setBetButtonsVisible(false);
+    if (pendingModeStartMessage) {
+      addTricklistEntry(pendingModeStartMessage, 'info');
+      pendingModeStartMessage = null;
+    }
+    rollArcadeTrick();
+  }
+
+  BET_BUTTONS.forEach(({ amount, el }) => {
+    el.addEventListener('click', () => placeBet(amount));
+  });
+
+  // Оценка трюка (Landed/Failed) в Arcade: выигрыш — банк х2 от ставки
+  // (ставка уже была списана при placeBet, так что чистый прирост — ровно
+  // ставка), проигрыш — банк остаётся как есть (ставка уже потеряна). Дальше:
+  // хватает на минимальную ставку (50) — раунд продолжается, иначе Game Over.
+  function resolveArcadeBet(landed) {
+    if (isGameOver) return;
+    const bet = pendingBetAmount || 0;
+    if (landed) {
+      skatebucks += bet * 2;
+      setSkatebucksFlag(skatebucks);
+    }
+    pendingBetAmount = null;
+    setPendingBetFlag(null);
+    updateArcadeBucksDisplay();
+
+    if (skatebucks < ARCADE_MIN_BET) {
+      triggerArcadeGameOver();
+      return;
+    }
+
+    bubbleEl.classList.remove('active');
+    resultEl.textContent = '';
+    judgeButtonsEl.classList.remove('visible');
+    setTimeout(() => {
+      bubbleEl.classList.add('active');
+      setResultText('Ok. Make a bet for a next trick.', false);
+      setBetButtonsVisible(true);
+    }, 120);
   }
 
   // ==== Versus (2 Player Flatground): по трюку каждый игрок ходит отдельно,
@@ -3648,6 +3994,24 @@
         } else if (failedByPlayer[2] >= overFails) {
           triggerVersusGameOver(1);
         }
+      }
+    } else if (isArcadeActive()) {
+      // Game over в Arcade решается не количеством ошибок, а размером банка
+      // (см. resolveArcadeBet) — но на резюме страницы этот метод не
+      // вызывается, поэтому проверка здесь дублирует его же условие: без
+      // неё возврат в уже проигранную Arcade-игру не показал бы Game Over.
+      // ВАЖНО: только когда нет ставки "в полёте" (pendingBetAmount === null) —
+      // иначе этот же renderTricklist() вызывается ещё и изнутри placeBet()
+      // (когда логируется приветственное сообщение), в момент когда банк уже
+      // списан под ставку, но трюк ещё даже не оценён — без этого условия
+      // игра ошибочно завершалась бы раньше, чем игрок успевал бы попробовать
+      // трюк, на который только что поставил.
+      arcadeLandedCountEl.textContent = landed;
+      arcadeFailedCountEl.textContent = failed;
+      updateArcadeBucksDisplay();
+
+      if (!isGameOver && pendingBetAmount == null && skatebucks < ARCADE_MIN_BET) {
+        triggerArcadeGameOver();
       }
     } else {
       landedCountEl.textContent = landed;
@@ -3751,11 +4115,33 @@
 
   // Показываем последний сгенерированный результат сразу при открытии Flatmode.
   // Если трюк уже ждёт оценки — сразу показываем кнопки-иконки вместо Roll.
-  // Если игра уже была завершена (15 ошибок / кто-то из игроков — вся SKATE)
-  // — вместо этого сразу показываем Game over (см. renderTricklist() выше,
-  // которая уже вызвала triggerGameOver/triggerVersusGameOver при первом рендере).
+  // Если игра уже была завершена (15 ошибок / кто-то из игроков — вся SKATE /
+  // банк Arcade меньше минимальной ставки) — вместо этого сразу показываем
+  // Game over (см. renderTricklist() выше, которая уже вызвала
+  // triggerGameOver/triggerVersusGameOver/triggerArcadeGameOver при первом рендере).
   if (isGameOver) {
-    if (!isVersusActive()) triggerGameOver();
+    if (!isVersusActive() && !isArcadeActive()) triggerGameOver();
+  } else if (isArcadeActive()) {
+    // Arcade: lastResult сам по себе не чистится после оценки трюка (в
+    // отличие от classic/versus, где сразу следует новый трюк), поэтому
+    // "мы посреди хода" здесь определяет pendingBetAmount, а не сам факт
+    // наличия lastResult — иначе уже оценённый трюк между ставками
+    // восстановился бы как снова ожидающий Landed/Failed.
+    const lastResult = loadFromStorage(STORAGE_KEY_LAST, '');
+    if (pendingBetAmount != null && lastResult) {
+      currentDisplayedTrick = lastResult;
+      bubbleEl.classList.add('active');
+      setBtn1Visible(false);
+      setBetButtonsVisible(false);
+      setResultText(lastResult + '. Your bet is ' + pendingBetAmount + ' skatebucks.', true, () => {
+        judgeButtonsEl.classList.add('visible');
+      });
+    } else {
+      setBtn1Visible(false);
+      setBetButtonsVisible(true);
+      bubbleEl.classList.add('active');
+      setResultText('Ok. Make a bet for a next trick.', false);
+    }
   } else {
     const lastResult = loadFromStorage(STORAGE_KEY_LAST, '');
     console.log('[GoSkate debug] restore check — isGameOver:', isGameOver, 'lastResult:', JSON.stringify(lastResult));
@@ -3923,6 +4309,7 @@
     flatgroundImg.src = GAME_MODE_CONFIG[currentGameMode].groundImage + '?v=' + ASSET_VERSION;
     resetPlayerVisuals();
     syncVersusModeClass();
+    syncArcadeModeClass();
     if (isVersusActive()) {
       applyPlayerVisuals(currentTurn);
     }
@@ -3953,6 +4340,16 @@
   // (см. buildVersusTrickMessage), лог записывает его как есть, с меткой
   // игрока, и передаёт ход дальше вместо генерации нового трюка сразу.
   document.getElementById('btnLanded').addEventListener('click', () => {
+    if (isArcadeActive()) {
+      // Порядок важен: сначала зачисляем выигрыш (resolveArcadeBet), ПОТОМ
+      // логируем запись — иначе addTricklistEntry вызвал бы renderTricklist()
+      // (и его проверку "хватает ли банка") ещё ДО того, как выигрыш зачтён,
+      // и мог бы ошибочно объявить Game Over на пустом промежуточном балансе.
+      const text = resultEl.textContent;
+      resolveArcadeBet(true);
+      if (text) addTricklistEntry(text, 'landed');
+      return;
+    }
     if (isVersusActive()) {
       if (resultEl.textContent) addTricklistEntry(resultEl.textContent, 'landed', currentTurn);
       if (!isGameOver) continueVersusRound();
@@ -3963,6 +4360,12 @@
   });
 
   document.getElementById('btnFailed').addEventListener('click', () => {
+    if (isArcadeActive()) {
+      const text = resultEl.textContent;
+      resolveArcadeBet(false);
+      if (text) addTricklistEntry(text, 'failed');
+      return;
+    }
     if (isVersusActive()) {
       if (resultEl.textContent) addTricklistEntry(resultEl.textContent, 'failed', currentTurn);
       if (!isGameOver) continueVersusRound();
@@ -3976,6 +4379,10 @@
   // (обрыв связи и т.п.) — пробуем ещё раз.
   btnRetryEl.addEventListener('click', () => {
     setRetryVisible(false);
+    if (isArcadeActive()) {
+      rollArcadeTrick(); // ставка уже списана в placeBet, повторно генерируем тот же трюк
+      return;
+    }
     setBtn1Visible(true);
     if (isVersusActive()) {
       startVersusRound();
@@ -3995,6 +4402,9 @@
   function getOtherGameplayButtons() {
     return [
       btn1El,
+      betBtn50El,
+      betBtn100El,
+      betBtn500El,
       btnRetryEl,
       logToggleBtn,
       btnInfoEl,
@@ -4039,17 +4449,35 @@
     setVersusTurnFlag(1);
     pendingVersusTrick = null;
     currentDisplayedTrick = '';
+
+    // Arcade: тот же принцип, что у Versus/currentTurn выше — Restart
+    // сохраняет currentIsArcade как есть (см. doRestart), Quit сбрасывает
+    // его отдельно уже ПОСЛЕ этого вызова (см. doQuit). Банк — обратно к 100
+    // в любом случае: и Restart, и Quit-затем-новая-игра должны начинать
+    // Arcade с чистого листа, а не с прошлого баланса.
+    pendingBetAmount = null;
+    setPendingBetFlag(null);
+    if (isArcadeActive()) {
+      skatebucks = ARCADE_START_BUCKS;
+      setSkatebucksFlag(skatebucks);
+    }
     renderTricklist();
 
-    // Прячем пузырь/текст и возвращаем кнопку Start Game на место, сворачиваем лог,
-    // чтобы экран был полностью чистым
+    // Прячем пузырь/текст и возвращаем кнопку Start Game (или ставки в
+    // Arcade) на место, сворачиваем лог, чтобы экран был полностью чистым
     bubbleEl.classList.remove('active');
     resultEl.textContent = '';
     setInfoButtonVisible(false);
     judgeButtonsEl.classList.remove('visible');
-    setBtn1Visible(true);
     setRetryVisible(false);
     setLogExpanded(false);
+    if (isArcadeActive()) {
+      setBtn1Visible(false);
+      setBetButtonsVisible(true);
+    } else {
+      setBtn1Visible(true);
+      setBetButtonsVisible(false);
+    }
 
     // Возвращаем скейтера/тренера/пузырь/кнопки к обычному виду, а если
     // versus остаётся активным (Restart) — сразу показываем Player 1, чтобы
@@ -4064,6 +4492,9 @@
     currentIsVersus = false;
     setVersusActiveFlag(false);
     syncVersusModeClass();
+    currentIsArcade = false;
+    setArcadeActiveFlag(false);
+    syncArcadeModeClass();
     hideQuitConfirm();
     transitionToScreen(mainscreenEl);
   }
@@ -4073,7 +4504,9 @@
   // сообщение, что и при свежем старте, но с "restarts" вместо "starts" —
   // экран при этом не переключается, так что задержка перед показом минимальна.
   function doRestart() {
-    const restartMessage = buildModeStartMessage(currentGameMode, getFlatDifficulty(), 'restarts', isVersusActive());
+    const restartMessage = isArcadeActive()
+      ? ARCADE_WELCOME_MESSAGE
+      : buildModeStartMessage(currentGameMode, getFlatDifficulty(), 'restarts', isVersusActive());
     resetGameState();
     hideQuitConfirm();
     showModeStartMessage(restartMessage, 80);
