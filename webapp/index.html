@@ -1314,7 +1314,7 @@
     top: 48.53%;
     transform: translateY(-50%);
     font-family: 'Press Start 2P', monospace;
-    font-size: 15px;
+    font-size: 10px;
     color: #f4d35e;
     white-space: nowrap;
     z-index: 1;
@@ -1698,10 +1698,6 @@
               <div class="trick-stat">
                 <img src="images/Icon_failed.png?v=20260716a" alt="Не засчитано">
                 <span id="arcadeFailedCount">0</span>
-              </div>
-              <div class="trick-stat">
-                <img id="arcadeBucksIcon" src="images/arcade/Skatebucks_1.png?v=20260716a" alt="Skatebucks">
-                <span id="arcadeBucksAmount">100</span>
               </div>
             </div>
           </div>
@@ -3820,8 +3816,9 @@
 
   // ==== Arcade: банк skatebucks вместо букв SKATE, ставки вместо Landed/
   // Failed-цикла с автогенерацией. Иконка банка (центральный слот, тот же,
-  // что у SKATE-букв) переключается по трём "тирам" достатка — только
-  // визуальный флюр, актуальное число живёт в шапке лога (arcadeBucksAmount). ====
+  // что у SKATE-букв) переключается по трём "тирам" достатка, число рядом с
+  // ней (skatebucksAmountBigEl) — единственное место, где показан банк
+  // (маленький дубль в шапке лога убрали — только landed/failed там остались). ====
   const betBtn50El = document.getElementById('betBtn50');
   const betBtn50VisualEl = document.getElementById('betBtn50Visual');
   const betBtn100El = document.getElementById('betBtn100');
@@ -3830,23 +3827,45 @@
   const betBtn500VisualEl = document.getElementById('betBtn500Visual');
   const skatebucksImg = document.getElementById('skatebucksImg');
   const skatebucksAmountBigEl = document.getElementById('skatebucksAmountBig');
-  const arcadeBucksIconEl = document.getElementById('arcadeBucksIcon');
-  const arcadeBucksAmountEl = document.getElementById('arcadeBucksAmount');
   const arcadeLandedCountEl = document.getElementById('arcadeLandedCount');
   const arcadeFailedCountEl = document.getElementById('arcadeFailedCount');
 
-  const BET_BUTTONS = [
+  // Две "линейки" ставок вместо одной фиксированной — какая активна, решает
+  // текущий банк: пока меньше 1000, доступны 50/100/250 (Bet_50/100/250.png),
+  // от 1000 и выше — уже 500/1000/1500 (Bet_500/1000/1500.png). Слоты (три
+  // кнопки в ряду) остаются теми же тремя DOM-элементами — просто у каждого
+  // на лету меняется и картинка, и то, какую сумму он на самом деле ставит.
+  const ARCADE_BET_TIER_THRESHOLD = 1000;
+  const ARCADE_BET_TIERS_LOW = [50, 100, 250];
+  const ARCADE_BET_TIERS_HIGH = [500, 1000, 1500];
+
+  const BET_SLOTS = [
     { amount: 50, el: betBtn50El, visual: betBtn50VisualEl },
     { amount: 100, el: betBtn100El, visual: betBtn100VisualEl },
     { amount: 500, el: betBtn500El, visual: betBtn500VisualEl },
   ];
+
+  // Перечитывает актуальную линейку ставок по текущему банку и подставляет
+  // в слоты и суммы, и картинки — вызывается из setBetButtonsVisible() перед
+  // каждым показом, поэтому даже смена банка МЕЖДУ раундами (не только на
+  // старте) сразу переключает линейку на нужную.
+  function syncBetButtonAmounts() {
+    const tierAmounts = skatebucks >= ARCADE_BET_TIER_THRESHOLD ? ARCADE_BET_TIERS_HIGH : ARCADE_BET_TIERS_LOW;
+    BET_SLOTS.forEach((slot, i) => {
+      slot.amount = tierAmounts[i];
+      const img = slot.visual.querySelector('img');
+      img.src = 'images/arcade/Bet_' + slot.amount + '.png?v=' + ASSET_VERSION;
+      slot.el.setAttribute('aria-label', 'Bet ' + slot.amount);
+    });
+  }
 
   // Показывает только те ставки, которые реально по карману — если банк,
   // скажем, 70, из трёх кнопок останется только Bet_50 (специальных
   // "неактивных" картинок под остальные две не было прислано, поэтому прячем
   // целиком, а не тускним, как раньше с Easy/Hard на Street).
   function setBetButtonsVisible(visible) {
-    BET_BUTTONS.forEach(({ amount, el, visual }) => {
+    syncBetButtonAmounts();
+    BET_SLOTS.forEach(({ amount, el, visual }) => {
       const show = visible && amount <= skatebucks;
       const display = show ? '' : 'none';
       el.style.display = display;
@@ -3855,6 +3874,7 @@
   }
 
   function arcadeBucksTier(amount) {
+    if (amount <= 0) return 0;
     if (amount >= 2500) return 3;
     if (amount >= 500) return 2;
     return 1;
@@ -3863,8 +3883,6 @@
   function updateArcadeBucksDisplay() {
     const tierSrc = 'images/arcade/Skatebucks_' + arcadeBucksTier(skatebucks) + '.png?v=' + ASSET_VERSION;
     skatebucksImg.src = tierSrc;
-    arcadeBucksIconEl.src = tierSrc;
-    arcadeBucksAmountEl.textContent = skatebucks;
     skatebucksAmountBigEl.textContent = 'x ' + skatebucks;
   }
 
@@ -3945,8 +3963,8 @@
     rollArcadeTrick();
   }
 
-  BET_BUTTONS.forEach(({ amount, el }) => {
-    el.addEventListener('click', () => placeBet(amount));
+  BET_SLOTS.forEach((slot) => {
+    slot.el.addEventListener('click', () => placeBet(slot.amount));
   });
 
   // Оценка трюка (Landed/Failed) в Arcade: выигрыш — банк х2 от ставки
