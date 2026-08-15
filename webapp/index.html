@@ -864,6 +864,21 @@
     height: 9.15%;
   }
 
+  /* ==== Game over: New Game / Quit Game — та же строка, что Start Game/ставки. ==== */
+  #btnNewGame {
+    left: 21.15%;
+    top: 33.66%;
+    width: 38.94%;
+    height: 9.15%;
+  }
+
+  #btnQuitGame {
+    left: 60.58%;
+    top: 33.66%;
+    width: 18.75%;
+    height: 9.15%;
+  }
+
   /* Retry — показывается вместо Roll/Landed/Failed, когда списки трюков не
      удалось загрузить (обрыв связи и т.п.). Не показывается одновременно с
      Landed/Failed, чтобы нельзя было случайно записать в лог служебное
@@ -1596,6 +1611,20 @@
           <img src="images/arcade/Bet_500.png?v=20260716a" alt="">
         </div>
 
+        <!-- ==== Game over (любой режим): New Game / Quit Game — появляются
+             в той же позиции, что Start Game/ставки, но только ПОСЛЕ того как
+             текст "Game over..."/"Player N wins!"/итог Arcade допечатается в
+             пузыре (см. onComplete в triggerGameOver/triggerVersusGameOver/
+             triggerArcadeGameOver). ==== -->
+        <button class="menu-button fullcanvas-hitarea" id="btnNewGame" aria-label="New Game"></button>
+        <div class="menu-button-visual" id="btnNewGameVisual">
+          <img src="images/Button_newgame.png?v=20260716a" alt="">
+        </div>
+        <button class="menu-button fullcanvas-hitarea" id="btnQuitGame" aria-label="Quit Game"></button>
+        <div class="menu-button-visual" id="btnQuitGameVisual">
+          <img src="images/Button_quitgame.png?v=20260716a" alt="">
+        </div>
+
         <button class="menu-button fullcanvas-hitarea" id="btnRetry" aria-label="Повторить"></button>
         <div class="menu-button-visual" id="btnRetryVisual">
           <img src="images/Button_retry.png?v=20260716a" alt="">
@@ -2225,6 +2254,7 @@
     betBtn50: 'confirm',
     betBtn100: 'confirm',
     betBtn500: 'confirm',
+    btnNewGame: 'confirm',
     btnQuitRestart: 'confirm',
     togglePlayerSelect: 'toggle',
     toggleModeSelect: 'toggle',
@@ -2249,6 +2279,7 @@
     btnLanded: 'landed',
     btnFailed: 'failed',
     btn2: 'back',
+    btnQuitGame: 'back',
     mainscreenQuit: 'back',
     optionsQuit: 'back',
     btnQuitBack: 'back',
@@ -3031,6 +3062,7 @@
       setBtn1Visible(true);
       setBetButtonsVisible(false);
     }
+    setGameOverButtonsVisible(false);
 
     closeAllDifficultyPickers();
     transitionToScreen(flatmodeEl);
@@ -3660,6 +3692,30 @@
     btn1VisualEl.style.display = display;
   }
 
+  // ==== Game over (любой режим): New Game / Quit Game — появляются только
+  // ПОСЛЕ того, как текст об окончании игры допечатается в пузыре (см.
+  // onComplete в triggerGameOver/triggerVersusGameOver/triggerArcadeGameOver). ====
+  const btnNewGameEl = document.getElementById('btnNewGame');
+  const btnNewGameVisualEl = document.getElementById('btnNewGameVisual');
+  const btnQuitGameEl = document.getElementById('btnQuitGame');
+  const btnQuitGameVisualEl = document.getElementById('btnQuitGameVisual');
+
+  function setGameOverButtonsVisible(visible) {
+    const display = visible ? '' : 'none';
+    btnNewGameEl.style.display = display;
+    btnNewGameVisualEl.style.display = display;
+    btnQuitGameEl.style.display = display;
+    btnQuitGameVisualEl.style.display = display;
+  }
+
+  btnNewGameEl.addEventListener('click', () => {
+    doRestart();
+  });
+
+  btnQuitGameEl.addEventListener('click', () => {
+    doQuit();
+  });
+
   function setRetryVisible(visible) {
     btnRetryEl.classList.toggle('visible', visible);
     btnRetryVisualEl.classList.toggle('visible', visible);
@@ -3731,7 +3787,9 @@
     bubbleEl.classList.remove('active');
     resultEl.textContent = '';
     setTimeout(() => {
-      setResultText('Game over!', false);
+      setResultText('Game over!', false, () => {
+        setGameOverButtonsVisible(true);
+      });
       bubbleEl.classList.add('active');
     }, 120);
     judgeButtonsEl.classList.remove('visible');
@@ -3797,7 +3855,9 @@
     bubbleEl.classList.remove('active');
     resultEl.textContent = '';
     setTimeout(() => {
-      setResultText('Game over! You ran out of skatebucks.', false);
+      setResultText('Game over! You ran out of skatebucks.', false, () => {
+        setGameOverButtonsVisible(true);
+      });
       bubbleEl.classList.add('active');
     }, 120);
     judgeButtonsEl.classList.remove('visible');
@@ -3933,7 +3993,9 @@
     bubbleEl.classList.remove('active');
     resultEl.textContent = '';
     setTimeout(() => {
-      setResultText('Player ' + winner + ' wins!', false);
+      setResultText('Player ' + winner + ' wins!', false, () => {
+        setGameOverButtonsVisible(true);
+      });
       bubbleEl.classList.add('active');
     }, 120);
     judgeButtonsEl.classList.remove('visible');
@@ -4085,16 +4147,20 @@
     btnFailedImg.src = 'images/Button_failed.png?v=' + ASSET_VERSION;
   }
 
+  // Скейтер/сцена (flatgroundImg) на каждого игрока — теперь есть у ВСЕХ трёх
+  // режимов (images/versus mode/Animation_<режим>_player1/2.png), а не только
+  // у Flat.
+  const VERSUS_GROUND_IMAGE_PREFIX = {
+    [GAME_MODE_FLAT]: 'Animation_flatmode_player',
+    [GAME_MODE_RAMP]: 'Animation_ramp_player',
+    [GAME_MODE_STREET]: 'Animation_street_player',
+  };
+
   function applyPlayerVisuals(player) {
     if (!isVersusActive()) return;
-    // Скейтер/сцена (flatgroundImg) — свои картинки на игрока есть только у
-    // Flat (images/versus mode/Animation_flatmode_player1/2.png). У Ramp и
-    // Street таких вариантов пока нет, так что там сцена остаётся обычной
-    // (Animation_ramp.png / Animation_street.png, см. applyGameModeVisuals) —
-    // а тренер/пузырь/кнопки Landed-Failed общие для всех режимов, меняются
-    // как обычно.
-    if (currentGameMode === GAME_MODE_FLAT) {
-      flatgroundImg.src = 'images/versus%20mode/Animation_flatmode_player' + player + '.png?v=' + ASSET_VERSION;
+    const groundPrefix = VERSUS_GROUND_IMAGE_PREFIX[currentGameMode];
+    if (groundPrefix) {
+      flatgroundImg.src = 'images/versus%20mode/' + groundPrefix + player + '.png?v=' + ASSET_VERSION;
     }
     coachImg.src = 'images/versus%20mode/Animation_coach_player' + player + '.png?v=' + ASSET_VERSION;
     bubbleImg.src = player === 2
@@ -4405,6 +4471,8 @@
       betBtn50El,
       betBtn100El,
       betBtn500El,
+      btnNewGameEl,
+      btnQuitGameEl,
       btnRetryEl,
       logToggleBtn,
       btnInfoEl,
@@ -4471,6 +4539,7 @@
     judgeButtonsEl.classList.remove('visible');
     setRetryVisible(false);
     setLogExpanded(false);
+    setGameOverButtonsVisible(false);
     if (isArcadeActive()) {
       setBtn1Visible(false);
       setBetButtonsVisible(true);
