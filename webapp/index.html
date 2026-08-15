@@ -1303,6 +1303,27 @@
     display: block;
   }
 
+  /* Число справа от значка — крупнее обычных счётчиков лога (там 8px), с
+     префиксом "x" (см. updateArcadeBucksDisplay). Иконка растёт по ширине с
+     тиром (11.54% -> 14.42%), поэтому число стоит с отступом, за которым
+     точно помещается даже самый широкий (3-й тир) вариант иконки. */
+  #skateLetters #skatebucksAmountBig {
+    display: none;
+    position: absolute;
+    left: 61%;
+    top: 48.53%;
+    transform: translateY(-50%);
+    font-family: 'Press Start 2P', monospace;
+    font-size: 15px;
+    color: #f4d35e;
+    white-space: nowrap;
+    z-index: 1;
+  }
+
+  #tricklist.arcade-mode #skateLetters #skatebucksAmountBig {
+    display: block;
+  }
+
   #tricklist.arcade-mode #skateLetters #skateLettersImg,
   #tricklist.arcade-mode #skateLetters #skateLettersImg2 {
     display: none;
@@ -1691,6 +1712,7 @@
             <img id="skateLettersImg" src="images/Letters_null.png?v=20260716a" alt="SKATE">
             <img id="skateLettersImg2" src="images/versus%20mode/Letters_skate_player2_null.png?v=20260716a" alt="Player 2 SKATE">
             <img id="skatebucksImg" src="images/arcade/Skatebucks_1.png?v=20260716a" alt="Skatebucks">
+            <span id="skatebucksAmountBig">x 100</span>
           </div>
           <button id="logToggleBtn" aria-label="Развернуть лог"></button>
           <div id="logToggleVisual">
@@ -3807,6 +3829,7 @@
   const betBtn500El = document.getElementById('betBtn500');
   const betBtn500VisualEl = document.getElementById('betBtn500Visual');
   const skatebucksImg = document.getElementById('skatebucksImg');
+  const skatebucksAmountBigEl = document.getElementById('skatebucksAmountBig');
   const arcadeBucksIconEl = document.getElementById('arcadeBucksIcon');
   const arcadeBucksAmountEl = document.getElementById('arcadeBucksAmount');
   const arcadeLandedCountEl = document.getElementById('arcadeLandedCount');
@@ -3842,6 +3865,7 @@
     skatebucksImg.src = tierSrc;
     arcadeBucksIconEl.src = tierSrc;
     arcadeBucksAmountEl.textContent = skatebucks;
+    skatebucksAmountBigEl.textContent = 'x ' + skatebucks;
   }
 
   function syncArcadeModeClass() {
@@ -4498,7 +4522,13 @@
   // Общий сброс состояния текущей игры (лог трюков, сохранённый последний
   // трюк, счётчики) — используется и при Quit (выход в меню), и при Restart
   // (начать заново, не выходя из текущего режима).
-  function resetGameState() {
+  // showReadyButtons=false — используется при Quit (см. doQuit): не показывать
+  // Start Game/ставки вообще, экран всё равно сразу уезжает на Mainscreen —
+  // иначе на долю секунды успевает мелькнуть "готов к игре" прямо перед
+  // переходом. При Restart/New Game (showReadyButtons=true, по умолчанию)
+  // кнопки нужны — там мы остаёмся на Flatmode для нового раунда.
+  function resetGameState(showReadyButtons) {
+    if (showReadyButtons === undefined) showReadyButtons = true;
     try {
       localStorage.removeItem(STORAGE_KEY_LAST);
       localStorage.removeItem(STORAGE_KEY_HISTORY);
@@ -4540,7 +4570,10 @@
     setRetryVisible(false);
     setLogExpanded(false);
     setGameOverButtonsVisible(false);
-    if (isArcadeActive()) {
+    if (!showReadyButtons) {
+      setBtn1Visible(false);
+      setBetButtonsVisible(false);
+    } else if (isArcadeActive()) {
       setBtn1Visible(false);
       setBetButtonsVisible(true);
     } else {
@@ -4557,7 +4590,7 @@
 
   function doQuit() {
     setActiveMode(0);
-    resetGameState();
+    resetGameState(false); // без "готов к игре"-кнопок — экран всё равно сразу уезжает на Mainscreen
     currentIsVersus = false;
     setVersusActiveFlag(false);
     syncVersusModeClass();
