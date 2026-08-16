@@ -4198,11 +4198,11 @@
   // Общая генерация трюка для Arcade — та же механика, что у rollNextTrick(),
   // только текст пузыря заканчивается ставкой, а не сразу голым названием
   // трюка (см. описание задачи). Ставка уже списана к этому моменту (см.
-  // placeBet), тут только генерируем и показываем.
-  // isReroll=true — вызов из карты Reroll Trick: та же генерация, но НЕ
-  // считается для счётчика "каждые 5 ходов" (см. описание задачи) и не трогает
-  // ставку/банк — только новый трюк на ту же уже списанную ставку.
-  async function rollArcadeTrick(isReroll) {
+  // placeBet), тут только генерируем и показываем. Параметр не нужен — тик
+  // кулдаунов карт живёт в resolveArcadeBet() (по нажатию Landed/Failed), эта
+  // функция сама по себе больше не влияет на кулдауны ни при обычном вызове,
+  // ни при вызове из карты Reroll Trick.
+  async function rollArcadeTrick() {
     if (isGameOver) return;
     bubbleEl.classList.remove('active');
     resultEl.textContent = '';
@@ -4226,11 +4226,6 @@
 
     setTimeout(() => {
       bubbleEl.classList.add('active');
-      // Тик кулдаунов карт — ровно здесь, при генерации НОВОГО трюка (не на
-      // нажатии Landed/Failed и не на промежуточном "провале" бонусной
-      // попытки Extra Try — тот же трюк, новый не генерируется). Reroll
-      // исключён (см. !isReroll) — он не считается ходом с самого начала.
-      if (!isReroll) tickCardCooldowns();
       const trick = generateUniqueTrick();
       currentDisplayedTrick = trick;
       extraTryAttempt = 0;
@@ -4275,7 +4270,7 @@
     setCardCooldownsFlag(cardCooldowns);
     addTricklistEntry('Reroll trick card used', 'info');
     syncCardVisuals();
-    rollArcadeTrick(true);
+    rollArcadeTrick();
   }
   cardRerollEl.addEventListener('click', useRerollCard);
 
@@ -4343,6 +4338,11 @@
   // хватает на минимальную ставку (50) — раунд продолжается, иначе Game Over.
   function resolveArcadeBet(landed) {
     if (isGameOver) return;
+    // Тик кулдаунов карт — по нажатию Landed/Failed, когда трюк ДЕЙСТВИТЕЛЬНО
+    // разрешается (resolveArcadeBet вызывается один раз на трюк: сразу на
+    // Landed, или на Failed на последней попытке — но НЕ на промежуточном
+    // "провале" бонусной попытки Extra Try, та ветка сюда не доходит).
+    tickCardCooldowns();
     const bet = pendingBetAmount || 0;
     if (landed) {
       skatebucks += bet * 2;
@@ -4846,9 +4846,7 @@
       // логируем запись — иначе addTricklistEntry вызвал бы renderTricklist()
       // (и его проверку "хватает ли банка") ещё ДО того, как выигрыш зачтён,
       // и мог бы ошибочно объявить Game Over на пустом промежуточном балансе.
-      // Тик кулдаунов карт — НЕ здесь, а в rollArcadeTrick() при генерации
-      // НОВОГО трюка (см. комментарий там): нажатие Landed само по себе ходом
-      // для кулдауна не считается.
+      // Тик кулдаунов карт — внутри resolveArcadeBet() (см. комментарий там).
       const text = resultEl.textContent;
       resolveArcadeBet(true);
       if (text) addTricklistEntry(text, 'landed');
