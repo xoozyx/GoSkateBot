@@ -919,6 +919,32 @@
     height: 9.15%;
   }
 
+  /* ==== Arcade: подложка-заглушка под тремя картами (Cards_shadows.png) —
+     всегда видна, пока видны сами карты (тот же класс .visible, переключается
+     вместе в setCardsVisible), но ниже них по z-index (.menu-button-visual
+     сидит на 3, .fullcanvas-hitarea — на 4) — поэтому просвечивает только
+     там, где реальную картинку карты сейчас не рисуем (см. ниже про "карта
+     использована — просто прячем картинку"). */
+  #cardsShadow {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    display: none;
+    image-rendering: pixelated;
+  }
+
+  #cardsShadow.visible {
+    display: block;
+  }
+
+  #cardsShadow img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+  }
+
   /* ==== Arcade: карты — видны только в arcade-mode. Показ/скрытие не через
      CSS-классы от #tricklist (карты — не его потомки, а соседи в .device,
      обычный descendant-селектор тут не сработал бы), а через класс .visible
@@ -1732,11 +1758,18 @@
 
         <!-- ==== Arcade: карты-баффы, всегда видны на игровом экране в Arcade
              (не показываются в classic/versus — см. #tricklist.arcade-mode).
-             *_off.png — недоступна (карта уже использована в этом окне из 5
-             ходов, идёт печать трюка, или Double Bet не по карману), *_on.png
-             — доступна и кликабельна, ровно как Landed/Failed (см.
-             syncCardVisuals). Note: отдельной "shadow" картинки для состояния
-             "до старта игры" не прислали — используем тот же *_off.png. ==== -->
+             Cards_shadows.png — общая подложка под всеми тремя (пустые слоты),
+             лежит НИЖЕ самих карт (z-index) и видна всегда, пока видны карты —
+             именно поэтому "использованная в этом окне из 5 ходов" карта
+             теперь просто прячется целиком (см. syncCardVisuals), а не
+             показывает отдельную серую картинку — сквозь пустое место видна
+             эта самая подложка. *_off.png остаётся для ДРУГИХ случаев
+             недоступности (игра не начата, идёт печать трюка, Double Bet не
+             по карману) — тех, что не про "уже потрачена в этом окне". ==== -->
+        <div id="cardsShadow">
+          <img src="images/arcade/Cards_shadows.png?v=20260716a" alt="">
+        </div>
+
         <button class="menu-button fullcanvas-hitarea" id="cardReroll" aria-label="Reroll Trick"></button>
         <div class="menu-button-visual" id="cardRerollVisual">
           <img src="images/arcade/Card_rerolltrick_off.png?v=20260716a" alt="">
@@ -4060,6 +4093,7 @@
   const cardExtraTryVisualEl = document.getElementById('cardExtraTryVisual');
   const cardDoubleBetEl = document.getElementById('cardDoubleBet');
   const cardDoubleBetVisualEl = document.getElementById('cardDoubleBetVisual');
+  const cardsShadowEl = document.getElementById('cardsShadow');
 
   const ARCADE_CARDS = [
     { key: 'reroll', prefix: 'Card_rerolltrick', el: cardRerollEl, visual: cardRerollVisualEl },
@@ -4067,10 +4101,10 @@
     { key: 'doublebet', prefix: 'Card_doublebet', el: cardDoubleBetEl, visual: cardDoubleBetVisualEl },
   ];
 
-  // Базовая видимость блока карт целиком — только в Arcade, на любом из трёх
-  // режимов (Flat/Ramp/Street). Не через CSS-класс от #tricklist (карты не
-  // его потомки), а напрямую — тот же приём, что у ставок.
+  // Базовая видимость блока карт целиком (плюс подложка Cards_shadows.png под
+  // ними) — только в Arcade, на любом из трёх режимов (Flat/Ramp/Street).
   function setCardsVisible(visible) {
+    cardsShadowEl.classList.toggle('visible', visible);
     ARCADE_CARDS.forEach(({ el, visual }) => {
       el.classList.toggle('visible', visible);
       visual.classList.toggle('visible', visible);
@@ -4097,9 +4131,17 @@
   function syncCardVisuals() {
     ARCADE_CARDS.forEach(({ key, prefix, el, visual }) => {
       const available = isCardAvailable(key);
+      el.classList.toggle('card-disabled', !available);
+      if (cardsUsed[key]) {
+        // Уже потрачена в этом окне из 5 ходов — картинку карты прячем
+        // целиком (не показываем даже *_off.png), сквозь пустой слот видна
+        // общая подложка Cards_shadows.png (см. #cardsShadow, z-index ниже).
+        visual.style.display = 'none';
+        return;
+      }
+      visual.style.display = '';
       const img = visual.querySelector('img');
       img.src = 'images/arcade/' + prefix + (available ? '_on' : '_off') + '.png?v=' + ASSET_VERSION;
-      el.classList.toggle('card-disabled', !available);
     });
   }
 
@@ -4753,6 +4795,11 @@
   // объявлены выше, перед блоком восстановления незавершённой игры — см. комментарий там).
   function applyGameModeVisuals() {
     flatgroundImg.src = GAME_MODE_CONFIG[currentGameMode].groundImage + '?v=' + ASSET_VERSION;
+    // Arcade: сцену (Animation_flatmode/ramp/street.png) не показываем вовсе —
+    // экран отдан под карты/ставки. #flatground img уже имеет свой CSS-правило
+    // display:block, так что пустая строка корректно возвращает картинку
+    // обратно при выходе из Arcade (в отличие от кнопок выше, тут это безопасно).
+    flatgroundImg.style.display = isArcadeActive() ? 'none' : '';
     resetPlayerVisuals();
     syncVersusModeClass();
     syncArcadeModeClass();
