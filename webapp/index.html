@@ -835,6 +835,26 @@
     opacity: 0.8;
   }
 
+  /* ==== btn1 (Start Game) и ставки Arcade — скрыты по умолчанию, показываются
+     только через класс .visible (тот же принцип, что и Retry/Game over ниже).
+     Раньше полагались на пустую инлайн display + класс .menu-button по
+     умолчанию — это работало для "первого показа", но ничего не мешало им
+     остаться видимыми на резюме уже начатой игры после перезагрузки страницы
+     (тот участок кода никогда явно их не прятал). ==== */
+  #btn1, #btn1Visual,
+  #betBtn50, #betBtn50Visual,
+  #betBtn100, #betBtn100Visual,
+  #betBtn500, #betBtn500Visual {
+    display: none;
+  }
+
+  #btn1.visible, #btn1Visual.visible,
+  #betBtn50.visible, #betBtn50Visual.visible,
+  #betBtn100.visible, #betBtn100Visual.visible,
+  #betBtn500.visible, #betBtn500Visual.visible {
+    display: block;
+  }
+
   #btn1 {
     left: 26.44%;
     top: 33.66%;
@@ -864,7 +884,27 @@
     height: 9.15%;
   }
 
-  /* ==== Game over: New Game / Quit Game — та же строка, что Start Game/ставки. ==== */
+  /* ==== Game over: New Game / Quit Game — та же строка, что Start Game/ставки.
+     Скрыты по умолчанию и показываются ТОЛЬКО через класс .visible (тот же
+     принцип, что уже был у Retry чуть выше) — раньше тут пробовали дублировать
+     подход bet-кнопок (пустая инлайн display, полагаясь на класс .menu-button
+     по умолчанию), но это не защищало от двух багов сразу: 1) resume уже
+     начатой (не завершённой!) игры после перезагрузки страницы никогда явно
+     не прятал эти кнопки — они просто были видны из разметки с самого начала;
+     2) если бы им ещё добавили голый "#id{display:none}" по умолчанию, пустая
+     инлайн-строка ('') от старого JS не переопределила бы этот ID-селектор
+     (в CSS каскаде это НЕ то же самое, что явно показать элемент) — только
+     класс с тем же или более высоким приоритетом решает эту проблему надёжно. */
+  #btnNewGame, #btnNewGameVisual,
+  #btnQuitGame, #btnQuitGameVisual {
+    display: none;
+  }
+
+  #btnNewGame.visible, #btnNewGameVisual.visible,
+  #btnQuitGame.visible, #btnQuitGameVisual.visible {
+    display: block;
+  }
+
   #btnNewGame {
     left: 21.15%;
     top: 33.66%;
@@ -881,13 +921,19 @@
 
   /* ==== Arcade: карты — видны только в arcade-mode. Показ/скрытие не через
      CSS-классы от #tricklist (карты — не его потомки, а соседи в .device,
-     обычный descendant-селектор тут не сработал бы), а напрямую через JS —
-     см. syncCardVisuals()/setCardsVisible(), тот же приём, что у ставок
-     (setBetButtonsVisible). ==== */
+     обычный descendant-селектор тут не сработал бы), а через класс .visible
+     на самих элементах (см. syncCardVisuals()/setCardsVisible()) — тот же
+     принцип, что у Retry/btn1/ставок/Game over выше. ==== */
   #cardReroll, #cardRerollVisual,
   #cardExtraTry, #cardExtraTryVisual,
   #cardDoubleBet, #cardDoubleBetVisual {
     display: none;
+  }
+
+  #cardReroll.visible, #cardRerollVisual.visible,
+  #cardExtraTry.visible, #cardExtraTryVisual.visible,
+  #cardDoubleBet.visible, #cardDoubleBetVisual.visible {
+    display: block;
   }
 
   #cardReroll {
@@ -3840,9 +3886,8 @@
   // и декоративной картинки поверх/под ней (btn1VisualEl). Скрывать/показывать
   // нужно оба сразу, иначе картинка Roll останется висеть после "скрытия".
   function setBtn1Visible(visible) {
-    const display = visible ? '' : 'none';
-    btn1El.style.display = display;
-    btn1VisualEl.style.display = display;
+    btn1El.classList.toggle('visible', visible);
+    btn1VisualEl.classList.toggle('visible', visible);
   }
 
   // ==== Game over (любой режим): New Game / Quit Game — появляются только
@@ -3854,11 +3899,10 @@
   const btnQuitGameVisualEl = document.getElementById('btnQuitGameVisual');
 
   function setGameOverButtonsVisible(visible) {
-    const display = visible ? '' : 'none';
-    btnNewGameEl.style.display = display;
-    btnNewGameVisualEl.style.display = display;
-    btnQuitGameEl.style.display = display;
-    btnQuitGameVisualEl.style.display = display;
+    btnNewGameEl.classList.toggle('visible', visible);
+    btnNewGameVisualEl.classList.toggle('visible', visible);
+    btnQuitGameEl.classList.toggle('visible', visible);
+    btnQuitGameVisualEl.classList.toggle('visible', visible);
   }
 
   btnNewGameEl.addEventListener('click', () => {
@@ -4002,9 +4046,8 @@
     syncBetButtonAmounts();
     BET_SLOTS.forEach(({ amount, el, visual }) => {
       const show = visible && amount <= skatebucks;
-      const display = show ? '' : 'none';
-      el.style.display = display;
-      visual.style.display = display;
+      el.classList.toggle('visible', show);
+      visual.classList.toggle('visible', show);
     });
   }
 
@@ -4028,10 +4071,9 @@
   // режимов (Flat/Ramp/Street). Не через CSS-класс от #tricklist (карты не
   // его потомки), а напрямую — тот же приём, что у ставок.
   function setCardsVisible(visible) {
-    const display = visible ? '' : 'none';
     ARCADE_CARDS.forEach(({ el, visual }) => {
-      el.style.display = display;
-      visual.style.display = display;
+      el.classList.toggle('visible', visible);
+      visual.classList.toggle('visible', visible);
     });
   }
 
