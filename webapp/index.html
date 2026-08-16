@@ -2659,46 +2659,42 @@
     return currentIsArcade;
   }
 
-  // ==== Arcade: карты-баффы (Reroll Trick / Extra Try / Double Bet) —
-  // отдельная попытка на текущий трюк, "использована в этом окне из 5 ходов"
-  // и т.д. persist'ятся тем же способом, что и остальное состояние Arcade —
-  // синхронно здесь же, до первого renderTricklist(). ====
-  const STORAGE_KEY_CARDS_USED = 'goskate_cardsUsed';
-  const STORAGE_KEY_CARD_TURN_COUNTER = 'goskate_cardTurnCounter';
+  // ==== Arcade: карты-баффы (Reroll Trick / Extra Try / Double Bet) — у
+  // каждой свой независимый "кулдаун" в 5 ходов (ход = нажатие Landed/Failed,
+  // НЕ печать трюка в пузыре) после использования, со своей прогрессией
+  // картинок (_off -> _off_1 -> _off_2 -> _off_3 -> _off_4 -> _on). persist'ятся
+  // тем же способом, что и остальное состояние Arcade — синхронно здесь же,
+  // до первого renderTricklist(). ====
+  const STORAGE_KEY_CARD_COOLDOWNS = 'goskate_cardCooldowns';
   const STORAGE_KEY_EXTRATRY_ATTEMPT = 'goskate_extraTryAttempt';
-  const ARCADE_CARD_REFRESH_TURNS = 5;
-  const ARCADE_CARD_DEFAULT_USED = { reroll: false, extratry: false, doublebet: false };
+  const ARCADE_CARD_COOLDOWN_TURNS = 5;
+  const ARCADE_CARD_DEFAULT_COOLDOWNS = { reroll: 0, extratry: 0, doublebet: 0 };
 
-  function getCardsUsedFlag() {
+  // cooldown: 0 — доступна; 5 — только что использована (Card_X_off.png);
+  // 4..1 — прогрессия Card_X_off_(5-cooldown).png; при следующем тике (ходе)
+  // после 1 карта возвращается в 0 (доступна, Card_X_on.png).
+  function getCardCooldownsFlag() {
     try {
-      const raw = JSON.parse(localStorage.getItem(STORAGE_KEY_CARDS_USED));
+      const raw = JSON.parse(localStorage.getItem(STORAGE_KEY_CARD_COOLDOWNS));
       if (raw && typeof raw === 'object') {
-        return { reroll: !!raw.reroll, extratry: !!raw.extratry, doublebet: !!raw.doublebet };
+        return {
+          reroll: clampCardCooldown(raw.reroll),
+          extratry: clampCardCooldown(raw.extratry),
+          doublebet: clampCardCooldown(raw.doublebet),
+        };
       }
     } catch (e) { /* используем значение по умолчанию ниже */ }
-    return { reroll: false, extratry: false, doublebet: false };
+    return { reroll: 0, extratry: 0, doublebet: 0 };
   }
-  function setCardsUsedFlag(obj) {
-    try {
-      localStorage.setItem(STORAGE_KEY_CARDS_USED, JSON.stringify(obj));
-    } catch (e) {
-      console.warn('Не удалось сохранить состояние карт Arcade:', e);
-    }
+  function clampCardCooldown(value) {
+    const n = parseInt(value, 10);
+    return n >= 0 && n <= ARCADE_CARD_COOLDOWN_TURNS ? n : 0;
   }
-
-  function getCardTurnCounterFlag() {
+  function setCardCooldownsFlag(obj) {
     try {
-      const raw = parseInt(localStorage.getItem(STORAGE_KEY_CARD_TURN_COUNTER), 10);
-      return isNaN(raw) ? 0 : raw;
+      localStorage.setItem(STORAGE_KEY_CARD_COOLDOWNS, JSON.stringify(obj));
     } catch (e) {
-      return 0;
-    }
-  }
-  function setCardTurnCounterFlag(value) {
-    try {
-      localStorage.setItem(STORAGE_KEY_CARD_TURN_COUNTER, String(value));
-    } catch (e) {
-      console.warn('Не удалось сохранить счётчик ходов карт Arcade:', e);
+      console.warn('Не удалось сохранить кулдауны карт Arcade:', e);
     }
   }
 
@@ -2721,8 +2717,7 @@
     }
   }
 
-  let cardsUsed = getCardsUsedFlag();
-  let cardTurnCounter = getCardTurnCounterFlag();
+  let cardCooldowns = getCardCooldownsFlag();
   let extraTryAttempt = getExtraTryAttemptFlag();
 
   // ==== Сложность (Easy/Hard) — своя для каждого режима, сохраняется вместе
@@ -3254,10 +3249,8 @@
     }
     pendingBetAmount = null;
     setPendingBetFlag(null);
-    cardsUsed = { reroll: false, extratry: false, doublebet: false };
-    setCardsUsedFlag(cardsUsed);
-    cardTurnCounter = 0;
-    setCardTurnCounterFlag(0);
+    cardCooldowns = { reroll: 0, extratry: 0, doublebet: 0 };
+    setCardCooldownsFlag(cardCooldowns);
     extraTryAttempt = 0;
     setExtraTryAttemptFlag(0);
     syncArcadeModeClass();
@@ -4117,10 +4110,15 @@
   // Double Bet — банка хватает на удвоение ставки.
   function isCardAvailable(key) {
     if (!isArcadeActive() || isGameOver) return false;
-    if (cardsUsed[key]) return false;
+    if (cardCooldowns[key] > 0) return false;
     if (pendingBetAmount == null) return false;
     if (!judgeButtonsEl.classList.contains('visible')) return false;
     if (key === 'doublebet' && skatebucks < pendingBetAmount) return false;
+    // Пока идёт Extra Try (вторая попытка на тот же трюк) — Reroll и Double
+    // Bet недоступны НА ЭТОТ ХОД, даже если сами не на кулдауне: перебросить
+    // трюк или удвоить ставку посреди уже начатой бонусной попытки не должно
+    // быть можно.
+    if (extraTryAttempt !== 0 && (key === 'reroll' || key === 'doublebet')) return false;
     return true;
   }
 
@@ -4132,17 +4130,34 @@
     ARCADE_CARDS.forEach(({ key, prefix, el, visual }) => {
       const available = isCardAvailable(key);
       el.classList.toggle('card-disabled', !available);
-      if (cardsUsed[key]) {
-        // Уже потрачена в этом окне из 5 ходов — картинку карты прячем
-        // целиком (не показываем даже *_off.png), сквозь пустой слот видна
-        // общая подложка Cards_shadows.png (см. #cardsShadow, z-index ниже).
-        visual.style.display = 'none';
-        return;
-      }
       visual.style.display = '';
       const img = visual.querySelector('img');
-      img.src = 'images/arcade/' + prefix + (available ? '_on' : '_off') + '.png?v=' + ASSET_VERSION;
+      const cooldown = cardCooldowns[key];
+      if (cooldown > 0) {
+        // На кулдауне после использования — прогрессия _off -> _off_1 -> ... -> _off_4.
+        const suffix = cooldown === ARCADE_CARD_COOLDOWN_TURNS ? '' : ('_' + (ARCADE_CARD_COOLDOWN_TURNS - cooldown));
+        img.src = 'images/arcade/' + prefix + '_off' + suffix + '.png?v=' + ASSET_VERSION;
+      } else {
+        // Не на кулдауне, но недоступна по другой причине (печать трюка,
+        // Double Bet не по карману, временная блокировка Extra Try) — просто
+        // обычный _off.png, без прогрессии.
+        img.src = 'images/arcade/' + prefix + (available ? '_on' : '_off') + '.png?v=' + ASSET_VERSION;
+      }
     });
+  }
+
+  // Ход (для кулдаунов карт) засчитывается по нажатию Landed/Failed — НЕ по
+  // печати трюка в пузыре. Каждая карта тикает независимо: у каждой свой
+  // кулдаун, отсчитывается с момента ЕЁ использования, а не общий на все три.
+  function tickCardCooldowns() {
+    let changed = false;
+    ARCADE_CARDS.forEach(({ key }) => {
+      if (cardCooldowns[key] > 0) {
+        cardCooldowns[key]--;
+        changed = true;
+      }
+    });
+    if (changed) setCardCooldownsFlag(cardCooldowns);
   }
 
   function arcadeBucksTier(amount) {
@@ -4209,18 +4224,6 @@
       }
     }
 
-    if (!isReroll) {
-      cardTurnCounter++;
-      setCardTurnCounterFlag(cardTurnCounter);
-      if (cardTurnCounter >= ARCADE_CARD_REFRESH_TURNS) {
-        cardTurnCounter = 0;
-        setCardTurnCounterFlag(0);
-        cardsUsed = { reroll: false, extratry: false, doublebet: false };
-        setCardsUsedFlag(cardsUsed);
-        addTricklistEntry('Cards back to game', 'info');
-      }
-    }
-
     setTimeout(() => {
       bubbleEl.classList.add('active');
       const trick = generateUniqueTrick();
@@ -4263,8 +4266,8 @@
   // изменений ставки/банка. ====
   function useRerollCard() {
     if (!isCardAvailable('reroll')) return;
-    cardsUsed.reroll = true;
-    setCardsUsedFlag(cardsUsed);
+    cardCooldowns.reroll = ARCADE_CARD_COOLDOWN_TURNS;
+    setCardCooldownsFlag(cardCooldowns);
     addTricklistEntry('Reroll trick card used', 'info');
     syncCardVisuals();
     rollArcadeTrick(true);
@@ -4277,8 +4280,8 @@
   // extraTryAttempt в обработчике btnFailed). ====
   function useExtraTryCard() {
     if (!isCardAvailable('extratry')) return;
-    cardsUsed.extratry = true;
-    setCardsUsedFlag(cardsUsed);
+    cardCooldowns.extratry = ARCADE_CARD_COOLDOWN_TURNS;
+    setCardCooldownsFlag(cardCooldowns);
     addTricklistEntry('Extra try card used', 'info');
     extraTryAttempt = 1;
     setExtraTryAttemptFlag(1);
@@ -4304,8 +4307,8 @@
   // посчитает верную выплату/проигрыш по уже удвоенной ставке. ====
   function useDoubleBetCard() {
     if (!isCardAvailable('doublebet')) return;
-    cardsUsed.doublebet = true;
-    setCardsUsedFlag(cardsUsed);
+    cardCooldowns.doublebet = ARCADE_CARD_COOLDOWN_TURNS;
+    setCardCooldownsFlag(cardCooldowns);
     addTricklistEntry('Double Bet card used', 'info');
 
     skatebucks -= pendingBetAmount;
@@ -4834,10 +4837,13 @@
   // игрока, и передаёт ход дальше вместо генерации нового трюка сразу.
   document.getElementById('btnLanded').addEventListener('click', () => {
     if (isArcadeActive()) {
-      // Порядок важен: сначала зачисляем выигрыш (resolveArcadeBet), ПОТОМ
-      // логируем запись — иначе addTricklistEntry вызвал бы renderTricklist()
-      // (и его проверку "хватает ли банка") ещё ДО того, как выигрыш зачтён,
-      // и мог бы ошибочно объявить Game Over на пустом промежуточном балансе.
+      // Ход (тик кулдаунов карт) — по нажатию Landed/Failed, а не по печати
+      // трюка. Порядок важен: сначала тикаем и зачисляем выигрыш
+      // (resolveArcadeBet), ПОТОМ логируем запись — иначе addTricklistEntry
+      // вызвал бы renderTricklist() (и его проверку "хватает ли банка") ещё
+      // ДО того, как выигрыш зачтён, и мог бы ошибочно объявить Game Over на
+      // пустом промежуточном балансе.
+      tickCardCooldowns();
       const text = resultEl.textContent;
       resolveArcadeBet(true);
       if (text) addTricklistEntry(text, 'landed');
@@ -4854,6 +4860,7 @@
 
   document.getElementById('btnFailed').addEventListener('click', () => {
     if (isArcadeActive()) {
+      tickCardCooldowns(); // ход засчитан в любом случае — и на бонусной попытке Extra Try тоже
       if (extraTryAttempt === 1) {
         // Бонусная (первая) попытка от Extra Try не засчитана — ставка ЕЩЁ
         // не проиграна, даём последний шанс на этот же трюк. В лог ничего не
@@ -4987,10 +4994,8 @@
       skatebucks = ARCADE_START_BUCKS;
       setSkatebucksFlag(skatebucks);
     }
-    cardsUsed = { reroll: false, extratry: false, doublebet: false };
-    setCardsUsedFlag(cardsUsed);
-    cardTurnCounter = 0;
-    setCardTurnCounterFlag(0);
+    cardCooldowns = { reroll: 0, extratry: 0, doublebet: 0 };
+    setCardCooldownsFlag(cardCooldowns);
     extraTryAttempt = 0;
     setExtraTryAttemptFlag(0);
     renderTricklist();
