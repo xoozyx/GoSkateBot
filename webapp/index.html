@@ -4226,6 +4226,11 @@
 
     setTimeout(() => {
       bubbleEl.classList.add('active');
+      // Тик кулдаунов карт — ровно здесь, при генерации НОВОГО трюка (не на
+      // нажатии Landed/Failed и не на промежуточном "провале" бонусной
+      // попытки Extra Try — тот же трюк, новый не генерируется). Reroll
+      // исключён (см. !isReroll) — он не считается ходом с самого начала.
+      if (!isReroll) tickCardCooldowns();
       const trick = generateUniqueTrick();
       currentDisplayedTrick = trick;
       extraTryAttempt = 0;
@@ -4837,13 +4842,13 @@
   // игрока, и передаёт ход дальше вместо генерации нового трюка сразу.
   document.getElementById('btnLanded').addEventListener('click', () => {
     if (isArcadeActive()) {
-      // Ход (тик кулдаунов карт) — по нажатию Landed/Failed, а не по печати
-      // трюка. Порядок важен: сначала тикаем и зачисляем выигрыш
-      // (resolveArcadeBet), ПОТОМ логируем запись — иначе addTricklistEntry
-      // вызвал бы renderTricklist() (и его проверку "хватает ли банка") ещё
-      // ДО того, как выигрыш зачтён, и мог бы ошибочно объявить Game Over на
-      // пустом промежуточном балансе.
-      tickCardCooldowns();
+      // Порядок важен: сначала зачисляем выигрыш (resolveArcadeBet), ПОТОМ
+      // логируем запись — иначе addTricklistEntry вызвал бы renderTricklist()
+      // (и его проверку "хватает ли банка") ещё ДО того, как выигрыш зачтён,
+      // и мог бы ошибочно объявить Game Over на пустом промежуточном балансе.
+      // Тик кулдаунов карт — НЕ здесь, а в rollArcadeTrick() при генерации
+      // НОВОГО трюка (см. комментарий там): нажатие Landed само по себе ходом
+      // для кулдауна не считается.
       const text = resultEl.textContent;
       resolveArcadeBet(true);
       if (text) addTricklistEntry(text, 'landed');
@@ -4860,12 +4865,12 @@
 
   document.getElementById('btnFailed').addEventListener('click', () => {
     if (isArcadeActive()) {
-      tickCardCooldowns(); // ход засчитан в любом случае — и на бонусной попытке Extra Try тоже
       if (extraTryAttempt === 1) {
         // Бонусная (первая) попытка от Extra Try не засчитана — ставка ЕЩЁ
-        // не проиграна, даём последний шанс на этот же трюк. В лог ничего не
-        // пишем здесь — одна итоговая запись уйдёт по результату второй
-        // попытки (см. ветку ниже/Landed).
+        // не проиграна, даём последний шанс на этот же трюк (ТОТ ЖЕ трюк,
+        // новый не генерируется — поэтому кулдауны карт тут не тикают,
+        // см. rollArcadeTrick). В лог ничего не пишем здесь — одна итоговая
+        // запись уйдёт по результату второй попытки (см. ветку ниже/Landed).
         extraTryAttempt = 2;
         setExtraTryAttemptFlag(2);
         judgeButtonsEl.classList.remove('visible');
