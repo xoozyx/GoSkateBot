@@ -4556,7 +4556,11 @@
   }
 
   function resetPlayerVisuals() {
-    coachImg.src = 'images/Animation_coach.png?v=' + ASSET_VERSION;
+    // Arcade: свой тренер (Animation_coach_arcade.png) вместо обычного —
+    // сцена (flatground) в Arcade и так скрыта (см. applyGameModeVisuals),
+    // так что это единственная "персонажная" картинка, которая там вообще
+    // видна.
+    coachImg.src = (isArcadeActive() ? 'images/arcade/Animation_coach_arcade.png' : 'images/Animation_coach.png') + '?v=' + ASSET_VERSION;
     bubbleImg.src = 'images/Text_bubble.png?v=' + ASSET_VERSION;
     btnLandedImg.src = 'images/Button_landed.png?v=' + ASSET_VERSION;
     btnFailedImg.src = 'images/Button_failed.png?v=' + ASSET_VERSION;
