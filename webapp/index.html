@@ -4155,17 +4155,24 @@
     ARCADE_CARDS.forEach(({ key, prefix, el, visual }) => {
       const available = isCardAvailable(key);
       el.classList.toggle('card-disabled', !available);
-      visual.style.display = '';
       const img = visual.querySelector('img');
       const cooldown = cardCooldowns[key];
-      if (cooldown > 0) {
-        // На кулдауне после использования — прогрессия _off -> _off_1 -> ... -> _off_4.
-        const suffix = cooldown === ARCADE_CARD_COOLDOWN_TURNS ? '' : ('_' + (ARCADE_CARD_COOLDOWN_TURNS - cooldown));
+      if (cooldown === ARCADE_CARD_COOLDOWN_TURNS) {
+        // Только что использована, ещё ни одного тика не прошло — картинку
+        // карты прячем целиком (не показываем даже голый _off.png), сквозь
+        // пустой слот видна подложка Cards_shadows.png (см. #cardsShadow,
+        // z-index ниже карт).
+        visual.style.display = 'none';
+      } else if (cooldown > 0) {
+        // На кулдауне после первого тика — прогрессия _off_1 -> ... -> _off_4.
+        visual.style.display = '';
+        const suffix = '_' + (ARCADE_CARD_COOLDOWN_TURNS - cooldown);
         img.src = 'images/arcade/' + prefix + '_off' + suffix + '.png?v=' + ASSET_VERSION;
       } else {
-        // Не на кулдауне, но недоступна по другой причине (печать трюка,
-        // Double Bet не по карману, временная блокировка Extra Try) — просто
-        // обычный _off.png, без прогрессии.
+        // Не на кулдауне (готова по счётчику), но недоступна по другой причине
+        // (печать трюка, нет ставки, Double Bet не по карману, временная
+        // блокировка Extra Try) — обычный _off.png, без прогрессии.
+        visual.style.display = '';
         img.src = 'images/arcade/' + prefix + (available ? '_on' : '_off') + '.png?v=' + ASSET_VERSION;
       }
     });
