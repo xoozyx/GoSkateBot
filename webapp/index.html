@@ -2717,8 +2717,31 @@
     }
   }
 
+  // Использование карты ставит её на кулдаун СРАЗУ (5), но тикать он должен
+  // не с ЭТОГО же хода (на котором её только что применили), а со СЛЕДУЮЩЕГО
+  // нажатия Landed/Failed — то есть самое первое разрешение раунда после
+  // использования карты кулдаун не тратит, а лишь "снимает" этот флаг.
+  const STORAGE_KEY_CARD_SKIP_NEXT_TICK = 'goskate_cardSkipNextTick';
+  function getCardSkipNextTickFlag() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(STORAGE_KEY_CARD_SKIP_NEXT_TICK));
+      if (raw && typeof raw === 'object') {
+        return { reroll: !!raw.reroll, extratry: !!raw.extratry, doublebet: !!raw.doublebet };
+      }
+    } catch (e) { /* используем значение по умолчанию ниже */ }
+    return { reroll: false, extratry: false, doublebet: false };
+  }
+  function setCardSkipNextTickFlag(obj) {
+    try {
+      localStorage.setItem(STORAGE_KEY_CARD_SKIP_NEXT_TICK, JSON.stringify(obj));
+    } catch (e) {
+      console.warn('Не удалось сохранить флаг пропуска тика карт Arcade:', e);
+    }
+  }
+
   let cardCooldowns = getCardCooldownsFlag();
   let extraTryAttempt = getExtraTryAttemptFlag();
+  let cardSkipNextTick = getCardSkipNextTickFlag();
 
   // ==== Сложность (Easy/Hard) — своя для каждого режима, сохраняется вместе
   // с активной игрой, чтобы при возврате в незавершённую игру применялись те же правила. ====
@@ -3251,6 +3274,8 @@
     setPendingBetFlag(null);
     cardCooldowns = { reroll: 0, extratry: 0, doublebet: 0 };
     setCardCooldownsFlag(cardCooldowns);
+    cardSkipNextTick = { reroll: false, extratry: false, doublebet: false };
+    setCardSkipNextTickFlag(cardSkipNextTick);
     extraTryAttempt = 0;
     setExtraTryAttemptFlag(0);
     syncArcadeModeClass();
@@ -4150,14 +4175,24 @@
   // печати трюка в пузыре. Каждая карта тикает независимо: у каждой свой
   // кулдаун, отсчитывается с момента ЕЁ использования, а не общий на все три.
   function tickCardCooldowns() {
-    let changed = false;
+    let cooldownsChanged = false;
+    let skipFlagsChanged = false;
     ARCADE_CARDS.forEach(({ key }) => {
+      if (cardSkipNextTick[key]) {
+        // Это разрешение раунда идёт сразу следом за использованием карты —
+        // кулдаун за него не тратим, просто снимаем флаг: тикать начнём со
+        // СЛЕДУЮЩЕГО такого разрешения.
+        cardSkipNextTick[key] = false;
+        skipFlagsChanged = true;
+        return;
+      }
       if (cardCooldowns[key] > 0) {
         cardCooldowns[key]--;
-        changed = true;
+        cooldownsChanged = true;
       }
     });
-    if (changed) setCardCooldownsFlag(cardCooldowns);
+    if (cooldownsChanged) setCardCooldownsFlag(cardCooldowns);
+    if (skipFlagsChanged) setCardSkipNextTickFlag(cardSkipNextTick);
   }
 
   function arcadeBucksTier(amount) {
@@ -4268,6 +4303,8 @@
     if (!isCardAvailable('reroll')) return;
     cardCooldowns.reroll = ARCADE_CARD_COOLDOWN_TURNS;
     setCardCooldownsFlag(cardCooldowns);
+    cardSkipNextTick.reroll = true;
+    setCardSkipNextTickFlag(cardSkipNextTick);
     addTricklistEntry('Reroll trick card used', 'info');
     syncCardVisuals();
     rollArcadeTrick();
@@ -4282,6 +4319,8 @@
     if (!isCardAvailable('extratry')) return;
     cardCooldowns.extratry = ARCADE_CARD_COOLDOWN_TURNS;
     setCardCooldownsFlag(cardCooldowns);
+    cardSkipNextTick.extratry = true;
+    setCardSkipNextTickFlag(cardSkipNextTick);
     addTricklistEntry('Extra try card used', 'info');
     extraTryAttempt = 1;
     setExtraTryAttemptFlag(1);
@@ -4309,6 +4348,8 @@
     if (!isCardAvailable('doublebet')) return;
     cardCooldowns.doublebet = ARCADE_CARD_COOLDOWN_TURNS;
     setCardCooldownsFlag(cardCooldowns);
+    cardSkipNextTick.doublebet = true;
+    setCardSkipNextTickFlag(cardSkipNextTick);
     addTricklistEntry('Double Bet card used', 'info');
 
     skatebucks -= pendingBetAmount;
@@ -5003,6 +5044,8 @@
     }
     cardCooldowns = { reroll: 0, extratry: 0, doublebet: 0 };
     setCardCooldownsFlag(cardCooldowns);
+    cardSkipNextTick = { reroll: false, extratry: false, doublebet: false };
+    setCardSkipNextTickFlag(cardSkipNextTick);
     extraTryAttempt = 0;
     setExtraTryAttemptFlag(0);
     renderTricklist();
