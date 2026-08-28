@@ -262,7 +262,7 @@
     const MAX_UNIQUE_ATTEMPTS = 30;
     const TYPEWRITER_MS_PER_CHAR = 28;
 
-    const RESULT_FONT_BASE = 12;
+    const RESULT_FONT_BASE = 20;
     const RESULT_FONT_STEPS = [
       { maxLength: 16, scale: 1 },
       { maxLength: 24, scale: 0.82 },
@@ -270,54 +270,15 @@
       { maxLength: Infinity, scale: 0.56 },
     ];
 
-    // Свой префикс — полностью независим от localStorage основной версии.
-    const K_LAST = 'goskate_compact_lastResult';
-    const K_HISTORY = 'goskate_compact_history';
-    const K_FAILED = 'goskate_compact_failedCount';
-    const K_GAMEOVER = 'goskate_compact_gameOver';
-
-    function loadJSON(key, fallback) {
-      try {
-        const raw = localStorage.getItem(key);
-        return raw !== null ? JSON.parse(raw) : fallback;
-      } catch (e) {
-        return fallback;
-      }
-    }
-    function saveJSON(key, value) {
-      try {
-        localStorage.setItem(key, JSON.stringify(value));
-      } catch (e) { /* localStorage недоступен — играем в режиме "только память" */ }
-    }
-    function loadInt(key, fallback) {
-      try {
-        const v = parseInt(localStorage.getItem(key), 10);
-        return isNaN(v) ? fallback : v;
-      } catch (e) {
-        return fallback;
-      }
-    }
-    function saveInt(key, value) {
-      try {
-        localStorage.setItem(key, String(value));
-      } catch (e) { /* не критично */ }
-    }
-    function loadBool(key) {
-      try {
-        return localStorage.getItem(key) === '1';
-      } catch (e) {
-        return false;
-      }
-    }
-    function saveBool(key, value) {
-      try {
-        localStorage.setItem(key, value ? '1' : '0');
-      } catch (e) { /* не критично */ }
-    }
-
-    let recentResults = loadJSON(K_HISTORY, []);
-    let failedCount = loadInt(K_FAILED, 0);
-    let isGameOver = loadBool(K_GAMEOVER);
+    // По просьбе — никакого сохранения между перезагрузками страницы: каждое
+    // открытие компактной версии начинается с чистого листа (в отличие от
+    // основной версии, где прогресс восстанавливается). Раньше здесь был
+    // localStorage-слой (goskate_compact_*) — специально убран целиком, а не
+    // просто отключено чтение: раз ничего не сохраняем, нечего было бы и
+    // писать.
+    let recentResults = [];
+    let failedCount = 0;
+    let isGameOver = false;
 
     let tricks = [];
     let dataLoaded = false;
@@ -425,14 +386,11 @@
 
       recentResults.push(result);
       if (recentResults.length > HISTORY_SIZE) recentResults.shift();
-      saveJSON(K_HISTORY, recentResults);
-      saveJSON(K_LAST, result);
       return result;
     }
 
     function triggerGameOver() {
       isGameOver = true;
-      saveBool(K_GAMEOVER, true);
       hideBubble();
       setJudgeVisible(false);
       setTimeout(() => {
@@ -474,11 +432,8 @@
 
     function startNewGame() {
       failedCount = 0;
-      saveInt(K_FAILED, 0);
       isGameOver = false;
-      saveBool(K_GAMEOVER, false);
       recentResults = [];
-      saveJSON(K_HISTORY, []);
       syncLetters();
       setStartVisible(false);
       rollTrick();
@@ -496,7 +451,6 @@
     btnFailedEl.addEventListener('click', () => {
       if (isGameOver) return;
       failedCount++;
-      saveInt(K_FAILED, failedCount);
       syncLetters();
       if (failedCount >= GAME_OVER_FAILS) {
         triggerGameOver();
@@ -510,28 +464,11 @@
     // Start Game; если трюк уже ждал оценки — восстанавливаем его текст и
     // кнопки Landed/Failed без повторной печати; иначе (самый первый заход,
     // или после явного завершения без начала новой игры) — просто Start Game. ====
-    (async function init() {
-      syncLetters();
-      if (isGameOver) {
-        showBubble();
-        resultEl.style.fontSize = RESULT_FONT_BASE + 'px';
-        resultEl.textContent = 'Game over!';
-        setStartVisible(true);
-        return;
-      }
-
-      const lastResult = loadJSON(K_LAST, '');
-      if (lastResult) {
-        await ensureTricksLoaded();
-        showBubble();
-        const step = RESULT_FONT_STEPS.find((s) => lastResult.length <= s.maxLength);
-        resultEl.style.fontSize = (RESULT_FONT_BASE * step.scale) + 'px';
-        resultEl.textContent = lastResult;
-        setJudgeVisible(true);
-      } else {
-        setStartVisible(true);
-      }
-    })();
+    // На каждой перезагрузке страницы — гарантированно чистый старт: buttons
+    // сброшены в init прямо тут, isGameOver/failedCount/recentResults уже
+    // проинициализированы дефолтными значениями выше (см. комментарий там).
+    syncLetters();
+    setStartVisible(true);
   })();
 </script>
 </body>
