@@ -1441,6 +1441,60 @@
     display: block;
   }
 
+  /* ==== Arcade+Versus: банки ОБОИХ игроков видны одновременно, в два ряда
+     (не переключаются по ходу, как одиночный #skatebucksImg выше) — художник
+     уже нарисовал Skatebucks_player1_*.png/player2_*.png в двух
+     непересекающихся строках одного канваса (тот же приём, что у
+     Letters_skate_player1/2 выше), поэтому оба слоя просто накладываются
+     через inset:0 и остаются на месте сами по себе. Показываются ТОЛЬКО
+     когда активны ОБА класса разом — иначе показывается одиночная версия
+     выше (обычный Arcade без Versus). ==== */
+  #skateLetters #skatebucksImgP1,
+  #skateLetters #skatebucksImgP2 {
+    position: absolute;
+    inset: 0;
+    display: none;
+  }
+
+  #tricklist.versus-mode.arcade-mode #skateLetters #skatebucksImgP1,
+  #tricklist.versus-mode.arcade-mode #skateLetters #skatebucksImgP2 {
+    display: block;
+  }
+
+  #tricklist.versus-mode.arcade-mode #skateLetters #skatebucksImg,
+  #tricklist.versus-mode.arcade-mode #skateLetters #skatebucksAmountBig {
+    display: none;
+  }
+
+  #skateLetters #skatebucksAmountP1,
+  #skateLetters #skatebucksAmountP2 {
+    display: none;
+    position: absolute;
+    left: 61%;
+    transform: translateY(-50%);
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    color: #f4d35e;
+    white-space: nowrap;
+    z-index: 1;
+  }
+
+  /* Вертикальный центр строки каждого игрока — считано по альфа-канале
+     соответствующих Skatebucks_player{N}_*.png (P1: 46.08–48.69%, P2:
+     48.37–50.98%), тот же приём, что у top:48.53% одиночной версии выше. */
+  #skateLetters #skatebucksAmountP1 {
+    top: 47.39%;
+  }
+
+  #skateLetters #skatebucksAmountP2 {
+    top: 49.68%;
+  }
+
+  #tricklist.versus-mode.arcade-mode #skateLetters #skatebucksAmountP1,
+  #tricklist.versus-mode.arcade-mode #skateLetters #skatebucksAmountP2 {
+    display: block;
+  }
+
   #tricklist.arcade-mode #skateLetters #skateLettersImg,
   #tricklist.arcade-mode #skateLetters #skateLettersImg2 {
     display: none;
@@ -1853,6 +1907,10 @@
             <img id="skateLettersImg2" src="images/versus%20mode/Letters_skate_player2_null.png?v=20260716a" alt="Player 2 SKATE">
             <img id="skatebucksImg" src="images/arcade/Skatebucks_1.png?v=20260716a" alt="Skatebucks">
             <span id="skatebucksAmountBig">x 100</span>
+            <img id="skatebucksImgP1" src="images/arcade%20versus%20mode/Skatebucks_player1_1.png?v=20260716a" alt="Player 1 Skatebucks">
+            <span id="skatebucksAmountP1">x 100</span>
+            <img id="skatebucksImgP2" src="images/arcade%20versus%20mode/Skatebucks_player2_1.png?v=20260716a" alt="Player 2 Skatebucks">
+            <span id="skatebucksAmountP2">x 100</span>
           </div>
           <button id="logToggleBtn" aria-label="Развернуть лог"></button>
           <div id="logToggleVisual">
@@ -4157,6 +4215,10 @@
   const betBtn500VisualEl = document.getElementById('betBtn500Visual');
   const skatebucksImg = document.getElementById('skatebucksImg');
   const skatebucksAmountBigEl = document.getElementById('skatebucksAmountBig');
+  const skatebucksImgP1El = document.getElementById('skatebucksImgP1');
+  const skatebucksAmountP1El = document.getElementById('skatebucksAmountP1');
+  const skatebucksImgP2El = document.getElementById('skatebucksImgP2');
+  const skatebucksAmountP2El = document.getElementById('skatebucksAmountP2');
   const arcadeLandedCountEl = document.getElementById('arcadeLandedCount');
   const arcadeFailedCountEl = document.getElementById('arcadeFailedCount');
 
@@ -4274,6 +4336,16 @@
   // Landed/Failed (см. judgeButtonsEl.classList), плюс сразу после
   // использования любой карты (её доступность меняется мгновенно).
   function syncCardVisuals() {
+    // Подложка (Cards_shadows*.png) должна обновляться при каждой синхронизации
+    // карт — не только при первом показе (setCardsVisible) — иначе при смене
+    // хода в Arcade+Versus она оставалась картинкой ПЕРВОГО игрока навсегда:
+    // единственное место, где меняется currentTurn "на лету", это именно
+    // resolveArcadeBet -> switchArcadeVersusTurn, а не повторный вызов
+    // setCardsVisible(true) (та функция вызывается только при показе/скрытии
+    // блока целиком, не при смене хода).
+    if (cardsShadowEl.classList.contains('visible')) {
+      cardsShadowEl.querySelector('img').src = arcadeImagePath('Cards_shadows');
+    }
     ARCADE_CARDS.forEach(({ key, prefix, el, visual }) => {
       const available = isCardAvailable(key);
       el.classList.toggle('card-disabled', !available);
@@ -4335,6 +4407,30 @@
     const tierSrc = skatebucksImagePath(arcadeBucksTier(skatebucks));
     skatebucksImg.src = tierSrc;
     skatebucksAmountBigEl.textContent = 'x ' + skatebucks;
+    updateArcadeVersusBucksDisplay();
+  }
+
+  // Банк конкретного игрока в Arcade+Versus: для ТЕКУЩЕГО (currentTurn) — это
+  // просто живая переменная skatebucks, для "другого" — его сохранённый
+  // снимок (arcadeVersusOtherState), см. switchArcadeVersusTurn.
+  function getArcadeVersusPlayerBucks(player) {
+    if (player === currentTurn) return skatebucks;
+    return (arcadeVersusOtherState || defaultArcadePlayerState()).skatebucks;
+  }
+
+  // Банки ОБОИХ игроков видны одновременно (см. CSS #skatebucksImgP1/P2) —
+  // обновляется при каждом updateArcadeBucksDisplay(), то есть на каждое
+  // изменение банка ЛЮБОГО из игроков (ставка, выигрыш, смена хода и т.д.).
+  function updateArcadeVersusBucksDisplay() {
+    if (!isArcadeVersusActive()) return;
+    [1, 2].forEach((player) => {
+      const amount = getArcadeVersusPlayerBucks(player);
+      const src = 'images/arcade%20versus%20mode/Skatebucks_player' + player + '_' + arcadeBucksTier(amount) + '.png?v=' + ASSET_VERSION;
+      const iconEl = player === 1 ? skatebucksImgP1El : skatebucksImgP2El;
+      const amountEl = player === 1 ? skatebucksAmountP1El : skatebucksAmountP2El;
+      iconEl.src = src;
+      amountEl.textContent = 'x ' + amount;
+    });
   }
 
   function syncArcadeModeClass() {
