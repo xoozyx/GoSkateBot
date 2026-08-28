@@ -4295,10 +4295,24 @@
   const cardsShadowEl = document.getElementById('cardsShadow');
 
   const ARCADE_CARDS = [
-    { key: 'reroll', prefix: 'Card_rerolltrick', el: cardRerollEl, visual: cardRerollVisualEl },
-    { key: 'extratry', prefix: 'Card_extratry', el: cardExtraTryEl, visual: cardExtraTryVisualEl },
-    { key: 'doublebet', prefix: 'Card_doublebet', el: cardDoubleBetEl, visual: cardDoubleBetVisualEl },
+    { key: 'reroll', prefix: 'Card_rerolltrick', el: cardRerollEl, visual: cardRerollVisualEl, baseLeft: 40.38 },
+    { key: 'extratry', prefix: 'Card_extratry', el: cardExtraTryEl, visual: cardExtraTryVisualEl, baseLeft: 55.29 },
+    { key: 'doublebet', prefix: 'Card_doublebet', el: cardDoubleBetEl, visual: cardDoubleBetVisualEl, baseLeft: 70.19 },
   ];
+
+  // Arcade+Versus: художник нарисовал карты игрока 2 сдвинутыми ровно на 25
+  // процентных пунктов влево от игрока 1 (проверено по альфа-каналу всех
+  // трёх Card_*_on_player2.png) — сама картинка при этом лежит в
+  // .menu-button-visual (inset:0, позиционируется своей же прозрачностью и
+  // никуда не двигается), а вот кликабельная зона (.fullcanvas-hitarea) задана
+  // фиксированным left в CSS и её нужно двигать явно, иначе на ходу игрока 2
+  // хитбокс остаётся под координатами игрока 1, а рисунок карты — левее.
+  function syncCardHitareaPositions() {
+    const shift = (isArcadeVersusActive() && currentTurn === 2) ? 25 : 0;
+    ARCADE_CARDS.forEach(({ el, baseLeft }) => {
+      el.style.left = (baseLeft - shift) + '%';
+    });
+  }
 
   // Базовая видимость блока карт целиком (плюс подложка Cards_shadows.png под
   // ними) — только в Arcade, на любом из трёх режимов (Flat/Ramp/Street).
@@ -4336,6 +4350,7 @@
   // Landed/Failed (см. judgeButtonsEl.classList), плюс сразу после
   // использования любой карты (её доступность меняется мгновенно).
   function syncCardVisuals() {
+    syncCardHitareaPositions(); // хитбоксы карт — под текущего игрока (см. комментарий выше)
     // Подложка (Cards_shadows*.png) должна обновляться при каждой синхронизации
     // карт — не только при первом показе (setCardsVisible) — иначе при смене
     // хода в Arcade+Versus она оставалась картинкой ПЕРВОГО игрока навсегда:
