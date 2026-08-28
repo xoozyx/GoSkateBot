@@ -71,7 +71,9 @@
   }
 
   #bubbleLayer {
-    z-index: 2;
+    /* Ниже тренера по просьбе (тренер должен быть ПОВЕРХ пузыря) — сам
+       тренер получает z-index:2 инлайном в разметке (было 1). */
+    z-index: 1;
     opacity: 0;
     transition: opacity 0.25s ease;
   }
@@ -94,7 +96,10 @@
     text-align: center;
     font-family: 'Press Start 2P', monospace;
     line-height: 1.35;
-    color: #2b2b2b;
+    /* Внутренность Text_bubble.png — почти чёрная (rgb(35,35,35) по факту),
+       поэтому тёмно-серый (#2b2b2b) текст на ней был не виден — светлый,
+       как в основной версии (#result там #ffffff), даёт нужный контраст. */
+    color: #ffffff;
     word-wrap: break-word;
     opacity: 0;
     transition: opacity 0.25s ease;
@@ -138,6 +143,17 @@
     transition: opacity 0.08s ease;
   }
 
+  /* Забытая раньше пара к ".layer img" выше — без нее картинки кнопок
+     рендерились в своём natural-размере (162x197 исходника) вместо
+     растягивания на весь .device, поэтому выглядели не такого размера, как
+     фон/тренер/пузырь. */
+  .btn-visual img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+  }
+
   .btn:active + .btn-visual {
     opacity: 0.8;
   }
@@ -169,7 +185,7 @@
       <div class="layer" style="z-index: 0;">
         <img src="images/compact%20mode/Background_0.png" alt="">
       </div>
-      <div class="layer" style="z-index: 1;">
+      <div class="layer" style="z-index: 2;">
         <img src="images/compact%20mode/Animation_coach.png" alt="">
       </div>
       <div id="bubbleLayer" class="layer">
