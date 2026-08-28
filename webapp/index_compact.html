@@ -111,10 +111,10 @@
 
   #result {
     position: absolute;
-    left: 8%;
-    right: 8%;
-    top: 8%;
-    height: 42%;
+    left: 5%;
+    right: 5%;
+    top: 4%;
+    height: 46%;
     box-sizing: border-box;
     display: flex;
     align-items: center;
@@ -122,7 +122,7 @@
     overflow: hidden;
     text-align: center;
     font-family: 'Press Start 2P', monospace;
-    line-height: 1.35;
+    line-height: 1.3;
     /* Внутренность Text_bubble.png — почти чёрная (rgb(35,35,35) по факту),
        поэтому тёмно-серый (#2b2b2b) текст на ней был не виден — светлый,
        как в основной версии (#result там #ffffff), даёт нужный контраст. */
@@ -262,12 +262,12 @@
     const MAX_UNIQUE_ATTEMPTS = 30;
     const TYPEWRITER_MS_PER_CHAR = 28;
 
-    const RESULT_FONT_BASE = 20;
+    const RESULT_FONT_BASE = 30;
     const RESULT_FONT_STEPS = [
-      { maxLength: 16, scale: 1 },
-      { maxLength: 24, scale: 0.82 },
-      { maxLength: 32, scale: 0.68 },
-      { maxLength: Infinity, scale: 0.56 },
+      { maxLength: 12, scale: 1 },
+      { maxLength: 18, scale: 0.75 },
+      { maxLength: 26, scale: 0.58 },
+      { maxLength: Infinity, scale: 0.46 },
     ];
 
     // По просьбе — никакого сохранения между перезагрузками страницы: каждое
