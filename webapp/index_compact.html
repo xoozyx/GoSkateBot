@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>GoSkateBot Compact</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  /* ==== Compact mode: первая проба под маленькие экраны (Apple Watch SE
+     gen1 и т.п.) — только один режим "зашит" намертво: Single / Classic /
+     Ramp / Easy / без Air Tricks (см. TRICK_LIST_PATH в скрипте ниже). Ни
+     выбора режима, ни меню, ни лога трюков, ни звука — со стороны
+     images/compact mode/ прислано только 6 картинок (фон, пузырь, тренер,
+     Start Game, Landed, Failed), под них и сделан весь экран. Канвас — 162x197
+     (собственный формат компактных картинок, отдельный от 208x306 основной
+     версии — Preview.png был просто референсом стиля, а не новым размером). ==== */
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    background: #cfe9ee;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  img {
+    -webkit-user-drag: none;
+    user-select: none;
+  }
+
+  #app {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  /* Канвас компактных картинок — 162x197 (см. images/compact mode/*.png),
+     тот же приём, что в основной версии: фиксированное соотношение сторон,
+     ширина/высота считаются от вьюпорта, дальше все элементы внутри —
+     проценты от ЭТОГО блока. */
+  .device {
+    position: relative;
+    width: min(94vw, 90vh, 320px);
+    aspect-ratio: 162 / 197;
+    image-rendering: pixelated;
+  }
+
+  /* Полноразмерный слой-картинка (фон, тренер, пузырь) — каждая PNG уже сама
+     нарисована с прозрачностью в нужном месте всего канваса 162x197, поэтому
+     сам слой всегда inset:0, без индивидуальных left/top/width/height. */
+  .layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .layer img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+  }
+
+  #bubbleLayer {
+    z-index: 2;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
+
+  #bubbleLayer.active {
+    opacity: 1;
+  }
+
+  #result {
+    position: absolute;
+    left: 10%;
+    right: 10%;
+    top: 24%;
+    height: 28%;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    text-align: center;
+    font-family: 'Press Start 2P', monospace;
+    line-height: 1.35;
+    color: #2b2b2b;
+    word-wrap: break-word;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+    z-index: 3;
+  }
+
+  #result.active {
+    opacity: 1;
+  }
+
+  /* ==== Кнопки: невидимый button (реальная кликабельная зона по альфа-каналу
+     соответствующей картинки) + соседний слой с самой картинкой — тот же
+     приём с двумя слоями, что и в основной версии. Скрыты по умолчанию,
+     показываются только через класс .visible (см. JS) — специально не
+     полагаемся на пустую инлайн-строку в display, чтобы не словить тот же
+     баг, что был в основной версии (см. историю правок). ==== */
+  .btn, .btn-visual {
+    display: none;
+  }
+
+  .btn.visible, .btn-visual.visible {
+    display: block;
+  }
+
+  .btn {
+    position: absolute;
+    border: none;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    z-index: 4;
+  }
+
+  .btn-visual {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 3;
+    transition: opacity 0.08s ease;
+  }
+
+  .btn:active + .btn-visual {
+    opacity: 0.8;
+  }
+
+  #btnStart, #btnLanded, #btnFailed {
+    top: 63.96%;
+    height: 35.03%;
+  }
+
+  #btnStart {
+    left: 1.23%;
+    width: 97.53%;
+  }
+
+  #btnLanded {
+    left: 1.23%;
+    width: 48.15%;
+  }
+
+  #btnFailed {
+    left: 50.62%;
+    width: 48.15%;
+  }
+</style>
+</head>
+<body>
+  <div id="app">
+    <div class="device">
+      <div class="layer" style="z-index: 0;">
+        <img src="images/compact%20mode/Background_0.png" alt="">
+      </div>
+      <div class="layer" style="z-index: 1;">
+        <img src="images/compact%20mode/Animation_coach.png" alt="">
+      </div>
+      <div id="bubbleLayer" class="layer">
+        <img src="images/compact%20mode/Text_bubble.png" alt="">
+      </div>
+      <div id="result"></div>
+
+      <button id="btnStart" class="btn" aria-label="Start Game"></button>
+      <div id="btnStartVisual" class="btn-visual">
+        <img src="images/compact%20mode/Button_startgame.png" alt="">
+      </div>
+
+      <button id="btnLanded" class="btn" aria-label="Landed"></button>
+      <div id="btnLandedVisual" class="btn-visual">
+        <img src="images/compact%20mode/Button_landed.png" alt="">
+      </div>
+
+      <button id="btnFailed" class="btn" aria-label="Failed"></button>
+      <div id="btnFailedVisual" class="btn-visual">
+        <img src="images/compact%20mode/Button_failed.png" alt="">
+      </div>
+    </div>
+  </div>
+
+<script>
+  // ==== GoSkateBot — Compact mode ====
+  // Единственный зашитый режим: Single / Classic / Ramp / Easy / без Air
+  // Tricks — тот же trick-лист, что использует основная версия для этой
+  // комбинации (Rampmode_tricks_easy.txt), но независимая логика: этот файл
+  // не переиспользует код index.html и не делит с ним ни один ключ
+  // localStorage (свой префикс ниже) — можно играть в обе версии параллельно,
+  // не мешая друг другу.
+  //
+  // Что сознательно урезано по сравнению с основной версией (нет ни готовых
+  // картинок, ни явного запроса на это): звук, лог трюков, видимый прогресс
+  // по буквам SKATE (сам счётчик ошибок внутри есть и доводит до Game Over
+  // на 15-й, как в Easy основной версии — просто не отрисован, картинки под
+  // буквы не присылали), кнопка Info/повтор при обрыве связи (переиспользует
+  // Start Game — см. rollTrick).
+  (function () {
+    const TRICK_LIST_PATH = 'data/Rampmode_tricks_easy.txt';
+    const GAME_OVER_FAILS = 15; // как в основной версии для Easy (GAME_OVER_FAILS_EASY)
+    const HISTORY_SIZE = 30;
+    const MAX_UNIQUE_ATTEMPTS = 30;
+    const TYPEWRITER_MS_PER_CHAR = 28;
+
+    const RESULT_FONT_BASE = 8;
+    const RESULT_FONT_STEPS = [
+      { maxLength: 16, scale: 1 },
+      { maxLength: 24, scale: 0.82 },
+      { maxLength: 32, scale: 0.68 },
+      { maxLength: Infinity, scale: 0.56 },
+    ];
+
+    // Свой префикс — полностью независим от localStorage основной версии.
+    const K_LAST = 'goskate_compact_lastResult';
+    const K_HISTORY = 'goskate_compact_history';
+    const K_FAILED = 'goskate_compact_failedCount';
+    const K_GAMEOVER = 'goskate_compact_gameOver';
+
+    function loadJSON(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw !== null ? JSON.parse(raw) : fallback;
+      } catch (e) {
+        return fallback;
+      }
+    }
+    function saveJSON(key, value) {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+      } catch (e) { /* localStorage недоступен — играем в режиме "только память" */ }
+    }
+    function loadInt(key, fallback) {
+      try {
+        const v = parseInt(localStorage.getItem(key), 10);
+        return isNaN(v) ? fallback : v;
+      } catch (e) {
+        return fallback;
+      }
+    }
+    function saveInt(key, value) {
+      try {
+        localStorage.setItem(key, String(value));
+      } catch (e) { /* не критично */ }
+    }
+    function loadBool(key) {
+      try {
+        return localStorage.getItem(key) === '1';
+      } catch (e) {
+        return false;
+      }
+    }
+    function saveBool(key, value) {
+      try {
+        localStorage.setItem(key, value ? '1' : '0');
+      } catch (e) { /* не критично */ }
+    }
+
+    let recentResults = loadJSON(K_HISTORY, []);
+    let failedCount = loadInt(K_FAILED, 0);
+    let isGameOver = loadBool(K_GAMEOVER);
+
+    let tricks = [];
+    let dataLoaded = false;
+    let typewriterTimer = null;
+
+    const bubbleLayerEl = document.getElementById('bubbleLayer');
+    const resultEl = document.getElementById('result');
+    const btnStartEl = document.getElementById('btnStart');
+    const btnStartVisualEl = document.getElementById('btnStartVisual');
+    const btnLandedEl = document.getElementById('btnLanded');
+    const btnLandedVisualEl = document.getElementById('btnLandedVisual');
+    const btnFailedEl = document.getElementById('btnFailed');
+    const btnFailedVisualEl = document.getElementById('btnFailedVisual');
+
+    function setStartVisible(visible) {
+      btnStartEl.classList.toggle('visible', visible);
+      btnStartVisualEl.classList.toggle('visible', visible);
+    }
+
+    function setJudgeVisible(visible) {
+      btnLandedEl.classList.toggle('visible', visible);
+      btnLandedVisualEl.classList.toggle('visible', visible);
+      btnFailedEl.classList.toggle('visible', visible);
+      btnFailedVisualEl.classList.toggle('visible', visible);
+    }
+
+    function showBubble() {
+      bubbleLayerEl.classList.add('active');
+      resultEl.classList.add('active');
+    }
+
+    function hideBubble() {
+      bubbleLayerEl.classList.remove('active');
+      resultEl.classList.remove('active');
+      resultEl.textContent = '';
+    }
+
+    // Печатная машинка — тот же принцип, что в основной версии (setResultText),
+    // упрощённая: тут не нужна отдельная Info-кнопка и статус "это трюк".
+    function typeText(text, onComplete) {
+      if (typewriterTimer !== null) {
+        clearInterval(typewriterTimer);
+        typewriterTimer = null;
+      }
+      const step = RESULT_FONT_STEPS.find((s) => text.length <= s.maxLength);
+      resultEl.style.fontSize = (RESULT_FONT_BASE * step.scale) + 'px';
+      resultEl.textContent = '';
+
+      if (!text) {
+        if (onComplete) onComplete();
+        return;
+      }
+
+      let i = 0;
+      typewriterTimer = setInterval(() => {
+        i++;
+        resultEl.textContent = text.slice(0, i);
+        if (i >= text.length) {
+          clearInterval(typewriterTimer);
+          typewriterTimer = null;
+          if (onComplete) onComplete();
+        }
+      }, TYPEWRITER_MS_PER_CHAR);
+    }
+
+    function parseTrickList(text) {
+      return text.split('\n').map((line) => line.trim()).filter(Boolean);
+    }
+
+    async function ensureTricksLoaded() {
+      if (dataLoaded) return;
+      try {
+        const res = await fetch(TRICK_LIST_PATH);
+        tricks = parseTrickList(await res.text());
+        dataLoaded = tricks.length > 0;
+      } catch (e) {
+        dataLoaded = false;
+      }
+    }
+
+    // Тот же фильтр от повторов, что и в основной версии (generateUniqueTrick):
+    // не даём последним HISTORY_SIZE трюкам повториться подряд, пока не
+    // исчерпаны разумные попытки подобрать что-то новое.
+    function generateUniqueTrick() {
+      if (tricks.length === 0) return '';
+      let result;
+      let attempts = 0;
+      do {
+        result = tricks[Math.floor(Math.random() * tricks.length)];
+        attempts++;
+      } while (recentResults.includes(result) && attempts < MAX_UNIQUE_ATTEMPTS && tricks.length > 1);
+
+      recentResults.push(result);
+      if (recentResults.length > HISTORY_SIZE) recentResults.shift();
+      saveJSON(K_HISTORY, recentResults);
+      saveJSON(K_LAST, result);
+      return result;
+    }
+
+    function triggerGameOver() {
+      isGameOver = true;
+      saveBool(K_GAMEOVER, true);
+      hideBubble();
+      setJudgeVisible(false);
+      setTimeout(() => {
+        showBubble();
+        typeText('Game over!', () => {
+          setStartVisible(true);
+        });
+      }, 120);
+    }
+
+    // Один трюк — генерация, печать, показ Landed/Failed после того, как
+    // текст допечатался (та же логика видимости, что у классического
+    // single-режима основной версии: Roll -> печать -> кнопки оценки).
+    async function rollTrick() {
+      hideBubble();
+      setJudgeVisible(false);
+
+      await ensureTricksLoaded();
+      if (!dataLoaded) {
+        // Отдельной картинки "Retry" под обрыв связи не прислали — в
+        // компактной версии для этого переиспользуется Start Game.
+        setTimeout(() => {
+          showBubble();
+          typeText('Connection problem, try again', () => {
+            setStartVisible(true);
+          });
+        }, 120);
+        return;
+      }
+
+      setTimeout(() => {
+        showBubble();
+        const trick = generateUniqueTrick();
+        typeText(trick, () => {
+          setJudgeVisible(true);
+        });
+      }, 120);
+    }
+
+    function startNewGame() {
+      failedCount = 0;
+      saveInt(K_FAILED, 0);
+      isGameOver = false;
+      saveBool(K_GAMEOVER, false);
+      recentResults = [];
+      saveJSON(K_HISTORY, []);
+      setStartVisible(false);
+      rollTrick();
+    }
+
+    btnStartEl.addEventListener('click', () => {
+      startNewGame();
+    });
+
+    btnLandedEl.addEventListener('click', () => {
+      if (isGameOver) return;
+      rollTrick();
+    });
+
+    btnFailedEl.addEventListener('click', () => {
+      if (isGameOver) return;
+      failedCount++;
+      saveInt(K_FAILED, failedCount);
+      if (failedCount >= GAME_OVER_FAILS) {
+        triggerGameOver();
+        return;
+      }
+      rollTrick();
+    });
+
+    // ==== Резюме при открытии страницы — тот же принцип, что в основной
+    // версии: если игра уже была завершена, сразу показываем Game Over +
+    // Start Game; если трюк уже ждал оценки — восстанавливаем его текст и
+    // кнопки Landed/Failed без повторной печати; иначе (самый первый заход,
+    // или после явного завершения без начала новой игры) — просто Start Game. ====
+    (async function init() {
+      if (isGameOver) {
+        showBubble();
+        resultEl.style.fontSize = RESULT_FONT_BASE + 'px';
+        resultEl.textContent = 'Game over!';
+        setStartVisible(true);
+        return;
+      }
+
+      const lastResult = loadJSON(K_LAST, '');
+      if (lastResult) {
+        await ensureTricksLoaded();
+        showBubble();
+        const step = RESULT_FONT_STEPS.find((s) => lastResult.length <= s.maxLength);
+        resultEl.style.fontSize = (RESULT_FONT_BASE * step.scale) + 'px';
+        resultEl.textContent = lastResult;
+        setJudgeVisible(true);
+      } else {
+        setStartVisible(true);
+      }
+    })();
+  })();
+</script>
+</body>
+</html>

@@ -1454,6 +1454,10 @@
     position: absolute;
     inset: 0;
     display: none;
+    /* "На 2 пикселя выше" по просьбе — картинка на всю канву (inset:0), так
+       что translateY-процент тут считается от ЕЁ ЖЕ высоты, которая равна
+       высоте всего канваса (306px) — тем самым это ровно 2px смещение вверх. */
+    transform: translateY(-0.65%);
   }
 
   #tricklist.versus-mode.arcade-mode #skateLetters #skatebucksImgP1,
@@ -1481,13 +1485,15 @@
 
   /* Вертикальный центр строки каждого игрока — считано по альфа-канале
      соответствующих Skatebucks_player{N}_*.png (P1: 46.08–48.69%, P2:
-     48.37–50.98%), тот же приём, что у top:48.53% одиночной версии выше. */
+     48.37–50.98%), тот же приём, что у top:48.53% одиночной версии выше.
+     Минус ~0.65% (= 2px из 306px канваса) — просили сдвинуть на 2px выше
+     для более центрированного вида. */
   #skateLetters #skatebucksAmountP1 {
-    top: 47.39%;
+    top: 46.74%;
   }
 
   #skateLetters #skatebucksAmountP2 {
-    top: 49.68%;
+    top: 49.03%;
   }
 
   #tricklist.versus-mode.arcade-mode #skateLetters #skatebucksAmountP1,
