@@ -1292,6 +1292,13 @@
     display: flex;
   }
 
+  /* Arcade+Versus вместе: показываем строку P1/P2 (уже несёт landed/failed на
+     каждого), а не голую arcade-строку (там нет разбивки по игрокам) — иначе
+     обе строки показались бы одновременно, друг на друге. */
+  #tricklist.versus-mode.arcade-mode .trick-stats.arcade-only {
+    display: none;
+  }
+
   .player-label {
     font-family: 'Press Start 2P', monospace;
     font-size: 8px;
@@ -2659,6 +2666,12 @@
     return currentIsArcade;
   }
 
+  // Arcade+Versus вместе — оба банка/набора карт живут параллельно, по
+  // одному на игрока, см. блок ниже (arcadeVersusOtherState/switchArcadeVersusTurn).
+  function isArcadeVersusActive() {
+    return currentIsArcade && isVersusActive();
+  }
+
   // ==== Arcade: карты-баффы (Reroll Trick / Extra Try / Double Bet) — у
   // каждой свой независимый "кулдаун" в 5 ходов (ход = нажатие Landed/Failed,
   // НЕ печать трюка в пузыре) после использования, со своей прогрессией
@@ -2742,6 +2755,83 @@
   let cardCooldowns = getCardCooldownsFlag();
   let extraTryAttempt = getExtraTryAttemptFlag();
   let cardSkipNextTick = getCardSkipNextTickFlag();
+
+  // ==== Arcade + Versus вместе: у каждого игрока свой банк/ставка/карты,
+  // но переменные выше (skatebucks, pendingBetAmount, cardCooldowns,
+  // cardSkipNextTick, extraTryAttempt) остаются ОБЩИМИ для всего файла —
+  // они всегда содержат состояние ТЕКУЩЕГО активного игрока (currentTurn).
+  // При передаче хода switchArcadeVersusTurn() сохраняет их в
+  // arcadeVersusOtherState (состояние игрока, чей сейчас ход НЕ идёт) и
+  // подставляет туда состояние нового текущего игрока — благодаря этому все
+  // остальные функции Arcade (placeBet/resolveArcadeBet/карты и т.д.)
+  // продолжают работать без единого изменения, как будто игрок всегда один. ====
+  const STORAGE_KEY_ARCADE_VERSUS_OTHER = 'goskate_arcadeVersusOtherState';
+
+  function getArcadeVersusOtherStateFlag() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(STORAGE_KEY_ARCADE_VERSUS_OTHER));
+      if (raw && typeof raw === 'object') return raw;
+    } catch (e) { /* используем null ниже — состояние "другого" ещё не создавалось */ }
+    return null;
+  }
+  function setArcadeVersusOtherStateFlag(state) {
+    try {
+      if (state == null) localStorage.removeItem(STORAGE_KEY_ARCADE_VERSUS_OTHER);
+      else localStorage.setItem(STORAGE_KEY_ARCADE_VERSUS_OTHER, JSON.stringify(state));
+    } catch (e) {
+      console.warn('Не удалось сохранить состояние второго игрока Arcade+Versus:', e);
+    }
+  }
+
+  let arcadeVersusOtherState = getArcadeVersusOtherStateFlag();
+
+  function defaultArcadePlayerState() {
+    return {
+      skatebucks: ARCADE_START_BUCKS,
+      pendingBetAmount: null,
+      cardCooldowns: { reroll: 0, extratry: 0, doublebet: 0 },
+      cardSkipNextTick: { reroll: false, extratry: false, doublebet: false },
+      extraTryAttempt: 0,
+    };
+  }
+
+  function captureArcadePlayerState() {
+    return {
+      skatebucks,
+      pendingBetAmount,
+      cardCooldowns: { ...cardCooldowns },
+      cardSkipNextTick: { ...cardSkipNextTick },
+      extraTryAttempt,
+    };
+  }
+
+  function applyArcadePlayerState(state) {
+    skatebucks = state.skatebucks;
+    pendingBetAmount = state.pendingBetAmount;
+    cardCooldowns = { ...state.cardCooldowns };
+    cardSkipNextTick = { ...state.cardSkipNextTick };
+    extraTryAttempt = state.extraTryAttempt;
+    setSkatebucksFlag(skatebucks);
+    setPendingBetFlag(pendingBetAmount);
+    setCardCooldownsFlag(cardCooldowns);
+    setCardSkipNextTickFlag(cardSkipNextTick);
+    setExtraTryAttemptFlag(extraTryAttempt);
+  }
+
+  // Передаёт ход: сохраняет состояние уходящего игрока, переключает
+  // currentTurn, подставляет состояние нового текущего игрока (или свежее по
+  // умолчанию, если это его первый ход в игре). Визуалы (coach/пузырь/кнопки/
+  // карты/банк) — забота вызывающего кода (см. resolveArcadeBet), эта функция
+  // только переключает ДАННЫЕ.
+  function switchArcadeVersusTurn() {
+    const outgoing = captureArcadePlayerState();
+    const incoming = arcadeVersusOtherState || defaultArcadePlayerState();
+    arcadeVersusOtherState = outgoing;
+    setArcadeVersusOtherStateFlag(arcadeVersusOtherState);
+    currentTurn = currentTurn === 1 ? 2 : 1;
+    setVersusTurnFlag(currentTurn);
+    applyArcadePlayerState(incoming);
+  }
 
   // ==== Сложность (Easy/Hard) — своя для каждого режима, сохраняется вместе
   // с активной игрой, чтобы при возврате в незавершённую игру применялись те же правила. ====
@@ -3248,9 +3338,9 @@
     // игры), а не новое.
     const wantVersus = getPlayerSelectForMode(mode) === PLAYER_SELECT_VERSUS;
     // Arcade — свой Mode Select у каждого режима (см. getModeSelectForMode).
-    // НЕ работает одновременно с Versus (ставки на банк одного игрока не
-    // определены для 2 игроков) — если оба выставлены разом, Versus побеждает.
-    const wantArcade = !wantVersus && getModeSelectForMode(mode) === MODE_SELECT_ARCADE;
+    // Теперь работает и вместе с Versus — см. isArcadeVersusActive(), у
+    // каждого игрока тогда свой банк/карты (arcadeVersusOtherState).
+    const wantArcade = getModeSelectForMode(mode) === MODE_SELECT_ARCADE;
     const startMessage = wantArcade
       ? ARCADE_WELCOME_MESSAGE
       : buildModeStartMessage(mode, difficulty, 'starts', wantVersus);
@@ -3278,6 +3368,12 @@
     setCardSkipNextTickFlag(cardSkipNextTick);
     extraTryAttempt = 0;
     setExtraTryAttemptFlag(0);
+    // Arcade+Versus: у "другого" игрока (тот, чей ход сейчас не идёт) не
+    // должно остаться состояния от ПРЕДЫДУЩЕЙ игры — новая игра начинается с
+    // чистого листа для обоих (Player 1 — переменные выше, Player 2 —
+    // получит defaultArcadePlayerState() при первом switchArcadeVersusTurn()).
+    arcadeVersusOtherState = null;
+    setArcadeVersusOtherStateFlag(null);
     syncArcadeModeClass();
 
     applyGameModeVisuals();
@@ -3289,7 +3385,11 @@
     // Start Game/ставки) — иначе до этого момента видна картинка, оставшаяся
     // от ПРЕДЫДУЩЕЙ игры/режима: отсюда был баг с "половиной букв"/наложением
     // при переключении single <-> versus (тот же класс бага возможен и здесь).
-    if (currentIsVersus) {
+    // ВАЖНО: Arcade+Versus проверяем ПЕРВЫМ — иначе currentIsVersus увёл бы в
+    // ветку букв SKATE вместо банка (та же ловушка, что была в renderTricklist).
+    if (currentIsVersus && currentIsArcade) {
+      updateArcadeBucksDisplay();
+    } else if (currentIsVersus) {
       versusFailed = { 1: 0, 2: 0 };
       refreshCentralLetters();
     } else if (currentIsArcade) {
@@ -4075,6 +4175,25 @@
     { amount: 500, el: betBtn500El, visual: betBtn500VisualEl },
   ];
 
+  // Путь к картинке ставки/карты/подложки с учётом режима: обычный Arcade
+  // (images/arcade/) без суффикса, или Arcade+Versus
+  // (images/arcade versus mode/) с суффиксом _player{currentTurn} — папка и
+  // суффикс общие для Bet_*/Card_*/Cards_shadows, поэтому один хелпер на всё.
+  // У Skatebucks_*.png другой порядок частей имени — своя функция ниже.
+  function arcadeImagePath(baseName) {
+    if (isArcadeVersusActive()) {
+      return 'images/arcade%20versus%20mode/' + baseName + '_player' + currentTurn + '.png?v=' + ASSET_VERSION;
+    }
+    return 'images/arcade/' + baseName + '.png?v=' + ASSET_VERSION;
+  }
+
+  function skatebucksImagePath(tier) {
+    if (isArcadeVersusActive()) {
+      return 'images/arcade%20versus%20mode/Skatebucks_player' + currentTurn + '_' + tier + '.png?v=' + ASSET_VERSION;
+    }
+    return 'images/arcade/Skatebucks_' + tier + '.png?v=' + ASSET_VERSION;
+  }
+
   // Перечитывает актуальную линейку ставок по текущему банку и подставляет
   // в слоты и суммы, и картинки — вызывается из setBetButtonsVisible() перед
   // каждым показом, поэтому даже смена банка МЕЖДУ раундами (не только на
@@ -4084,7 +4203,7 @@
     BET_SLOTS.forEach((slot, i) => {
       slot.amount = tierAmounts[i];
       const img = slot.visual.querySelector('img');
-      img.src = 'images/arcade/Bet_' + slot.amount + '.png?v=' + ASSET_VERSION;
+      img.src = arcadeImagePath('Bet_' + slot.amount);
       slot.el.setAttribute('aria-label', 'Bet ' + slot.amount);
     });
   }
@@ -4123,6 +4242,9 @@
   // ними) — только в Arcade, на любом из трёх режимов (Flat/Ramp/Street).
   function setCardsVisible(visible) {
     cardsShadowEl.classList.toggle('visible', visible);
+    if (visible) {
+      cardsShadowEl.querySelector('img').src = arcadeImagePath('Cards_shadows');
+    }
     ARCADE_CARDS.forEach(({ el, visual }) => {
       el.classList.toggle('visible', visible);
       visual.classList.toggle('visible', visible);
@@ -4167,13 +4289,13 @@
         // На кулдауне после первого тика — прогрессия _off_1 -> ... -> _off_4.
         visual.style.display = '';
         const suffix = '_' + (ARCADE_CARD_COOLDOWN_TURNS - cooldown);
-        img.src = 'images/arcade/' + prefix + '_off' + suffix + '.png?v=' + ASSET_VERSION;
+        img.src = arcadeImagePath(prefix + '_off' + suffix);
       } else {
         // Не на кулдауне (готова по счётчику), но недоступна по другой причине
         // (печать трюка, нет ставки, Double Bet не по карману, временная
         // блокировка Extra Try) — обычный _off.png, без прогрессии.
         visual.style.display = '';
-        img.src = 'images/arcade/' + prefix + (available ? '_on' : '_off') + '.png?v=' + ASSET_VERSION;
+        img.src = arcadeImagePath(prefix + (available ? '_on' : '_off'));
       }
     });
   }
@@ -4210,7 +4332,7 @@
   }
 
   function updateArcadeBucksDisplay() {
-    const tierSrc = 'images/arcade/Skatebucks_' + arcadeBucksTier(skatebucks) + '.png?v=' + ASSET_VERSION;
+    const tierSrc = skatebucksImagePath(arcadeBucksTier(skatebucks));
     skatebucksImg.src = tierSrc;
     skatebucksAmountBigEl.textContent = 'x ' + skatebucks;
   }
@@ -4225,8 +4347,14 @@
     SoundEngine.setSlowdown(1.9, 0.82); // "теряющая питание пластинка" — темп и тон проседают
     bubbleEl.classList.remove('active');
     resultEl.textContent = '';
+    // Arcade+Versus: банк текущего игрока (currentTurn) иссяк — он проигрывает,
+    // а победителем объявляется второй игрок, тем же текстом, что и в
+    // классическом Versus ("Player N wins!").
+    const gameOverMessage = isArcadeVersusActive()
+      ? 'Player ' + (currentTurn === 1 ? 2 : 1) + ' wins!'
+      : 'Game over! You ran out of skatebucks.';
     setTimeout(() => {
-      setResultText('Game over! You ran out of skatebucks.', false, () => {
+      setResultText(gameOverMessage, false, () => {
         setGameOverButtonsVisible(true);
       });
       bubbleEl.classList.add('active');
@@ -4244,6 +4372,21 @@
   // кулдаунов карт живёт в resolveArcadeBet() (по нажатию Landed/Failed), эта
   // функция сама по себе больше не влияет на кулдауны ни при обычном вызове,
   // ни при вызове из карты Reroll Trick.
+  // "Player N try. " перед текстом трюка — только в Arcade+Versus (в обычном
+  // Arcade игрок один, префикс не нужен).
+  function arcadeMessagePrefix() {
+    return isArcadeVersusActive() ? 'Player ' + currentTurn + ' try. ' : '';
+  }
+
+  // "Ok. Make a bet..." — в Arcade+Versus вместо этого называем, чей ход
+  // (currentTurn к этому моменту уже переключён на СЛЕДУЮЩЕГО игрока — см.
+  // switchArcadeVersusTurn в resolveArcadeBet).
+  function arcadeNextRoundMessage() {
+    return isArcadeVersusActive()
+      ? 'Player ' + currentTurn + '\'s turn! Make a bet for a next trick.'
+      : 'Ok. Make a bet for a next trick.';
+  }
+
   async function rollArcadeTrick() {
     if (isGameOver) return;
     bubbleEl.classList.remove('active');
@@ -4272,7 +4415,7 @@
       currentDisplayedTrick = trick;
       extraTryAttempt = 0;
       setExtraTryAttemptFlag(0);
-      const message = trick + '. Your bet is ' + pendingBetAmount + ' skatebucks.';
+      const message = arcadeMessagePrefix() + trick + '. Your bet is ' + pendingBetAmount + ' skatebucks.';
       setResultText(message, true, () => {
         judgeButtonsEl.classList.add('visible');
         syncCardVisuals();
@@ -4338,7 +4481,7 @@
     syncCardVisuals();
     setTimeout(() => {
       bubbleEl.classList.add('active');
-      const message = currentDisplayedTrick + '. You have 2 attempts for land it';
+      const message = arcadeMessagePrefix() + currentDisplayedTrick + '. You have 2 attempts for land it';
       setResultText(message, true, () => {
         judgeButtonsEl.classList.add('visible');
         syncCardVisuals();
@@ -4371,7 +4514,7 @@
     syncCardVisuals();
     setTimeout(() => {
       bubbleEl.classList.add('active');
-      const message = currentDisplayedTrick + '. Your bet is ' + pendingBetAmount + ' skatebucks.';
+      const message = arcadeMessagePrefix() + currentDisplayedTrick + '. Your bet is ' + pendingBetAmount + ' skatebucks.';
       setResultText(message, true, () => {
         judgeButtonsEl.classList.add('visible');
         syncCardVisuals();
@@ -4384,6 +4527,10 @@
   // (ставка уже была списана при placeBet, так что чистый прирост — ровно
   // ставка), проигрыш — банк остаётся как есть (ставка уже потеряна). Дальше:
   // хватает на минимальную ставку (50) — раунд продолжается, иначе Game Over.
+  // В Arcade+Versus, если раунд продолжается, тут же передаём ход другому
+  // игроку (см. switchArcadeVersusTurn) — у каждого свой банк/карты, поэтому
+  // просто подставляем его сохранённое состояние в общие переменные и
+  // обновляем визуалы под него.
   function resolveArcadeBet(landed) {
     if (isGameOver) return;
     // Тик кулдаунов карт — по нажатию Landed/Failed, когда трюк ДЕЙСТВИТЕЛЬНО
@@ -4411,9 +4558,17 @@
     resultEl.textContent = '';
     judgeButtonsEl.classList.remove('visible');
     syncCardVisuals(); // между раундами, пока не поставлена следующая ставка, — все карты недоступны
+
+    if (isArcadeVersusActive()) {
+      switchArcadeVersusTurn();
+      applyPlayerVisuals(currentTurn); // coach/пузырь/Landed-Failed нового игрока
+      updateArcadeBucksDisplay(); // банк уже нового игрока после swap
+      syncCardVisuals(); // карты нового игрока (свои кулдауны)
+    }
+
     setTimeout(() => {
       bubbleEl.classList.add('active');
-      setResultText('Ok. Make a bet for a next trick.', false);
+      setResultText(arcadeNextRoundMessage(), false);
       setBetButtonsVisible(true);
     }, 120);
   }
@@ -4504,7 +4659,23 @@
 
     updateDifficultyBadge();
 
-    if (isVersusActive()) {
+    if (isArcadeVersusActive()) {
+      // Arcade+Versus: та же строка P1/P2 landed/failed, что у классического
+      // Versus (CSS уже прячет голую arcade-строку, когда присутствуют ОБА
+      // класса) — банк каждого отдельно в шапке не показываем, только банк
+      // ТЕКУЩЕГО игрока в центральном слоте (иконка + "x <сумма>").
+      landedCount1El.textContent = landedByPlayer[1];
+      failedCount1El.textContent = failedByPlayer[1];
+      landedCount2El.textContent = landedByPlayer[2];
+      failedCount2El.textContent = failedByPlayer[2];
+      updateArcadeBucksDisplay();
+
+      // Game over по банку ТЕКУЩЕГО игрока — та же защита от срабатывания
+      // "посреди ставки" (см. комментарий в обычном Arcade-случае ниже).
+      if (!isGameOver && pendingBetAmount == null && skatebucks < ARCADE_MIN_BET) {
+        triggerArcadeGameOver();
+      }
+    } else if (isVersusActive()) {
       versusFailed = failedByPlayer;
       landedCount1El.textContent = landedByPlayer[1];
       failedCount1El.textContent = failedByPlayer[1];
@@ -4625,6 +4796,17 @@
 
   function applyPlayerVisuals(player) {
     if (!isVersusActive()) return;
+    if (isArcadeActive()) {
+      // Arcade+Versus: своя папка ассетов (images/arcade versus mode/), сцену
+      // не трогаем — она и так скрыта в Arcade (см. applyGameModeVisuals).
+      coachImg.src = 'images/arcade%20versus%20mode/Animation_coach_arcade_player' + player + '.png?v=' + ASSET_VERSION;
+      bubbleImg.src = player === 2
+        ? 'images/arcade%20versus%20mode/Text_bubble_player2.png?v=' + ASSET_VERSION
+        : 'images/Text_bubble.png?v=' + ASSET_VERSION;
+      btnLandedImg.src = 'images/arcade%20versus%20mode/Button_landed_player' + player + '.png?v=' + ASSET_VERSION;
+      btnFailedImg.src = 'images/arcade%20versus%20mode/Button_failed_player' + player + '.png?v=' + ASSET_VERSION;
+      return;
+    }
     const groundPrefix = VERSUS_GROUND_IMAGE_PREFIX[currentGameMode];
     if (groundPrefix) {
       flatgroundImg.src = 'images/versus%20mode/' + groundPrefix + player + '.png?v=' + ASSET_VERSION;
@@ -4673,11 +4855,11 @@
       setBetButtonsVisible(false);
       // Extra Try могла быть в процессе на момент закрытия — восстанавливаем
       // ровно тот текст, что видел игрок, а не стандартный "...Your bet is...".
-      let restoredMessage = lastResult + '. Your bet is ' + pendingBetAmount + ' skatebucks.';
+      let restoredMessage = arcadeMessagePrefix() + lastResult + '. Your bet is ' + pendingBetAmount + ' skatebucks.';
       if (extraTryAttempt === 1) {
-        restoredMessage = lastResult + '. You have 2 attempts for land it';
+        restoredMessage = arcadeMessagePrefix() + lastResult + '. You have 2 attempts for land it';
       } else if (extraTryAttempt === 2) {
-        restoredMessage = lastResult + '. Thats your last attempt to land it';
+        restoredMessage = arcadeMessagePrefix() + lastResult + '. Thats your last attempt to land it';
       }
       setResultText(restoredMessage, true, () => {
         judgeButtonsEl.classList.add('visible');
@@ -4687,7 +4869,7 @@
       setBtn1Visible(false);
       setBetButtonsVisible(true);
       bubbleEl.classList.add('active');
-      setResultText('Ok. Make a bet for a next trick.', false);
+      setResultText(arcadeNextRoundMessage(), false);
       syncCardVisuals();
     }
   } else {
@@ -4899,9 +5081,13 @@
       // (и его проверку "хватает ли банка") ещё ДО того, как выигрыш зачтён,
       // и мог бы ошибочно объявить Game Over на пустом промежуточном балансе.
       // Тик кулдаунов карт — внутри resolveArcadeBet() (см. комментарий там).
+      // currentTurn ловим ДО resolveArcadeBet — он передаёт ход другому
+      // игроку (см. switchArcadeVersusTurn), а запись должна пойти на счёт
+      // ТОГО, кто реально приземлил трюк, не на нового текущего игрока.
       const text = resultEl.textContent;
+      const scoringPlayer = isArcadeVersusActive() ? currentTurn : undefined;
       resolveArcadeBet(true);
-      if (text) addTricklistEntry(text, 'landed');
+      if (text) addTricklistEntry(text, 'landed', scoringPlayer);
       return;
     }
     if (isVersusActive()) {
@@ -4929,7 +5115,7 @@
         syncCardVisuals();
         setTimeout(() => {
           bubbleEl.classList.add('active');
-          const message = currentDisplayedTrick + '. Thats your last attempt to land it';
+          const message = arcadeMessagePrefix() + currentDisplayedTrick + '. Thats your last attempt to land it';
           setResultText(message, true, () => {
             judgeButtonsEl.classList.add('visible');
             syncCardVisuals();
@@ -4938,8 +5124,9 @@
         return;
       }
       const text = resultEl.textContent;
+      const scoringPlayer = isArcadeVersusActive() ? currentTurn : undefined;
       resolveArcadeBet(false);
-      if (text) addTricklistEntry(text, 'failed');
+      if (text) addTricklistEntry(text, 'failed', scoringPlayer);
       return;
     }
     if (isVersusActive()) {
@@ -5055,6 +5242,10 @@
     setCardSkipNextTickFlag(cardSkipNextTick);
     extraTryAttempt = 0;
     setExtraTryAttemptFlag(0);
+    // Arcade+Versus: у "другого" игрока тоже не должно остаться состояния от
+    // игры ДО Restart/Quit — оба начинают заново со 100 skatebucks.
+    arcadeVersusOtherState = null;
+    setArcadeVersusOtherStateFlag(null);
     renderTricklist();
 
     // Прячем пузырь/текст и возвращаем кнопку Start Game (или ставки в
