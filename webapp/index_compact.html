@@ -257,7 +257,10 @@
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    /* Было 5px — рассчитано ещё под старый мелкий шрифт (12-18px), с текущим
+       крупным (34px) выглядело слишком плотно, отдельные строки визуально
+       наезжали друг на друга. */
+    gap: 14px;
   }
 
   #tricklistInner::-webkit-scrollbar {
