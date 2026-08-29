@@ -201,6 +201,98 @@
     }
   }
 
+  /* ==== Лог трюков — открывается кликом по пузырю (см. #bubbleToggle),
+     не отдельной кнопкой, как в основной версии. Bbox самого
+     Text_bubble.png по альфа-каналу: left=1.85% top=1.67% width=96.3%
+     height=51.67% — invisible-кнопка ровно под этой областью. ==== */
+  #bubbleToggle {
+    position: absolute;
+    left: 1.85%;
+    top: 1.67%;
+    width: 96.3%;
+    height: 51.67%;
+    border: none;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    z-index: 4;
+  }
+
+  /* Панель лога — тот же приём, что #result/#bubbleLayer (полноразмерный
+     слой + opacity-переход), но поверх вообще всего (z-index больше, чем у
+     кнопок и бейджей), пока не открыта — не мешает игре (pointer-events:none
+     и невидима). Bbox Tricklist_background_expanded.png по альфа-каналу:
+     left=1.85% top=1.67% width=96.3% height=98.33% — почти весь канвас. */
+  #tricklistPanel {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+
+  #tricklistPanel.expanded {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  #tricklistPanel img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+  }
+
+  /* Прокручиваемое содержимое — внутри тёмной области ВНУТРИ рамки картинки
+     (граница считана по альфа-каналу: интерьер кончается/рамка начинается
+     на ~x=114 из 120 по высоте и ~x=7..155 из 162 по ширине). */
+  #tricklistInner {
+    position: absolute;
+    top: 6%;
+    bottom: 8%;
+    left: 6%;
+    right: 6%;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  #tricklistInner::-webkit-scrollbar {
+    width: 3px;
+  }
+
+  .trick-entry {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+  }
+
+  .trick-entry-icon {
+    flex-shrink: 0;
+    font-size: 8px;
+    line-height: 1;
+  }
+
+  .trick-entry span.trick-entry-text {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 6px;
+    line-height: 1.4;
+    color: #d8e8d0;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    min-width: 0;
+  }
+
+  .trick-entry-info span.trick-entry-text {
+    color: #9fb89a;
+  }
+
   /* ==== Кнопки: невидимый button (реальная кликабельная зона по альфа-каналу
      соответствующей картинки) + соседний слой с самой картинкой — тот же
      приём с двумя слоями, что и в основной версии. Скрыты по умолчанию,
@@ -286,6 +378,17 @@
       </div>
       <div id="result"><span id="resultText"></span></div>
 
+      <!-- Клик по пузырю (не отдельная кнопка, как в основной версии) —
+           открывает/закрывает лог трюков. Зона кликабельности — bbox самого
+           Text_bubble.png (см. вычисленный alpha-bbox), поверх текста и
+           фона пузыря (у обоих pointer-events:none). -->
+      <button id="bubbleToggle" aria-label="Показать лог трюков"></button>
+
+      <div id="tricklistPanel">
+        <img src="images/compact%20mode/Tricklist_background_expanded.png" alt="">
+        <div id="tricklistInner"></div>
+      </div>
+
       <button id="btnStart" class="btn" aria-label="Start Game"></button>
       <div id="btnStartVisual" class="btn-visual">
         <img src="images/compact%20mode/Button_startgame.png" alt="">
@@ -328,11 +431,9 @@
     const MAX_UNIQUE_ATTEMPTS = 30;
     const TYPEWRITER_MS_PER_CHAR = 28;
 
-    // Одна строка всегда (см. typeText/SCROLL_THRESHOLD ниже) — короткие
-    // названия трюков (<=15 символов) печатаются статично этим размером;
-    // длиннее — едут бегущей строкой (SCROLL_FONT_SIZE, см. ниже), поэтому
-    // никакой сложной таблицы уменьшения шрифта под перенос/сжатие больше не
-    // нужно — ширина строки перестала быть ограничением.
+    // Один размер шрифта (RESULT_FONT_BASE) для любого текста, короткого или
+    // длинного — печатается посимвольно этим же размером, а нужна ли после
+    // печати бегущая строка, решается по факту (см. typeText ниже).
     const RESULT_FONT_BASE = 34;
 
     // По просьбе — никакого сохранения между перезагрузками страницы: каждое
@@ -344,6 +445,9 @@
     let recentResults = [];
     let failedCount = 0;
     let isGameOver = false;
+    let currentTrick = ''; // текущий трюк, который сейчас на экране — нужен для лога при Landed/Failed
+    let tricklistEntries = []; // [{text, status}], новые в начале, статус: 'landed'/'failed'/'info'
+    let logExpanded = false;
 
     let tricks = [];
     let dataLoaded = false;
@@ -353,6 +457,9 @@
     const resultEl = document.getElementById('result');
     const resultTextEl = document.getElementById('resultText');
     const lettersImgEl = document.getElementById('lettersImg');
+    const bubbleToggleEl = document.getElementById('bubbleToggle');
+    const tricklistPanelEl = document.getElementById('tricklistPanel');
+    const tricklistInnerEl = document.getElementById('tricklistInner');
     const btnStartEl = document.getElementById('btnStart');
     const btnStartVisualEl = document.getElementById('btnStartVisual');
     const btnLandedEl = document.getElementById('btnLanded');
@@ -371,6 +478,59 @@
       const stage = LETTERS_STAGES[Math.min(failedCount, LETTERS_STAGES.length - 1)];
       lettersImgEl.src = 'images/compact%20mode/Letters_' + stage + '.png';
     }
+
+    // Лог трюков — открывается кликом по пузырю (см. bubbleToggleEl), не
+    // отдельной кнопкой, как в основной версии. Записи держим только в
+    // памяти (тот же принцип "никакой persistence", что и у остального
+    // состояния компактной версии) — сбрасываются в startNewGame().
+    function addTricklistEntry(text, status) {
+      tricklistEntries.unshift({ text, status }); // новая запись — наверх списка
+      if (logExpanded) renderTricklist();
+    }
+
+    function renderTricklist() {
+      tricklistInnerEl.innerHTML = '';
+      tricklistEntries.forEach((entry) => {
+        const row = document.createElement('div');
+        row.className = 'trick-entry' + (entry.status === 'info' ? ' trick-entry-info' : '');
+
+        if (entry.status !== 'info') {
+          const icon = document.createElement('span');
+          icon.className = 'trick-entry-icon';
+          // Те же символы, что у самих кнопок Landed/Failed (см. разметку
+          // #btnLandedVisual/#btnFailedVisual) — отдельных Icon_landed/
+          // Icon_failed.png для компактной версии не присылали.
+          icon.textContent = entry.status === 'landed' ? '\u{1F44D}' : '\u2715';
+          row.appendChild(icon);
+        }
+
+        const span = document.createElement('span');
+        span.className = 'trick-entry-text';
+        span.textContent = entry.text;
+
+        row.appendChild(span);
+        tricklistInnerEl.appendChild(row);
+      });
+    }
+
+    function setLogExpanded(expanded) {
+      logExpanded = expanded;
+      tricklistPanelEl.classList.toggle('expanded', expanded);
+      bubbleToggleEl.setAttribute('aria-label', expanded ? 'Скрыть лог трюков' : 'Показать лог трюков');
+      if (expanded) renderTricklist();
+    }
+
+    bubbleToggleEl.addEventListener('click', () => {
+      setLogExpanded(!logExpanded);
+    });
+
+    // Сама панель, когда открыта, накрывает собой весь канвас (z-index выше,
+    // чем у #bubbleToggle) — иначе повторный клик по пузырю не доходил бы
+    // до него, чтобы закрыть лог. Поэтому клик по самой панели тоже закрывает
+    // её — как тап "в пустоту" поверх модалки.
+    tricklistPanelEl.addEventListener('click', () => {
+      if (logExpanded) setLogExpanded(false);
+    });
 
     function setStartVisible(visible) {
       btnStartEl.classList.toggle('visible', visible);
@@ -397,30 +557,27 @@
       resultTextEl.textContent = '';
     }
 
-    // Одна строка всегда: и короткий, и длинный текст сначала печатаются
-    // посимвольно, по центру (см. typeText) — до SCROLL_THRESHOLD символов
-    // этим всё и заканчивается, статичным центрированным текстом; длиннее —
-    // как только допечаталось целиком, переключается в бегущую строку (см.
-    // CSS #result.scrolling), да ещё и БЕЗ паузы между циклами — вторая копия
-    // начинает въезжать, пока первая ещё докручивает хвост (см. дублирование
-    // текста в typeText + CSS-анимация до -50%). Длительность анимации
-    // подобрана так, чтобы скорость прокрутки была примерно одинаковой
-    // независимо от длины (иначе с фиксированной длительностью самые
-    // длинные названия трюков "пролетали" бы слишком быстро для чтения).
-    const SCROLL_THRESHOLD = 10;
-    const SCROLL_FONT_SIZE = 26;
-    const SCROLL_SECONDS_PER_CHAR = 0.3;
+    // Одна строка всегда: и короткий, и длинный текст печатаются посимвольно,
+    // по центру, ОДИНАКОВО быстро (TYPEWRITER_MS_PER_CHAR) — никакого деления
+    // на "короткий/длинный" ДО того, как текст реально напечатан: нужна ли
+    // вообще бегущая строка, решается уже ПОСЛЕ печати, по факту реального
+    // замера (resultTextEl.scrollWidth > resultEl.clientWidth — помещается
+    // ли напечатанное в видимую ширину бокса на ЭТОМ конкретном экране), а не
+    // по заранее угаданному количеству символов. Раньше был порог в символах
+    // (SCROLL_THRESHOLD) — но на реальном экране часов он то и дело оказывался
+    // неточным (то слишком строгим, то пропускал реально не влезающий текст).
+    // Замер вместо угадывания решает это раз и навсегда, для любого экрана и
+    // шрифта. Если не влезло — переключаемся на бегущую строку ТЕМ ЖЕ
+    // размером шрифта, что и обычный текст (RESULT_FONT_BASE) — отдельный
+    // (уменьшенный) размер для скролла тоже был не нужен: бегущей строке всё
+    // равно, насколько текст шире бокса.
     const SCROLL_MIN_SECONDS = 4;
+    const SCROLL_SECONDS_PER_CHAR = 0.3;
     // Отступ между концом одного повтора и началом следующего — "10 символов"
-    // по просьбе, тут это буквально 10 пробелов (моноширинный пиксельный
-    // шрифт — 10 пробелов дают предсказуемый зазор независимо от текста).
+    // по просьбе, тут это буквально 10 неразрывных пробелов (обычные пробелы
+    // схлопнулись бы в один при white-space:nowrap).
     const SCROLL_GAP = '\u00A0'.repeat(10);
 
-    // Длинный текст теперь ТОЖЕ печатается посимвольно (как короткий), и
-    // только ПОСЛЕ того, как напечатался целиком — переключается в бегущую
-    // строку (задваивается с отступом, см. SCROLL_GAP, и запускается
-    // анимация). Раньше бегущая строка стартовала сразу, без печати —
-    // просили сделать печать одинаковой для короткого и длинного текста.
     function typeText(text, onComplete) {
       if (typewriterTimer !== null) {
         clearInterval(typewriterTimer);
@@ -429,15 +586,7 @@
       resultEl.classList.remove('scrolling');
       resultTextEl.style.animation = '';
       resultTextEl.textContent = '';
-
-      const needsScroll = text.length > SCROLL_THRESHOLD;
-      resultTextEl.style.fontSize = (needsScroll ? SCROLL_FONT_SIZE : RESULT_FONT_BASE) + 'px';
-      // Длинный текст печатается в том же темпе, в каком потом едет бегущей
-      // строкой (SCROLL_SECONDS_PER_CHAR), а не в быстром темпе короткого
-      // текста — иначе печать домчится за секунду, а потом скорость резко
-      // упадёт для скролла: с одинаковым темпом переход печать->скролл
-      // ощущается непрерывным, без рывка.
-      const msPerChar = needsScroll ? (SCROLL_SECONDS_PER_CHAR * 1000) : TYPEWRITER_MS_PER_CHAR;
+      resultTextEl.style.fontSize = RESULT_FONT_BASE + 'px';
 
       if (!text) {
         if (onComplete) onComplete();
@@ -451,12 +600,13 @@
         if (i >= text.length) {
           clearInterval(typewriterTimer);
           typewriterTimer = null;
-          if (needsScroll) {
+          // Замер РЕАЛЬНОГО переполнения — только тут, когда весь текст уже
+          // напечатан целиком тем же шрифтом, каким он и останется, будь то
+          // статично или бегущей строкой.
+          if (resultTextEl.scrollWidth > resultEl.clientWidth) {
             // Строка задваивается с отступом (см. CSS-анимацию до -50%, а не
             // -100%, — комментарий там) — именно это даёт бесконечную ленту
             // без паузы, а не "въехал одной копией — пусто — въехал заново".
-            // Отступ ПОСЛЕ текста (text+gap, не gap+text) — просили убрать
-            // паузу перед самим появлением названия трюка.
             resultTextEl.textContent = text + SCROLL_GAP + text + SCROLL_GAP;
             resultEl.classList.add('scrolling');
             const cycleLength = text.length + SCROLL_GAP.length;
@@ -465,7 +615,7 @@
           }
           if (onComplete) onComplete();
         }
-      }, msPerChar);
+      }, TYPEWRITER_MS_PER_CHAR);
     }
 
 
@@ -503,6 +653,7 @@
 
     function triggerGameOver() {
       isGameOver = true;
+      addTricklistEntry('Game over!', 'info');
       hideBubble();
       setJudgeVisible(false);
       setTimeout(() => {
@@ -536,6 +687,7 @@
       setTimeout(() => {
         showBubble();
         const trick = generateUniqueTrick();
+        currentTrick = trick;
         typeText(trick, () => {
           setJudgeVisible(true);
         });
@@ -546,6 +698,8 @@
       failedCount = 0;
       isGameOver = false;
       recentResults = [];
+      tricklistEntries = [];
+      addTricklistEntry('Easy Ramp mode starts', 'info');
       syncLetters();
       setStartVisible(false);
       rollTrick();
@@ -557,11 +711,13 @@
 
     btnLandedEl.addEventListener('click', () => {
       if (isGameOver) return;
+      addTricklistEntry(currentTrick, 'landed');
       rollTrick();
     });
 
     btnFailedEl.addEventListener('click', () => {
       if (isGameOver) return;
+      addTricklistEntry(currentTrick, 'failed');
       failedCount++;
       syncLetters();
       if (failedCount >= GAME_OVER_FAILS) {
@@ -573,9 +729,8 @@
 
     // ==== Открытие страницы — всегда чистый старт (между перезагрузками
     // ничего не сохраняется, см. объявление failedCount/isGameOver выше).
-    // Пузырь сразу показывает приветственное сообщение с инструкцией — оно
-    // длиннее 15 символов, поэтому typeText() сам покажет его бегущей
-    // строкой (см. SCROLL_THRESHOLD), а не печатной машинкой. ====
+    // Пузырь сразу показывает приветственное сообщение с инструкцией —
+    // typeText() сам решит по факту замера, нужна ли тут бегущая строка. ====
     syncLetters();
     typeText('Game starts in Easy Ramp mode without Air Tricks');
     showBubble();
