@@ -432,6 +432,12 @@
 
       const needsScroll = text.length > SCROLL_THRESHOLD;
       resultTextEl.style.fontSize = (needsScroll ? SCROLL_FONT_SIZE : RESULT_FONT_BASE) + 'px';
+      // Длинный текст печатается в том же темпе, в каком потом едет бегущей
+      // строкой (SCROLL_SECONDS_PER_CHAR), а не в быстром темпе короткого
+      // текста — иначе печать домчится за секунду, а потом скорость резко
+      // упадёт для скролла: с одинаковым темпом переход печать->скролл
+      // ощущается непрерывным, без рывка.
+      const msPerChar = needsScroll ? (SCROLL_SECONDS_PER_CHAR * 1000) : TYPEWRITER_MS_PER_CHAR;
 
       if (!text) {
         if (onComplete) onComplete();
@@ -449,10 +455,9 @@
             // Строка задваивается с отступом (см. CSS-анимацию до -50%, а не
             // -100%, — комментарий там) — именно это даёт бесконечную ленту
             // без паузы, а не "въехал одной копией — пусто — въехал заново".
-            // Отступ ПЕРЕД текстом (gap+text, не text+gap) — чтобы перед
-            // появлением названия трюка сначала проезжал пустой зазор, а не
-            // чтобы сам трюк сразу упирался в левый край.
-            resultTextEl.textContent = SCROLL_GAP + text + SCROLL_GAP + text;
+            // Отступ ПОСЛЕ текста (text+gap, не gap+text) — просили убрать
+            // паузу перед самим появлением названия трюка.
+            resultTextEl.textContent = text + SCROLL_GAP + text + SCROLL_GAP;
             resultEl.classList.add('scrolling');
             const cycleLength = text.length + SCROLL_GAP.length;
             const duration = Math.max(SCROLL_MIN_SECONDS, cycleLength * SCROLL_SECONDS_PER_CHAR);
@@ -460,7 +465,7 @@
           }
           if (onComplete) onComplete();
         }
-      }, TYPEWRITER_MS_PER_CHAR);
+      }, msPerChar);
     }
 
 
