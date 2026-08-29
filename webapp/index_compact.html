@@ -109,6 +109,10 @@
     opacity: 1;
   }
 
+  /* ==== Одна строка всегда: короткий текст (<=15 символов) — статично и
+     по центру; длиннее — не перенос/сжатие шрифта (как раньше), а бегущая
+     строка (см. #result.scrolling ниже и #resultText.scroll-anim) — сам
+     текст остаётся крупным независимо от длины. ==== */
   #result {
     position: absolute;
     /* Растянут почти на весь чёрный фон пузыря (сам Text_bubble.png занимает
@@ -126,18 +130,12 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    text-align: center;
     font-family: 'Press Start 2P', monospace;
     line-height: 1.3;
-    /* pre-line — чтобы "\n" из formatTrickForDisplay() рендерился как
-       настоящий перенос строки (обычный word-wrap этого не делает сам по
-       себе), но обычный перенос по словам у длинных строк без "\n" по-прежнему работает. */
-    white-space: pre-line;
     /* Внутренность Text_bubble.png — почти чёрная (rgb(35,35,35) по факту),
        поэтому тёмно-серый (#2b2b2b) текст на ней был не виден — светлый,
        как в основной версии (#result там #ffffff), даёт нужный контраст. */
     color: #ffffff;
-    word-wrap: break-word;
     opacity: 0;
     transition: opacity 0.25s ease;
     pointer-events: none;
@@ -146,6 +144,35 @@
 
   #result.active {
     opacity: 1;
+  }
+
+  #resultText {
+    display: inline-block;
+    white-space: nowrap;
+  }
+
+  /* Длинный текст: контейнер больше не центрирует (бегущая строка сама
+     "въезжает" со старта — justify-content:center сдвинул бы старт
+     анимации и выглядел бы криво), сам текст едет через padding-left:100%
+     (сразу за правым краем контейнера) до полностью укатившегося влево. */
+  #result.scrolling {
+    justify-content: flex-start;
+  }
+
+  #result.scrolling #resultText {
+    padding-left: 100%;
+    animation-name: marquee-scroll;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+  }
+
+  @keyframes marquee-scroll {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-100%);
+    }
   }
 
   /* ==== Кнопки: невидимый button (реальная кликабельная зона по альфа-каналу
@@ -231,7 +258,7 @@
       <div id="bubbleLayer" class="layer">
         <img src="images/compact%20mode/Text_bubble.png" alt="">
       </div>
-      <div id="result"></div>
+      <div id="result"><span id="resultText"></span></div>
 
       <button id="btnStart" class="btn" aria-label="Start Game"></button>
       <div id="btnStartVisual" class="btn-visual">
@@ -275,24 +302,12 @@
     const MAX_UNIQUE_ATTEMPTS = 30;
     const TYPEWRITER_MS_PER_CHAR = 28;
 
-    // Шрифт калибруется по длине САМОЙ ДЛИННОЙ СТРОКИ уже ПОСЛЕ разбивки на
-    // две строки (см. formatTrickForDisplay ниже — режем по "to"), а не по
-    // длине всего названия трюка целиком. Разница огромная: например
-    // "Nollie FS 180 to Switch Rock,n,Roll" — это 35 символов одной строкой,
-    // но всего 21 в самой длинной из двух получившихся строк. Проверено по
-    // всему data/Rampmode_tricks_easy.txt — максимум после разбивки всего 22
-    // символа (было бы 35 без неё), поэтому шрифт можно сделать намного
-    // крупнее, чем раньше.
+    // Одна строка всегда (см. typeText/SCROLL_THRESHOLD ниже) — короткие
+    // названия трюков (<=15 символов) печатаются статично этим размером;
+    // длиннее — едут бегущей строкой (SCROLL_FONT_SIZE, см. ниже), поэтому
+    // никакой сложной таблицы уменьшения шрифта под перенос/сжатие больше не
+    // нужно — ширина строки перестала быть ограничением.
     const RESULT_FONT_BASE = 34;
-    const RESULT_FONT_STEPS = [
-      { maxLength: 13, scale: 1 },
-      { maxLength: 18, scale: 0.85 },
-      // Было 0.72 — на реальном экране часов строка в 22 символа (максимум
-      // после разбивки по всему списку трюков) на 0.72 всё ещё не влезала в
-      // одну строку и переносилась сама, добавляя третью строку сверху ("to
-      // Regular") — итого текст вылезал за рамку. 0.58 — с запасом.
-      { maxLength: Infinity, scale: 0.58 },
-    ];
 
     // По просьбе — никакого сохранения между перезагрузками страницы: каждое
     // открытие компактной версии начинается с чистого листа (в отличие от
@@ -310,6 +325,7 @@
 
     const bubbleLayerEl = document.getElementById('bubbleLayer');
     const resultEl = document.getElementById('result');
+    const resultTextEl = document.getElementById('resultText');
     const lettersImgEl = document.getElementById('lettersImg');
     const btnStartEl = document.getElementById('btnStart');
     const btnStartVisualEl = document.getElementById('btnStartVisual');
@@ -350,23 +366,42 @@
     function hideBubble() {
       bubbleLayerEl.classList.remove('active');
       resultEl.classList.remove('active');
-      resultEl.textContent = '';
+      resultEl.classList.remove('scrolling');
+      resultTextEl.style.animation = '';
+      resultTextEl.textContent = '';
     }
 
-    // Печатная машинка — тот же принцип, что в основной версии (setResultText),
-    // упрощённая: тут не нужна отдельная Info-кнопка и статус "это трюк".
+    // Одна строка всегда: до SCROLL_THRESHOLD символов — печатная машинка,
+    // как раньше, статично по центру; длиннее — без печати, сразу целиком,
+    // бегущей строкой (см. CSS #result.scrolling) — длительность анимации
+    // подобрана так, чтобы скорость прокрутки была примерно одинаковой
+    // независимо от длины (иначе с фиксированной длительностью самые
+    // длинные названия трюков "пролетали" бы слишком быстро для чтения).
+    const SCROLL_THRESHOLD = 15;
+    const SCROLL_FONT_SIZE = 26;
+    const SCROLL_SECONDS_PER_CHAR = 0.3;
+    const SCROLL_MIN_SECONDS = 4;
+
     function typeText(text, onComplete) {
       if (typewriterTimer !== null) {
         clearInterval(typewriterTimer);
         typewriterTimer = null;
       }
-      // Шрифт — по длине САМОЙ ДЛИННОЙ строки уже после разбивки на "\n" (см.
-      // formatTrickForDisplay), а не по длине всей строки целиком.
-      const lines = text.split('\n');
-      const longestLine = Math.max.apply(null, lines.map(function (l) { return l.length; }));
-      const step = RESULT_FONT_STEPS.find((s) => longestLine <= s.maxLength);
-      resultEl.style.fontSize = (RESULT_FONT_BASE * step.scale) + 'px';
-      resultEl.textContent = '';
+      resultEl.classList.remove('scrolling');
+      resultTextEl.style.animation = '';
+      resultTextEl.textContent = '';
+
+      if (text.length > SCROLL_THRESHOLD) {
+        resultTextEl.style.fontSize = SCROLL_FONT_SIZE + 'px';
+        resultTextEl.textContent = text;
+        resultEl.classList.add('scrolling');
+        const duration = Math.max(SCROLL_MIN_SECONDS, text.length * SCROLL_SECONDS_PER_CHAR);
+        resultTextEl.style.animationDuration = duration + 's';
+        if (onComplete) setTimeout(onComplete, 300);
+        return;
+      }
+
+      resultTextEl.style.fontSize = RESULT_FONT_BASE + 'px';
 
       if (!text) {
         if (onComplete) onComplete();
@@ -376,7 +411,7 @@
       let i = 0;
       typewriterTimer = setInterval(() => {
         i++;
-        resultEl.textContent = text.slice(0, i);
+        resultTextEl.textContent = text.slice(0, i);
         if (i >= text.length) {
           clearInterval(typewriterTimer);
           typewriterTimer = null;
@@ -384,6 +419,7 @@
         }
       }, TYPEWRITER_MS_PER_CHAR);
     }
+
 
     function parseTrickList(text) {
       return text.split('\n').map((line) => line.trim()).filter(Boolean);
@@ -415,18 +451,6 @@
       recentResults.push(result);
       if (recentResults.length > HISTORY_SIZE) recentResults.shift();
       return result;
-    }
-
-    // Многие названия трюков в этом списке — формата "X to Y" (обстакл/трюк
-    // to стойка) — режем ровно по этому " to " на две строки вместо того,
-    // чтобы полагаться на автоматический перенос браузера (тот мог бы
-    // разорвать где угодно, не обязательно в осмысленном месте). Если " to "
-    // в названии нет — возвращаем как есть, тогда обычный word-wrap (см. CSS)
-    // сам разберётся, если строка всё равно окажется длинной.
-    function formatTrickForDisplay(text) {
-      const idx = text.indexOf(' to ');
-      if (idx === -1) return text;
-      return text.slice(0, idx) + '\n' + text.slice(idx + 1);
     }
 
     function triggerGameOver() {
@@ -464,7 +488,7 @@
       setTimeout(() => {
         showBubble();
         const trick = generateUniqueTrick();
-        typeText(formatTrickForDisplay(trick), () => {
+        typeText(trick, () => {
           setJudgeVisible(true);
         });
       }, 120);
@@ -501,14 +525,11 @@
 
     // ==== Открытие страницы — всегда чистый старт (между перезагрузками
     // ничего не сохраняется, см. объявление failedCount/isGameOver выше).
-    // Пузырь сразу показывает приветственное сообщение с инструкцией — своя
-    // величина шрифта, а не RESULT_FONT_STEPS: та таблица калибрована под
-    // названия трюков (десяток-другой символов), а тут отдельное предложение
-    // (короче, чем было — раньше на маленьком экране часов было мелко читать,
-    // укоротили и увеличили шрифт под новую длину). ====
+    // Пузырь сразу показывает приветственное сообщение с инструкцией — оно
+    // длиннее 15 символов, поэтому typeText() сам покажет его бегущей
+    // строкой (см. SCROLL_THRESHOLD), а не печатной машинкой. ====
     syncLetters();
-    resultEl.style.fontSize = '13px';
-    resultEl.textContent = 'Game starts in Easy Ramp mode without Air Tricks';
+    typeText('Game starts in Easy Ramp mode without Air Tricks');
     showBubble();
     setStartVisible(true);
   })();
