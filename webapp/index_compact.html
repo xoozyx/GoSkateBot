@@ -159,8 +159,13 @@
     justify-content: flex-start;
   }
 
+  /* Раньше был padding-left:100% + анимация 0 -> -100% — это давало "въезд"
+     с паузой на пустом экране между циклами. Теперь строка задваивается в JS
+     (см. typeText: text + gap + text + gap) и едет БЕЗ паузы: сдвиг ровно на
+     -50% ширины ДВОЙНОГО контента — это ширина ОДНОЙ копии текста+отступа,
+     так что к моменту скачка обратно на 0% там уже визуально то же самое
+     место (начало второй копии = начало первой) — глаз не замечает стыка. */
   #result.scrolling #resultText {
-    padding-left: 100%;
     animation-name: marquee-scroll;
     animation-timing-function: linear;
     animation-iteration-count: infinite;
@@ -171,7 +176,7 @@
       transform: translateX(0);
     }
     to {
-      transform: translateX(-100%);
+      transform: translateX(-50%);
     }
   }
 
@@ -373,14 +378,20 @@
 
     // Одна строка всегда: до SCROLL_THRESHOLD символов — печатная машинка,
     // как раньше, статично по центру; длиннее — без печати, сразу целиком,
-    // бегущей строкой (см. CSS #result.scrolling) — длительность анимации
-    // подобрана так, чтобы скорость прокрутки была примерно одинаковой
+    // бегущей строкой (см. CSS #result.scrolling), да ещё и БЕЗ паузы между
+    // циклами — вторая копия начинает въезжать, пока первая ещё докручивает
+    // хвост (см. дублирование текста ниже + CSS-анимация до -50%). Длительность
+    // анимации подобрана так, чтобы скорость прокрутки была примерно одинаковой
     // независимо от длины (иначе с фиксированной длительностью самые
     // длинные названия трюков "пролетали" бы слишком быстро для чтения).
-    const SCROLL_THRESHOLD = 15;
+    const SCROLL_THRESHOLD = 10;
     const SCROLL_FONT_SIZE = 26;
     const SCROLL_SECONDS_PER_CHAR = 0.3;
     const SCROLL_MIN_SECONDS = 4;
+    // Отступ между концом одного повтора и началом следующего — "10 символов"
+    // по просьбе, тут это буквально 10 пробелов (моноширинный пиксельный
+    // шрифт — 10 пробелов дают предсказуемый зазор независимо от текста).
+    const SCROLL_GAP = '\u00A0'.repeat(10);
 
     function typeText(text, onComplete) {
       if (typewriterTimer !== null) {
@@ -393,9 +404,13 @@
 
       if (text.length > SCROLL_THRESHOLD) {
         resultTextEl.style.fontSize = SCROLL_FONT_SIZE + 'px';
-        resultTextEl.textContent = text;
+        // Строка задваивается с отступом (см. CSS-анимацию до -50%, а не
+        // -100%, — комментарий там) — именно это даёт бесконечную ленту без
+        // паузы, а не "въехал одной копией — пусто — въехал заново".
+        resultTextEl.textContent = text + SCROLL_GAP + text + SCROLL_GAP;
         resultEl.classList.add('scrolling');
-        const duration = Math.max(SCROLL_MIN_SECONDS, text.length * SCROLL_SECONDS_PER_CHAR);
+        const cycleLength = text.length + SCROLL_GAP.length;
+        const duration = Math.max(SCROLL_MIN_SECONDS, cycleLength * SCROLL_SECONDS_PER_CHAR);
         resultTextEl.style.animationDuration = duration + 's';
         if (onComplete) setTimeout(onComplete, 300);
         return;
