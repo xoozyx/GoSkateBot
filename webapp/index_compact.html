@@ -264,13 +264,18 @@
     width: 3px;
   }
 
+  /* Раньше был display:flex (иконка слева, текст справа, по центру по
+     вертикали) — теперь иконка float:right, чтобы сидеть в верхнем правом
+     углу текста, а текст естественно обтекает её снизу/слева (обычное
+     поведение float для последующего инлайн-контента в блочном контейнере).
+     overflow:hidden — контейнер "схлопывается" вокруг float (иначе если
+     текст короче одной строки, а иконка выше строки текста, она бы вылезала
+     за нижний край .trick-entry и налезала на следующую запись/разделитель). */
   .trick-entry {
-    display: flex;
-    align-items: center;
-    gap: 4px;
     width: 100%;
     box-sizing: border-box;
     min-width: 0;
+    overflow: hidden;
   }
 
   /* Без иконок — теперь у landed/failed просто текстовый префикс перед
@@ -288,6 +293,13 @@
 
   .trick-entry-info span.trick-entry-text {
     color: #9fb89a;
+  }
+
+  .trick-entry-separator {
+    font-family: 'Press Start 2P', monospace;
+    color: #5a6f57;
+    line-height: 1.4;
+    clear: both;
   }
 
   /* ==== Кнопки: невидимый button (реальная кликабельная зона по альфа-каналу
@@ -502,10 +514,14 @@
           // класса, и оно побеждало, растягивая иконку на 100% ширины
           // строки. Инлайн-стиль всегда выигрывает у любого правила в
           // <style>, независимо от специфичности — так этот баг не может
-          // повториться, что бы ни поменялось в остальном CSS.
+          // повториться, что бы ни поменялось в остальном CSS. float:right —
+          // тут же, инлайном, чтобы верхний правый угол текста был ровно там,
+          // где просили, без отдельного CSS-правила, с которым это опять
+          // могло бы разъехаться.
           icon.style.width = RESULT_FONT_BASE + 'px';
           icon.style.height = RESULT_FONT_BASE + 'px';
-          icon.style.flexShrink = '0';
+          icon.style.float = 'right';
+          icon.style.marginLeft = '6px';
           row.appendChild(icon);
         }
 
@@ -516,6 +532,15 @@
 
         row.appendChild(span);
         tricklistInnerEl.appendChild(row);
+
+        // Разделитель между записями — прямо следующей строкой после каждой,
+        // включая info-сообщения (старт режима, Game over), для единообразия.
+        const separator = document.createElement('div');
+        separator.className = 'trick-entry-separator';
+        separator.textContent = '----------';
+        separator.style.fontSize = RESULT_FONT_BASE + 'px';
+        tricklistInnerEl.appendChild(separator);
+
       });
     }
 
