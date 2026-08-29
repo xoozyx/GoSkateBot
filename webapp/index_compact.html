@@ -275,13 +275,14 @@
 
   .trick-entry-icon {
     flex-shrink: 0;
-    font-size: 12px;
-    line-height: 1;
+    width: 16px;
+    height: 16px;
+    image-rendering: pixelated;
   }
 
   .trick-entry span.trick-entry-text {
     font-family: 'Press Start 2P', monospace;
-    font-size: 12px;
+    font-size: 18px;
     line-height: 1.4;
     color: #d8e8d0;
     word-wrap: break-word;
@@ -495,12 +496,14 @@
         row.className = 'trick-entry' + (entry.status === 'info' ? ' trick-entry-info' : '');
 
         if (entry.status !== 'info') {
-          const icon = document.createElement('span');
+          const icon = document.createElement('img');
           icon.className = 'trick-entry-icon';
-          // Те же символы, что у самих кнопок Landed/Failed (см. разметку
-          // #btnLandedVisual/#btnFailedVisual) — отдельных Icon_landed/
-          // Icon_failed.png для компактной версии не присылали.
-          icon.textContent = entry.status === 'landed' ? '\u{1F44D}' : '\u2715';
+          // Те же иконки, что в логе основной версии (images/Icon_landed.png
+          // и images/Icon_failed.png) — они не полноразмерные (13x15px,
+          // самостоятельная картинка, а не наложение на весь канвас), поэтому
+          // размер и подгоняется через CSS width/height, а не bbox-приёмом.
+          icon.src = 'images/' + (entry.status === 'landed' ? 'Icon_landed.png' : 'Icon_failed.png');
+          icon.alt = entry.status === 'landed' ? 'Landed' : 'Failed';
           row.appendChild(icon);
         }
 
