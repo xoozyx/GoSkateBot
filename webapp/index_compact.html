@@ -273,24 +273,12 @@
     min-width: 0;
   }
 
-  /* #tricklistPanel img (та картинка-фон панели) даёт width/height:100% с
-     специфичностью ID+тег — выше, чем просто класс. Иконка внутри записи
-     логов — тоже <img> внутри #tricklistPanel, поэтому раньше эта картинка
-     побеждала и растягивала иконку на 100% ширины/высоты строки (тот самый
-     гигантский палец на скриншоте, а текст из-за этого сжимался в
-     вертикальный столбик). Добавляем #tricklistPanel в сам селектор — та же
-     специфичность ID+тег, но плюс класс, и побеждает уже это правило. */
-  #tricklistPanel .trick-entry-icon {
-    display: inline-block;
-    flex-shrink: 0;
-    width: 24px;
-    height: 24px;
-    image-rendering: pixelated;
-  }
-
+  /* Без иконок — теперь у landed/failed просто текстовый префикс перед
+     трюком (см. renderTricklist). font-size задаётся оттуда же через JS
+     (RESULT_FONT_BASE), не тут — чтобы гарантированно совпадал с коротким
+     текстом в пузыре и не расходился, если тот размер ещё раз поменяют. */
   .trick-entry span.trick-entry-text {
     font-family: 'Press Start 2P', monospace;
-    font-size: 24px;
     line-height: 1.4;
     color: #d8e8d0;
     word-wrap: break-word;
@@ -503,21 +491,18 @@
         const row = document.createElement('div');
         row.className = 'trick-entry' + (entry.status === 'info' ? ' trick-entry-info' : '');
 
-        if (entry.status !== 'info') {
-          const icon = document.createElement('img');
-          icon.className = 'trick-entry-icon';
-          // Те же иконки, что в логе основной версии (images/Icon_landed.png
-          // и images/Icon_failed.png) — они не полноразмерные (13x15px,
-          // самостоятельная картинка, а не наложение на весь канвас), поэтому
-          // размер и подгоняется через CSS width/height, а не bbox-приёмом.
-          icon.src = 'images/' + (entry.status === 'landed' ? 'Icon_landed.png' : 'Icon_failed.png');
-          icon.alt = entry.status === 'landed' ? 'Landed' : 'Failed';
-          row.appendChild(icon);
-        }
-
         const span = document.createElement('span');
         span.className = 'trick-entry-text';
-        span.textContent = entry.text;
+        // Без иконок — вместо них текстовый префикс перед трюком ("Land "/
+        // "Fail to land "), 'info'-записи (старт режима, Game over) — без
+        // префикса, как есть. Размер шрифта — тот же RESULT_FONT_BASE, что у
+        // короткого текста в пузыре (не хардкодим отдельное число в CSS,
+        // чтобы не разъезжалось, если RESULT_FONT_BASE ещё раз поменяют).
+        let displayText = entry.text;
+        if (entry.status === 'landed') displayText = 'Land ' + entry.text;
+        else if (entry.status === 'failed') displayText = 'Fail to land ' + entry.text;
+        span.textContent = displayText;
+        span.style.fontSize = RESULT_FONT_BASE + 'px';
 
         row.appendChild(span);
         tricklistInnerEl.appendChild(row);
