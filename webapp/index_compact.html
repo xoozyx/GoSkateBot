@@ -298,13 +298,6 @@
     color: #9fb89a;
   }
 
-  .trick-entry-separator {
-    font-family: 'Press Start 2P', monospace;
-    color: #5a6f57;
-    line-height: 1.4;
-    clear: both;
-  }
-
   /* ==== Кнопки: невидимый button (реальная кликабельная зона по альфа-каналу
      соответствующей картинки) + соседний слой с самой картинкой — тот же
      приём с двумя слоями, что и в основной версии. Скрыты по умолчанию,
@@ -502,7 +495,7 @@
 
     function renderTricklist() {
       tricklistInnerEl.innerHTML = '';
-      tricklistEntries.forEach((entry, index) => {
+      tricklistEntries.forEach((entry) => {
         const row = document.createElement('div');
         row.className = 'trick-entry' + (entry.status === 'info' ? ' trick-entry-info' : '');
 
@@ -532,20 +525,19 @@
         span.className = 'trick-entry-text';
         span.textContent = entry.text;
         span.style.fontSize = RESULT_FONT_BASE + 'px';
+        // Разделители (----------) убрали — не смотрелись как надо. Вместо
+        // этого статус кодируется цветом текста: провал — красным, засчитано
+        // — зелёным. Инлайн, а не CSS-класс — тот же принцип, что у иконки
+        // выше (надёжнее любой специфичности). 'info' не трогаем — у него
+        // свой приглушённый цвет через .trick-entry-info в CSS.
+        if (entry.status === 'landed') {
+          span.style.color = '#5fd068';
+        } else if (entry.status === 'failed') {
+          span.style.color = '#e05c5c';
+        }
 
         row.appendChild(span);
         tricklistInnerEl.appendChild(row);
-
-        // Разделитель — МЕЖДУ записями, не после каждой: у последней записи
-        // в списке разделителя после неё быть не должно (см. пример: "трюк /
-        // ---------- / трюк / ---------- / трюк", без хвостового разделителя).
-        if (index < tricklistEntries.length - 1) {
-          const separator = document.createElement('div');
-          separator.className = 'trick-entry-separator';
-          separator.textContent = '----------';
-          separator.style.fontSize = RESULT_FONT_BASE + 'px';
-          tricklistInnerEl.appendChild(separator);
-        }
       });
     }
 
