@@ -128,7 +128,11 @@
     box-sizing: border-box;
     display: flex;
     align-items: center;
-    justify-content: center;
+    /* flex-start — и печатная машинка, и бегущая строка теперь стартуют от
+       левого края бокса (раньше тут был center: с ним печатная машинка
+       "гуляла", перецентрируясь на каждый новый символ при наборе, вместо
+       того чтобы расти слева направо от фиксированной точки). */
+    justify-content: flex-start;
     overflow: hidden;
     font-family: 'Press Start 2P', monospace;
     line-height: 1.3;
@@ -155,10 +159,6 @@
      "въезжает" со старта — justify-content:center сдвинул бы старт
      анимации и выглядел бы криво), сам текст едет через padding-left:100%
      (сразу за правым краем контейнера) до полностью укатившегося влево. */
-  #result.scrolling {
-    justify-content: flex-start;
-  }
-
   /* Раньше был padding-left:100% + анимация 0 -> -100% — это давало "въезд"
      с паузой на пустом экране между циклами. Теперь строка задваивается в JS
      (см. typeText: text + gap + text + gap) и едет БЕЗ паузы: сдвиг ровно на
@@ -406,8 +406,11 @@
         resultTextEl.style.fontSize = SCROLL_FONT_SIZE + 'px';
         // Строка задваивается с отступом (см. CSS-анимацию до -50%, а не
         // -100%, — комментарий там) — именно это даёт бесконечную ленту без
-        // паузы, а не "въехал одной копией — пусто — въехал заново".
-        resultTextEl.textContent = text + SCROLL_GAP + text + SCROLL_GAP;
+        // паузы, а не "въехал одной копией — пусто — въехал заново". Отступ
+        // теперь ПЕРЕД текстом (gap+text, не text+gap) — просили, чтобы
+        // перед появлением названия трюка сначала проезжал пустой зазор, а
+        // не чтобы сам трюк сразу упирался в левый край.
+        resultTextEl.textContent = SCROLL_GAP + text + SCROLL_GAP + text;
         resultEl.classList.add('scrolling');
         const cycleLength = text.length + SCROLL_GAP.length;
         const duration = Math.max(SCROLL_MIN_SECONDS, cycleLength * SCROLL_SECONDS_PER_CHAR);
