@@ -491,17 +491,27 @@
         const row = document.createElement('div');
         row.className = 'trick-entry' + (entry.status === 'info' ? ' trick-entry-info' : '');
 
+        if (entry.status !== 'info') {
+          const icon = document.createElement('img');
+          icon.className = 'trick-entry-icon';
+          icon.src = 'images/' + (entry.status === 'landed' ? 'Icon_landed.png' : 'Icon_failed.png');
+          icon.alt = entry.status === 'landed' ? 'Landed' : 'Failed';
+          // Инлайн-стиль, а не только CSS-класс — раньше тут словили баг:
+          // #tricklistPanel img (фон самой панели) — тоже правило на <img>,
+          // но с ID в селекторе, у которого специфичность выше простого
+          // класса, и оно побеждало, растягивая иконку на 100% ширины
+          // строки. Инлайн-стиль всегда выигрывает у любого правила в
+          // <style>, независимо от специфичности — так этот баг не может
+          // повториться, что бы ни поменялось в остальном CSS.
+          icon.style.width = RESULT_FONT_BASE + 'px';
+          icon.style.height = RESULT_FONT_BASE + 'px';
+          icon.style.flexShrink = '0';
+          row.appendChild(icon);
+        }
+
         const span = document.createElement('span');
         span.className = 'trick-entry-text';
-        // Без иконок — вместо них текстовый префикс перед трюком ("Land "/
-        // "Fail to land "), 'info'-записи (старт режима, Game over) — без
-        // префикса, как есть. Размер шрифта — тот же RESULT_FONT_BASE, что у
-        // короткого текста в пузыре (не хардкодим отдельное число в CSS,
-        // чтобы не разъезжалось, если RESULT_FONT_BASE ещё раз поменяют).
-        let displayText = entry.text;
-        if (entry.status === 'landed') displayText = 'Land ' + entry.text;
-        else if (entry.status === 'failed') displayText = 'Fail to land ' + entry.text;
-        span.textContent = displayText;
+        span.textContent = entry.text;
         span.style.fontSize = RESULT_FONT_BASE + 'px';
 
         row.appendChild(span);
