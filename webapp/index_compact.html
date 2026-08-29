@@ -273,16 +273,24 @@
     min-width: 0;
   }
 
-  .trick-entry-icon {
+  /* #tricklistPanel img (та картинка-фон панели) даёт width/height:100% с
+     специфичностью ID+тег — выше, чем просто класс. Иконка внутри записи
+     логов — тоже <img> внутри #tricklistPanel, поэтому раньше эта картинка
+     побеждала и растягивала иконку на 100% ширины/высоты строки (тот самый
+     гигантский палец на скриншоте, а текст из-за этого сжимался в
+     вертикальный столбик). Добавляем #tricklistPanel в сам селектор — та же
+     специфичность ID+тег, но плюс класс, и побеждает уже это правило. */
+  #tricklistPanel .trick-entry-icon {
+    display: inline-block;
     flex-shrink: 0;
-    width: 18px;
-    height: 18px;
+    width: 24px;
+    height: 24px;
     image-rendering: pixelated;
   }
 
   .trick-entry span.trick-entry-text {
     font-family: 'Press Start 2P', monospace;
-    font-size: 18px;
+    font-size: 24px;
     line-height: 1.4;
     color: #d8e8d0;
     word-wrap: break-word;
