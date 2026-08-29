@@ -7,10 +7,27 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>GoSkateBot Compact</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
+  /* Шрифт — локальный файл (fonts/), а не Google Fonts CDN: на браузере
+     Apple Watch внешний CSS-запрос к fonts.googleapis.com/fonts.gstatic.com
+     по какой-то причине не отрабатывал (текст показывался обычным системным
+     шрифтом вместо пиксельного) — то ли сетевые ограничения самого
+     watch-браузера, то ли просто нет времени на подгрузку до первой отрисовки,
+     и нет повторного рендера после. Локальный файл из того же источника (тот
+     же woff2 от Google Fonts, просто выкачан через npm-пакет @fontsource/
+     press-start-2p и положен рядом со страницей) снимает саму возможность
+     сетевого сбоя — грузится с того же хоста, что и сама игра.
+     font-display:block — короткая пауза с невидимым текстом вместо мгновенного
+     показа системным шрифтом, чтобы не было заметного "мигания" сменой шрифта. */
+  @font-face {
+    font-family: 'Press Start 2P';
+    src: url('fonts/press-start-2p-latin-400-normal.woff2') format('woff2'),
+         url('fonts/press-start-2p-latin-400-normal.woff') format('woff');
+    font-weight: 400;
+    font-style: normal;
+    font-display: block;
+  }
+
   /* ==== Compact mode: первая проба под маленькие экраны (Apple Watch SE
      gen1 и т.п.) — только один режим "зашит" намертво: Single / Classic /
      Ramp / Easy / без Air Tricks (см. TRICK_LIST_PATH в скрипте ниже). Ни
@@ -128,11 +145,11 @@
     box-sizing: border-box;
     display: flex;
     align-items: center;
-    /* flex-start — и печатная машинка, и бегущая строка теперь стартуют от
-       левого края бокса (раньше тут был center: с ним печатная машинка
-       "гуляла", перецентрируясь на каждый новый символ при наборе, вместо
-       того чтобы расти слева направо от фиксированной точки). */
-    justify-content: flex-start;
+    /* Печатная машинка обратно по центру, как просили — только у активной
+       бегущей строки (см. #result.scrolling ниже) переключается на
+       flex-start, потому что там иначе анимация считала бы сдвиг не от того
+       края. */
+    justify-content: center;
     overflow: hidden;
     font-family: 'Press Start 2P', monospace;
     line-height: 1.3;
@@ -155,10 +172,14 @@
     white-space: nowrap;
   }
 
-  /* Длинный текст: контейнер больше не центрирует (бегущая строка сама
-     "въезжает" со старта — justify-content:center сдвинул бы старт
-     анимации и выглядел бы криво), сам текст едет через padding-left:100%
-     (сразу за правым краем контейнера) до полностью укатившегося влево. */
+  /* Активная бегущая строка — контейнер переключается на flex-start (не
+     center), иначе анимация -50% считала бы сдвиг от центрированной, а не
+     левой позиции. До этого момента (пока трюк ещё печатается) — и короткий,
+     и потом-станет-длинным текст одинаково центрированы, см. typeText(). */
+  #result.scrolling {
+    justify-content: flex-start;
+  }
+
   /* Раньше был padding-left:100% + анимация 0 -> -100% — это давало "въезд"
      с паузой на пустом экране между циклами. Теперь строка задваивается в JS
      (см. typeText: text + gap + text + gap) и едет БЕЗ паузы: сдвиг ровно на
@@ -376,12 +397,14 @@
       resultTextEl.textContent = '';
     }
 
-    // Одна строка всегда: до SCROLL_THRESHOLD символов — печатная машинка,
-    // как раньше, статично по центру; длиннее — без печати, сразу целиком,
-    // бегущей строкой (см. CSS #result.scrolling), да ещё и БЕЗ паузы между
-    // циклами — вторая копия начинает въезжать, пока первая ещё докручивает
-    // хвост (см. дублирование текста ниже + CSS-анимация до -50%). Длительность
-    // анимации подобрана так, чтобы скорость прокрутки была примерно одинаковой
+    // Одна строка всегда: и короткий, и длинный текст сначала печатаются
+    // посимвольно, по центру (см. typeText) — до SCROLL_THRESHOLD символов
+    // этим всё и заканчивается, статичным центрированным текстом; длиннее —
+    // как только допечаталось целиком, переключается в бегущую строку (см.
+    // CSS #result.scrolling), да ещё и БЕЗ паузы между циклами — вторая копия
+    // начинает въезжать, пока первая ещё докручивает хвост (см. дублирование
+    // текста в typeText + CSS-анимация до -50%). Длительность анимации
+    // подобрана так, чтобы скорость прокрутки была примерно одинаковой
     // независимо от длины (иначе с фиксированной длительностью самые
     // длинные названия трюков "пролетали" бы слишком быстро для чтения).
     const SCROLL_THRESHOLD = 10;
@@ -393,6 +416,11 @@
     // шрифт — 10 пробелов дают предсказуемый зазор независимо от текста).
     const SCROLL_GAP = '\u00A0'.repeat(10);
 
+    // Длинный текст теперь ТОЖЕ печатается посимвольно (как короткий), и
+    // только ПОСЛЕ того, как напечатался целиком — переключается в бегущую
+    // строку (задваивается с отступом, см. SCROLL_GAP, и запускается
+    // анимация). Раньше бегущая строка стартовала сразу, без печати —
+    // просили сделать печать одинаковой для короткого и длинного текста.
     function typeText(text, onComplete) {
       if (typewriterTimer !== null) {
         clearInterval(typewriterTimer);
@@ -402,24 +430,8 @@
       resultTextEl.style.animation = '';
       resultTextEl.textContent = '';
 
-      if (text.length > SCROLL_THRESHOLD) {
-        resultTextEl.style.fontSize = SCROLL_FONT_SIZE + 'px';
-        // Строка задваивается с отступом (см. CSS-анимацию до -50%, а не
-        // -100%, — комментарий там) — именно это даёт бесконечную ленту без
-        // паузы, а не "въехал одной копией — пусто — въехал заново". Отступ
-        // теперь ПЕРЕД текстом (gap+text, не text+gap) — просили, чтобы
-        // перед появлением названия трюка сначала проезжал пустой зазор, а
-        // не чтобы сам трюк сразу упирался в левый край.
-        resultTextEl.textContent = SCROLL_GAP + text + SCROLL_GAP + text;
-        resultEl.classList.add('scrolling');
-        const cycleLength = text.length + SCROLL_GAP.length;
-        const duration = Math.max(SCROLL_MIN_SECONDS, cycleLength * SCROLL_SECONDS_PER_CHAR);
-        resultTextEl.style.animationDuration = duration + 's';
-        if (onComplete) setTimeout(onComplete, 300);
-        return;
-      }
-
-      resultTextEl.style.fontSize = RESULT_FONT_BASE + 'px';
+      const needsScroll = text.length > SCROLL_THRESHOLD;
+      resultTextEl.style.fontSize = (needsScroll ? SCROLL_FONT_SIZE : RESULT_FONT_BASE) + 'px';
 
       if (!text) {
         if (onComplete) onComplete();
@@ -433,6 +445,19 @@
         if (i >= text.length) {
           clearInterval(typewriterTimer);
           typewriterTimer = null;
+          if (needsScroll) {
+            // Строка задваивается с отступом (см. CSS-анимацию до -50%, а не
+            // -100%, — комментарий там) — именно это даёт бесконечную ленту
+            // без паузы, а не "въехал одной копией — пусто — въехал заново".
+            // Отступ ПЕРЕД текстом (gap+text, не text+gap) — чтобы перед
+            // появлением названия трюка сначала проезжал пустой зазор, а не
+            // чтобы сам трюк сразу упирался в левый край.
+            resultTextEl.textContent = SCROLL_GAP + text + SCROLL_GAP + text;
+            resultEl.classList.add('scrolling');
+            const cycleLength = text.length + SCROLL_GAP.length;
+            const duration = Math.max(SCROLL_MIN_SECONDS, cycleLength * SCROLL_SECONDS_PER_CHAR);
+            resultTextEl.style.animationDuration = duration + 's';
+          }
           if (onComplete) onComplete();
         }
       }, TYPEWRITER_MS_PER_CHAR);
