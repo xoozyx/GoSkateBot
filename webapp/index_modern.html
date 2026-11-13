@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>GoSkateBot</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+@font-face{font-family:PS;src:url(fonts/press-start-2p-latin-400-normal.woff2) format('woff2');font-display:swap}
+:root{--bg:#0e1116;--card:#181c24;--card2:#222834;--tx:#f2f4f8;--mut:#8b94a7;--ac:#ffd23f;--ok:#34d399;--no:#fb5b5b;--p2:#60a5fa}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font:16px/1.35 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;overflow:hidden;user-select:none}
+button{font:inherit;color:inherit;border:0;background:var(--card2);border-radius:14px;padding:12px 14px;cursor:pointer;transition:transform .08s,opacity .2s}
+button:active{transform:scale(.96)}button:disabled{opacity:.35;pointer-events:none}
+.scr{position:absolute;inset:0;display:none;flex-direction:column;padding:calc(env(safe-area-inset-top) + 14px) 16px calc(env(safe-area-inset-bottom) + 14px)}
+.scr.on{display:flex}
+.logo{font:20px PS;color:var(--ac);text-align:center;margin:6px 0 2px}.sub{text-align:center;color:var(--mut);font-size:13px;margin-bottom:12px}
+.body{flex:1;overflow-y:auto;margin:0 -4px;padding:0 4px}
+.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.mode{display:flex;flex-direction:column;align-items:center;gap:4px;padding:16px 6px;background:var(--card);border:2px solid transparent;font-weight:600}
+.mode i{font-size:28px;font-style:normal}.mode.on{border-color:var(--ac);background:#2a2713}
+.grp{background:var(--card);border-radius:18px;padding:12px;margin-bottom:12px}
+.grp h4{margin:0 0 8px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.seg{display:flex;gap:6px}.seg button{flex:1;padding:11px 6px}
+.seg button.on,.chip.on{background:var(--ac);color:#171400;font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:8px}.chip{padding:9px 14px;border-radius:99px}
+.cta{background:var(--ac);color:#171400;font-weight:800;font-size:18px;padding:17px;margin-top:6px;width:100%;border-radius:18px}
+.bar{display:flex;align-items:center;gap:10px;margin-bottom:10px}.bar b{flex:1;text-align:center;font-size:14px}
+.ib{width:44px;height:44px;padding:0;font-size:20px;border-radius:50%}
+.stat{background:var(--card);border-radius:18px;padding:12px;margin-bottom:10px;display:flex;justify-content:space-around;gap:8px;text-align:center}
+.pl{flex:1;border-radius:12px;padding:6px}.pl.cur{background:#2a2713;outline:2px solid var(--ac)}.pl.p2.cur{background:#14233a;outline-color:var(--p2)}
+.let{font:16px PS;letter-spacing:3px;color:#394152}.let u{text-decoration:none;color:var(--no)}
+.pl small{display:block;color:var(--mut);font-size:12px;margin-top:6px}
+.trick{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:linear-gradient(160deg,#1c2230,#141821);border-radius:24px;padding:22px;margin-bottom:10px;min-height:0}
+.trick .who{color:var(--ac);font-weight:700;margin-bottom:8px}.trick .who.p2{color:var(--p2)}
+.trick h2{margin:0;font-size:clamp(26px,8vw,40px);line-height:1.15}.trick p{color:var(--mut);margin:12px 0 0}
+.row{display:flex;gap:10px;margin-bottom:10px}.row>*{flex:1}
+.bet{font-weight:800;font-size:18px;padding:16px;background:var(--card2);border:2px solid var(--ac)}
+.card{display:flex;flex-direction:column;align-items:center;font-size:12px;padding:10px 4px;background:var(--card)}.card i{font-size:22px;font-style:normal}
+.go{display:flex;gap:10px}.go button{flex:1;padding:22px 0;font-size:20px;font-weight:800;border-radius:20px}
+.go .f{background:var(--no);color:#fff}.go .l{background:var(--ok);color:#052e1d}
+.link{background:none;color:var(--mut);padding:10px;text-decoration:underline;font-size:14px}
+.sheet{position:absolute;left:0;right:0;bottom:0;max-height:75%;background:var(--card);border-radius:24px 24px 0 0;padding:16px 16px calc(env(safe-area-inset-bottom) + 16px);overflow-y:auto;transform:translateY(105%);transition:transform .25s;z-index:5;box-shadow:0 -10px 40px #0009}
+.sheet.on{transform:none}.sheet h3{margin:0 0 10px}
+.li{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--card2)}.li.info{color:var(--mut);font-size:13px}
+.dlg{position:absolute;inset:0;background:#000b;display:none;align-items:center;justify-content:center;padding:24px;z-index:9}.dlg.on{display:flex}
+.dlg>div{background:var(--card);border-radius:24px;padding:22px;width:100%;max-width:360px;text-align:center}
+.dlg h3{margin:0 0 6px;font-size:22px}.dlg p{color:var(--mut);margin:0 0 16px}.dlg button{width:100%;margin-top:8px}
+input[type=range]{width:100%;accent-color:var(--ac)}.vr{display:flex;align-items:center;gap:12px;margin-bottom:10px}.vr span{width:70px}
+</style></head><body>
+
+<section id="home" class="scr on">
+  <div class="logo">GO SKATE!</div><div class="sub">Random trick generator · S.K.A.T.E.</div>
+  <div class="body"><div class="modes" id="modes"></div><div id="opts"></div></div>
+  <div class="row" style="margin:0"><button class="cta" id="start">START</button><button class="ib" id="gear" style="flex:0 0 58px;height:58px;margin-top:6px">⚙️</button></div>
+</section>
+
+<section id="game" class="scr">
+  <div class="bar"><button class="ib" id="quit">✕</button><b id="title"></b><button class="ib" id="logb">☰</button></div>
+  <div class="stat" id="stat"></div>
+  <div class="trick" id="trick"></div>
+  <div id="ctl"></div>
+  <div class="sheet" id="sheet"><h3>Trick log <button class="link" id="sx" style="float:right;padding:0">close</button></h3><div id="log"></div></div>
+</section>
+
+<section id="set" class="scr">
+  <div class="bar"><button class="ib" id="sback">←</button><b>Settings</b><span style="width:44px"></span></div>
+  <div class="grp"><div class="vr"><span>Music</span><input type="range" id="mv" min="0" max="5"></div>
+  <div class="vr" style="margin:0"><span>Sounds</span><input type="range" id="sv" min="0" max="5"></div></div>
+</section>
+
+<div class="dlg" id="dlg"><div id="dbox"></div></div>
+<script src="sound.js"></script>
+<script>
+const tg=window.Telegram&&Telegram.WebApp;if(tg){tg.ready();tg.expand();try{tg.setHeaderColor('#0e1116');tg.setBackgroundColor('#0e1116')}catch(e){}}
+const $=i=>document.getElementById(i),hap=t=>{try{tg&&tg.HapticFeedback&&(t?tg.HapticFeedback.notificationOccurred(t):tg.HapticFeedback.impactOccurred('light'))}catch(e){}};
+const snd=n=>{try{SoundEngine.play(n)}catch(e){}};
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const MODES=[['flat','🛹','Flat'],['ramp','🌊','Ramp'],['street','🏙️','Street']];
+const OBS=[['manualbox','Manual Box','manualbox',1],['kicker','Kicker','kicker',0],['curb','Curb','slappy',1],['stairs','Stairs','stairs',0],['ledge','Ledge','ledge',1],['rail','Rail','rail',1]];
+const MODS={flat:[['old','Old School'],['body','Body Varial']],ramp:[['air','Air Tricks']],street:[['old','Old School'],['ins','Ins & Outs']]};
+let S={mode:'flat',diff:'easy',vs:0,arc:0,o:{},obs:{}};
+try{Object.assign(S,JSON.parse(localStorage.getItem('gs2')||'{}'))}catch(e){}
+const save=()=>{try{localStorage.setItem('gs2',JSON.stringify(S))}catch(e){}};
+const show=id=>{document.querySelectorAll('.scr').forEach(s=>s.classList.toggle('on',s.id==id));try{SoundEngine.startMusic(id=='game'?'punk':'hiphop')}catch(e){}};
+
+/* ---------- home ---------- */
+function seg(k,opts){return `<div class="seg">${opts.map(([v,l])=>`<button data-k="${k}" data-v="${v}" class="${S[k]==v?'on':''}">${l}</button>`).join('')}</div>`}
+function chip(t,k,l,on){return `<button class="chip ${on?'on':''}" data-t="${t}" data-k="${k}">${l}</button>`}
+function renderHome(){
+  $('modes').innerHTML=MODES.map(([k,i,l])=>`<button class="mode ${S.mode==k?'on':''}" data-k="mode" data-v="${k}"><i>${i}</i>${l}</button>`).join('');
+  let h=`<div class="grp"><h4>Difficulty</h4>${seg('diff',[['easy','Easy'],['hard','Hard']])}</div>
+  <div class="grp"><h4>Players</h4>${seg('vs',[[0,'Solo'],[1,'Versus 2P']])}<h4 style="margin-top:12px">Game</h4>${seg('arc',[[0,'Classic'],[1,'Arcade 🎰']])}</div>`;
+  h+=`<div class="grp"><h4>Trick styles</h4><div class="chips">${MODS[S.mode].map(([k,l])=>chip('o',k,l,S.o[S.mode+k])).join('')}</div></div>`;
+  if(S.mode=='street')h+=`<div class="grp"><h4>Obstacles</h4><div class="chips">${OBS.map(([k,l])=>chip('obs',k,l,S.obs[k]!==0)).join('')}</div></div>`;
+  $('opts').innerHTML=h;
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-k]');if(!b||!$('home').classList.contains('on'))return;
+  const k=b.dataset.k,t=b.dataset.t;snd('toggle');hap();
+  if(t=='o'){S.o[S.mode+k]=!S.o[S.mode+k]}else if(t=='obs'){S.obs[k]=S.obs[k]===0?1:0}else S[k]=isNaN(b.dataset.v)?b.dataset.v:+b.dataset.v;
+  save();renderHome();
+});
+
+/* ---------- tricks data ---------- */
+const cache={};let howto=null;
+const ld=async p=>cache[p]||(cache[p]=fetch('data/'+p+'.txt').then(r=>r.ok?r.text():'').then(t=>t.split('\n').map(x=>x.trim()).filter(Boolean)).catch(()=>[]));
+function files(){
+  const ds=S.diff=='hard'?['easy','hard']:['easy'],f=[],o=n=>S.o[S.mode+n];
+  if(S.mode=='flat')ds.forEach(d=>{f.push('Flatmode_tricks_'+d);o('old')&&f.push('Flatmode_tricks_oldschool_'+d);o('body')&&f.push('Flatmode_tricks_bodyvarial_'+d)});
+  if(S.mode=='ramp')ds.forEach(d=>{f.push('Rampmode_tricks_'+d);o('air')&&f.push('Rampmode_tricks_Airs_'+d)});
+  if(S.mode=='street')OBS.forEach(([k,,fk,ins])=>{if(S.obs[k]===0)return;ds.forEach(d=>{f.push(`Streetmode_tricks_${fk}_${d}`);o('old')&&f.push(`Streetmode_tricks_${fk}_oldschool_${d}`);o('ins')&&ins&&f.push(`Streetmode_tricks_${fk}_insandouts_${d}`)})});
+  return f;
+}
+let pool=[],recent=[];
+async function loadPool(){
+  pool=(await Promise.all(files().map(ld))).flat();
+  if(!howto){howto=new Map();try{(await(await fetch('data/Howto.txt')).text()).split('\n').forEach(l=>{const i=l.indexOf(',');i>0&&howto.set(l.slice(0,i).trim(),l.slice(i+1).trim())})}catch(e){}}
+  return pool.length>0;
+}
+function pick(){let t,n=0;do{t=pool[Math.random()*pool.length|0];n++}while(recent.includes(t)&&n<30);recent.push(t);recent.length>30&&recent.shift();return t}
+
+/* ---------- game ---------- */
+let G;const LIM=()=>S.diff=='hard'?5:15,CD=5,MINBET=50;
+const np=()=>S.vs?2:1,cur=()=>G.p[G.t];
+const blank=()=>({b:100,cd:{r:0,e:0,d:0},sk:{},f:0,l:0});
+function summary(){const m=MODES.find(x=>x[0]==S.mode)[2],x=[S.diff=='hard'?'Hard':'Easy',m];S.vs&&x.push('2P');S.arc&&x.push('Arcade');return x.join(' · ')}
+async function newGame(){
+  G={p:[blank(),blank()],t:0,st:'load',trick:'',bet:null,ex:0,log:[],msg:''};
+  $('title').textContent=summary();render();
+  if(!await loadPool()){G.st='err';return render()}
+  G.log.unshift({i:1,x:summary()});
+  S.arc?(G.st='bet',G.msg=S.vs?'Player 1: place your bet':'Place a bet to get a trick'):(G.st='ready');render();
+}
+function roll(){G.trick=pick();G.ex=0;G.st='trick';render()}
+function over(w){G.st='over';G.win=w;try{SoundEngine.setSlowdown(1.9,.82)}catch(e){}hap('error');render()}
+function tick(p){['r','e','d'].forEach(k=>{if(p.sk[k])p.sk[k]=false;else if(p.cd[k]>0)p.cd[k]--})}
+function logIt(ok){G.log.unshift({ok,x:G.trick,pl:S.vs?G.t+1:0})}
+function judge(ok){
+  const p=cur();snd(ok?'landed':'failed');hap(ok?'success':'error');
+  if(S.arc){
+    if(!ok&&G.ex==1){G.ex=2;return render()}
+    tick(p);if(ok){p.b+=G.bet*2;p.l++}else p.f++;logIt(ok);G.bet=null;G.ex=0;
+    if(p.b<MINBET)return over(S.vs?(G.t?1:2):0);
+    if(S.vs)G.t^=1;G.st='bet';G.msg=S.vs?`Player ${G.t+1}: place your bet`:'Place a bet for the next trick';return render();
+  }
+  ok?p.l++:p.f++;logIt(ok);
+  if(p.f>=LIM())return over(S.vs?(G.t?1:2):0);
+  if(S.vs&&G.t==0){G.t=1;return render()}
+  G.t=0;roll();
+}
+function bet(a){const p=cur();snd('confirm');p.b-=a;G.bet=a;roll()}
+function card(k){
+  const p=cur();if(!avail(k))return;snd('confirm');hap();p.cd[k]=CD;p.sk[k]=true;
+  G.log.unshift({i:1,x:{r:'Reroll card used',e:'Extra try card used',d:'Double bet card used'}[k]});
+  if(k=='r')roll();else if(k=='e'){G.ex=1;render()}else{p.b-=G.bet;G.bet*=2;render()}
+}
+function avail(k){const p=cur();return S.arc&&G.st=='trick'&&p.cd[k]==0&&!(k=='d'&&p.b<G.bet)&&!(G.ex&&(k=='r'||k=='d'))}
+
+/* ---------- render ---------- */
+function letters(f){const n=Math.min(5,S.diff=='hard'?f:Math.floor(f/3));return [...'SKATE'].map((c,i)=>i<n?`<u>${c}</u>`:c).join('')}
+function render(){
+  const c=$('ctl'),t=$('trick');
+  $('stat').innerHTML=G.p.slice(0,np()).map((p,i)=>`<div class="pl p${i+1} ${S.vs&&G.t==i&&G.st!='over'?'cur':''}">${S.vs?`<small style="margin:0 0 4px">Player ${i+1}</small>`:''}${S.arc?`<div style="font-size:22px;font-weight:800">🛹 ${p.b}</div>`:`<div class="let">${letters(p.f)}</div>`}<small>✓ ${p.l} · ✗ ${p.f}</small></div>`).join('');
+  const who=S.vs?`<div class="who ${G.t?'p2':''}">Player ${G.t+1}</div>`:'';
+  c.innerHTML='';
+  if(G.st=='load')t.innerHTML='<p>Loading tricks…</p>';
+  else if(G.st=='err'){t.innerHTML='<h2>Connection problem</h2><p>Could not load trick lists.</p>';c.innerHTML='<button class="cta" id="again">Try again</button>'}
+  else if(G.st=='ready'){t.innerHTML=`<h2>Ready?</h2><p>${esc(summary())}</p>`;c.innerHTML='<button class="cta" id="roll">ROLL TRICK</button>'}
+  else if(G.st=='bet'){
+    t.innerHTML=`${who}<h2 style="font-size:24px">${esc(G.msg)}</h2><p>Land it: win 2× your bet</p>`;
+    const p=cur(),a=p.b>=1000?[500,1000,1500]:[50,100,250];
+    c.innerHTML=`<div class="row">${a.map(x=>`<button class="bet" data-bet="${x}" ${x>p.b?'disabled':''}>${x}</button>`).join('')}</div>`+cards();
+  }else if(G.st=='trick'){
+    const m=G.ex==1?'You have 2 attempts':G.ex==2?'Last attempt!':S.arc?`Bet: ${G.bet} 🛹`:'';
+    t.innerHTML=`${who}<h2>${esc(G.trick)}</h2><p>${m}</p><button class="link" id="info">How to do it? ↗</button>`;
+    c.innerHTML=(S.arc?cards():'')+'<div class="go"><button class="f" data-j="0">✗ Failed</button><button class="l" data-j="1">✓ Landed</button></div>';
+  }
+  else if(G.st=='over'){
+    t.innerHTML=`<h2>${S.vs?`🏆 Player ${G.win} wins!`:'Game over!'}</h2><p>${S.arc&&!S.vs?'You ran out of skatebucks.':'Nice session.'}</p>`;
+    c.innerHTML='<div class="row"><button id="quit2">Menu</button><button class="cta" style="margin:0" id="again">New game</button></div>';
+  }
+  $('log').innerHTML=G.log.map(e=>e.i?`<div class="li info">${esc(e.x)}</div>`:`<div class="li"><span>${e.ok?'✅':'❌'}</span><span>${e.pl?`P${e.pl} · `:''}${esc(e.x)}</span></div>`).join('')||'<p style="color:var(--mut)">Empty</p>';
+}
+function cards(){const p=cur(),n={r:['🔄','Reroll'],e:['☝️','Extra try'],d:['✖️2','Double']};
+  return '<div class="row">'+['r','e','d'].map(k=>`<button class="card" data-c="${k}" ${avail(k)?'':'disabled'}><i>${n[k][0]}</i>${p.cd[k]?p.cd[k]+' left':n[k][1]}</button>`).join('')+'</div>'}
+
+/* ---------- events ---------- */
+document.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b||!G||!$('game').classList.contains('on'))return;
+  if(b.dataset.j!==undefined)judge(+b.dataset.j);
+  else if(b.dataset.bet)bet(+b.dataset.bet);
+  else if(b.dataset.c)card(b.dataset.c);
+  else if(b.id=='roll'){snd('confirm');roll()}
+  else if(b.id=='again'){snd('confirm');try{SoundEngine.setSlowdown(1,1)}catch(e){}newGame()}
+  else if(b.id=='quit2')leave();
+  else if(b.id=='info'){const u=howto&&howto.get(G.trick)||'https://www.google.com/search?q='+encodeURIComponent('How to '+G.trick+' on a skateboard');tg&&tg.openLink?tg.openLink(u):window.open(u,'_blank')}
+});
+function leave(){snd('back');try{SoundEngine.setSlowdown(1,1)}catch(e){}$('dlg').classList.remove('on');$('sheet').classList.remove('on');show('home')}
+function dlg(h){$('dbox').innerHTML=h;$('dlg').classList.add('on')}
+$('start').onclick=()=>{snd('confirm');hap();show('game');newGame()};
+$('quit').onclick=()=>{snd('click');dlg('<h3>Leave game?</h3><p>Your progress will be lost.</p><button class="cta" id="dno">Keep playing</button><button id="dre">Restart</button><button id="dq">Quit to menu</button>');
+  $('dno').onclick=()=>$('dlg').classList.remove('on');$('dre').onclick=()=>{$('dlg').classList.remove('on');try{SoundEngine.setSlowdown(1,1)}catch(e){}newGame()};$('dq').onclick=leave};
+$('logb').onclick=()=>{snd('click');$('sheet').classList.add('on')};$('sx').onclick=()=>$('sheet').classList.remove('on');
+$('gear').onclick=()=>{snd('click');$('mv').value=SoundEngine.getMusicVolume();$('sv').value=SoundEngine.getSfxVolume();show('set')};
+$('sback').onclick=()=>{snd('back');show('home')};
+$('mv').oninput=e=>SoundEngine.setMusicVolume(+e.target.value);$('sv').oninput=e=>{SoundEngine.setSfxVolume(+e.target.value);snd('click')};
+renderHome();
+</script></body></html>
