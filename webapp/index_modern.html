@@ -8,7 +8,8 @@
 @font-face{font-family:PS;src:url(fonts/press-start-2p-latin-400-normal.woff2) format('woff2');font-display:swap}
 :root{--bg:#0e1116;--card:#181c24;--card2:#222834;--tx:#f2f4f8;--mut:#8b94a7;--ac:#ffd23f;--ok:#34d399;--no:#fb5b5b;--p2:#60a5fa}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font:16px/1.35 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;overflow:hidden;user-select:none}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font:16px/1.35 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;overflow:hidden;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation;-webkit-text-size-adjust:100%}
+*{touch-action:manipulation}
 button{font:inherit;color:inherit;border:0;background:var(--card2);border-radius:14px;padding:12px 14px;cursor:pointer;transition:transform .08s,opacity .2s}
 button:active{transform:scale(.96)}button:disabled{opacity:.35;pointer-events:none}
 .scr{position:absolute;inset:0;display:none;flex-direction:column;padding:calc(env(safe-area-inset-top) + 14px) 16px calc(env(safe-area-inset-bottom) + 14px)}
@@ -59,7 +60,7 @@ input[type=range]{width:100%;accent-color:var(--ac)}.vr{display:flex;align-items
   <div class="stat" id="stat"></div>
   <div class="trick" id="trick"></div>
   <div id="ctl"></div>
-  <div class="sheet" id="sheet"><h3>Trick log <button class="link" id="sx" style="float:right;padding:0">close</button></h3><div id="log"></div></div>
+  <div class="sheet" id="sheet"><h3>Trick log <button class="link" id="sx" style="float:right;padding:6px 4px">close</button></h3><div id="log"></div></div>
 </section>
 
 <section id="set" class="scr">
@@ -205,4 +206,8 @@ $('gear').onclick=()=>{snd('click');$('mv').value=SoundEngine.getMusicVolume();$
 $('sback').onclick=()=>{snd('back');show('home')};
 $('mv').oninput=e=>SoundEngine.setMusicVolume(+e.target.value);$('sv').oninput=e=>{SoundEngine.setSfxVolume(+e.target.value);snd('click')};
 renderHome();
+/* iOS Safari ignores user-scalable=no: block double-tap and pinch zoom manually */
+['gesturestart','gesturechange','gestureend'].forEach(g=>document.addEventListener(g,e=>e.preventDefault()));
+document.addEventListener('dblclick',e=>e.preventDefault());
+document.addEventListener('touchmove',e=>{if(e.touches.length>1)e.preventDefault()},{passive:false});
 </script></body></html>
