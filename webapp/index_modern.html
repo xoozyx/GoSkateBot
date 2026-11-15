@@ -40,8 +40,8 @@ button:active{transform:scale(.96)}button:disabled{opacity:.35;pointer-events:no
 .go{display:flex;gap:10px}.go button{flex:1;padding:22px 0;font-size:20px;font-weight:800;border-radius:20px}
 .go .f{background:var(--no);color:#fff}.go .l{background:var(--ok);color:#052e1d}
 .link{background:none;color:var(--mut);padding:10px;text-decoration:underline;font-size:14px}
-.sheet{position:absolute;left:0;right:0;bottom:0;max-height:75%;background:var(--card);border-radius:24px 24px 0 0;padding:16px 16px calc(env(safe-area-inset-bottom) + 16px);overflow-y:auto;transform:translateY(105%);transition:transform .25s;z-index:5;box-shadow:0 -10px 40px #0009}
-.sheet.on{transform:none}.sheet h3{margin:0 0 10px}
+.sheet{position:absolute;left:0;right:0;bottom:0;max-height:75%;background:var(--card);border-radius:24px 24px 0 0;padding:16px 16px calc(env(safe-area-inset-bottom) + 16px);overflow-y:auto;transform:translateY(105%);visibility:hidden;transition:transform .25s,visibility .25s;z-index:5;box-shadow:0 -10px 40px #0009}
+.sheet.on{transform:none;visibility:visible}.sheet h3{margin:0 0 10px}
 .li{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--card2)}.li.info{color:var(--mut);font-size:13px}
 .dlg{position:absolute;inset:0;background:#000b;display:none;align-items:center;justify-content:center;padding:24px;z-index:9}.dlg.on{display:flex}
 .dlg>div{background:var(--card);border-radius:24px;padding:22px;width:100%;max-width:360px;text-align:center}
