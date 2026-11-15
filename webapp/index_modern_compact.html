@@ -6,12 +6,12 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 @font-face{font-family:PS;src:url(fonts/press-start-2p-latin-400-normal.woff2) format('woff2');font-display:swap}
-:root{--bg:#0e1116;--card:#181c24;--card2:#222834;--tx:#f2f4f8;--mut:#8b94a7;--ac:#ffd23f;--ok:#34d399;--no:#fb5b5b;--p2:#60a5fa;--bh:64px;--jh:96px}
+:root{--bg:#0e1116;--card:#181c24;--card2:#222834;--tx:#f2f4f8;--mut:#8b94a7;--ac:#ffd23f;--ok:#34d399;--no:#fb5b5b;--p2:#60a5fa;--bh:64px;--jh:96px;--th:88px}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 html,body{margin:0;background:var(--bg);color:var(--tx);font:12px/1.25 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-text-size-adjust:100%}
 button{font:inherit;color:inherit;border:0;background:var(--card2);border-radius:10px;padding:6px 8px;cursor:pointer;min-height:34px}
 button:active{transform:scale(.95)}button:disabled{opacity:.35;pointer-events:none}
-.scr{display:none;padding:calc(env(safe-area-inset-top) + 4px) 6px 6px;min-height:100vh;min-height:100dvh}.scr.on{display:flex;flex-direction:column}
+.scr{display:none;padding:calc(env(safe-area-inset-top) + 4px) 6px 6px}.scr.on{display:flex;flex-direction:column}
 .logo{font:9px PS;color:var(--ac);text-align:center;margin:2px 0 6px}
 .cta{display:block;width:100%;background:var(--ac);color:#171400;font-weight:800;font-size:22px;min-height:60px;border-radius:18px}
 .inf{position:absolute;top:3px;right:3px;width:22px;height:22px;min-height:0;padding:0;border-radius:50%;font-size:12px;color:var(--mut)}
@@ -25,7 +25,7 @@ h5{margin:10px 0 4px;font-size:9px;letter-spacing:.08em;text-transform:uppercase
 .ib{width:var(--bh);height:var(--bh);min-height:0;padding:0;border-radius:50%;font-size:28px;flex:none}
 .pl{margin:0 3px;font-weight:700;font-size:13px;white-space:nowrap}.pl.cur{color:var(--ac)}.pl.cur.p2{color:var(--p2)}
 .pl .let{font-size:9px;letter-spacing:1px}.let{font:15px PS;letter-spacing:2px;color:#394152}.let u{text-decoration:none;color:var(--no)}
-.trick{flex:1;position:relative;background:linear-gradient(160deg,#1c2230,#141821);border-radius:14px;padding:4px;text-align:center;margin-bottom:5px;min-height:40px;display:flex;flex-direction:column;justify-content:center;align-items:center}
+.trick{flex:none;height:var(--th);overflow:hidden;position:relative;background:linear-gradient(160deg,#1c2230,#141821);border-radius:14px;padding:4px;text-align:center;margin-bottom:5px;display:flex;flex-direction:column;justify-content:center;align-items:center}
 .trick h2{margin:0;font-size:30px;line-height:1.1;font-weight:800;word-break:break-word}.trick p{margin:3px 0 0;color:var(--mut);font-size:14px}
 .who{font-weight:700;font-size:14px;color:var(--ac)}.who.p2{color:var(--p2)}
 .link{background:none;color:var(--mut);min-height:0;padding:4px;text-decoration:underline;font-size:10px}
@@ -135,8 +135,8 @@ function avail(k){const p=cur();return S.arc&&G.st=='trick'&&p.cd[k]==0&&!(k=='d
 
 /* ---------- render ---------- */
 function letters(f){const n=Math.min(5,S.diff=='hard'?f:Math.floor(f/3));return `<span class="let">${[...'SKATE'].map((c,i)=>i<n?`<u>${c}</u>`:c).join('')}</span>`}
-function fit(){const t=$('trick'),h=t.querySelector('h2');if(!h||!t.offsetParent)return;let s=34;h.style.fontSize=s+'px';
-  const a=innerHeight-(t.getBoundingClientRect().top+scrollY)-$('ctl').offsetHeight-6;while(s>13&&t.offsetHeight>a+1){s--;h.style.fontSize=s+'px'}}
+function fit(){const t=$('trick'),h=t.querySelector('h2');if(!h||!t.offsetParent)return;let s=46;h.style.fontSize=s+'px';
+  const used=()=>[...t.children].reduce((a,c)=>a+c.offsetHeight,0);while(s>12&&used()>t.clientHeight-8){s--;h.style.fontSize=s+'px'}}
 addEventListener('resize',()=>{try{fit()}catch(e){}});
 function render(){render0();fit()}
 function render0(){
