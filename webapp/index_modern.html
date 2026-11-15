@@ -29,7 +29,7 @@ button:active{transform:scale(.96)}button:disabled{opacity:.35;pointer-events:no
 .ib{width:44px;height:44px;padding:0;font-size:20px;border-radius:50%}
 .stat{background:var(--card);border-radius:18px;padding:12px;margin-bottom:10px;display:flex;justify-content:space-around;gap:8px;text-align:center}
 .pl{flex:1;border-radius:12px;padding:6px}.pl.cur{background:#2a2713;outline:2px solid var(--ac)}.pl.p2.cur{background:#14233a;outline-color:var(--p2)}
-.let{font:16px PS;letter-spacing:3px;color:#394152}.let u{text-decoration:none;color:var(--no)}
+.let{font:16px PS;letter-spacing:3px;color:#394152}.let u{text-decoration:none;color:var(--no)}.let.sm{font-size:11px;letter-spacing:1px;white-space:nowrap}
 .pl small{display:block;color:var(--mut);font-size:12px;margin-top:6px}
 .trick{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:linear-gradient(160deg,#1c2230,#141821);border-radius:24px;padding:22px;margin-bottom:10px;min-height:0}
 .trick .who{color:var(--ac);font-weight:700;margin-bottom:8px}.trick .who.p2{color:var(--p2)}
@@ -79,8 +79,9 @@ const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[
 const MODES=[['flat','🛹','Flat'],['ramp','🌊','Ramp'],['street','🏙️','Street']];
 const OBS=[['manualbox','Manual Box','manualbox',1],['kicker','Kicker','kicker',0],['curb','Curb','slappy',1],['stairs','Stairs','stairs',0],['ledge','Ledge','ledge',1],['rail','Rail','rail',1]];
 const MODS={flat:[['old','Old School'],['body','Body Varial']],ramp:[['air','Air Tricks']],street:[['old','Old School'],['ins','Ins & Outs']]};
-let S={mode:'flat',diff:'easy',vs:0,arc:0,o:{},obs:{}};
+let S={mode:'flat',diff:'easy',word:'SKATE',vs:0,arc:0,o:{},obs:{}};
 try{Object.assign(S,JSON.parse(localStorage.getItem('gs2')||'{}'))}catch(e){}
+if(S.word!='SKATEBOARD')S.word='SKATE';
 const save=()=>{try{localStorage.setItem('gs2',JSON.stringify(S))}catch(e){}};
 const show=id=>{document.querySelectorAll('.scr').forEach(s=>s.classList.toggle('on',s.id==id));try{SoundEngine.startMusic(id=='game'?'punk':'hiphop')}catch(e){}};
 
@@ -89,7 +90,7 @@ function seg(k,opts){return `<div class="seg">${opts.map(([v,l])=>`<button data-
 function chip(t,k,l,on){return `<button class="chip ${on?'on':''}" data-t="${t}" data-k="${k}">${l}</button>`}
 function renderHome(){
   $('modes').innerHTML=MODES.map(([k,i,l])=>`<button class="mode ${S.mode==k?'on':''}" data-k="mode" data-v="${k}"><i>${i}</i>${l}</button>`).join('');
-  let h=`<div class="grp"><h4>Difficulty</h4>${seg('diff',[['easy','Easy'],['hard','Hard']])}</div>
+  let h=`<div class="grp"><h4>Trick difficulty</h4>${seg('diff',[['easy','Easy'],['hard','Hard']])}<h4 style="margin-top:12px">Word (1 fail = 1 letter)</h4>${seg('word',[['SKATE','SKATE'],['SKATEBOARD','SKATEBOARD']])}</div>
   <div class="grp"><h4>Players</h4>${seg('vs',[[0,'Solo'],[1,'Versus 2P']])}<h4 style="margin-top:12px">Game</h4>${seg('arc',[[0,'Classic'],[1,'Arcade 🎰']])}</div>`;
   h+=`<div class="grp"><h4>Trick styles</h4><div class="chips">${MODS[S.mode].map(([k,l])=>chip('o',k,l,S.o[S.mode+k])).join('')}</div></div>`;
   if(S.mode=='street')h+=`<div class="grp"><h4>Obstacles</h4><div class="chips">${OBS.map(([k,l])=>chip('obs',k,l,S.obs[k]!==0)).join('')}</div></div>`;
@@ -121,7 +122,7 @@ async function loadPool(){
 function pick(){let t,n=0;do{t=pool[Math.random()*pool.length|0];n++}while(recent.includes(t)&&n<30);recent.push(t);recent.length>30&&recent.shift();return t}
 
 /* ---------- game ---------- */
-let G;const LIM=()=>S.diff=='hard'?5:15,CD=5,MINBET=50;
+let G;const LIM=()=>S.word.length,CD=5,MINBET=50;
 const np=()=>S.vs?2:1,cur=()=>G.p[G.t];
 const blank=()=>({b:100,cd:{r:0,e:0,d:0},sk:{},f:0,l:0});
 function summary(){const m=MODES.find(x=>x[0]==S.mode)[2],x=[S.diff=='hard'?'Hard':'Easy',m];S.vs&&x.push('2P');S.arc&&x.push('Arcade');return x.join(' · ')}
@@ -158,10 +159,10 @@ function card(k){
 function avail(k){const p=cur();return S.arc&&G.st=='trick'&&p.cd[k]==0&&!(k=='d'&&p.b<G.bet)&&!(G.ex&&(k=='r'||k=='d'))}
 
 /* ---------- render ---------- */
-function letters(f){const n=Math.min(5,S.diff=='hard'?f:Math.floor(f/3));return [...'SKATE'].map((c,i)=>i<n?`<u>${c}</u>`:c).join('')}
+function letters(f){const n=Math.min(S.word.length,f);return [...S.word].map((c,i)=>i<n?`<u>${c}</u>`:c).join('')}
 function render(){
   const c=$('ctl'),t=$('trick');
-  $('stat').innerHTML=G.p.slice(0,np()).map((p,i)=>`<div class="pl p${i+1} ${S.vs&&G.t==i&&G.st!='over'?'cur':''}">${S.vs?`<small style="margin:0 0 4px">Player ${i+1}</small>`:''}${S.arc?`<div style="font-size:22px;font-weight:800">🛹 ${p.b}</div>`:`<div class="let">${letters(p.f)}</div>`}<small>✓ ${p.l} · ✗ ${p.f}</small></div>`).join('');
+  $('stat').innerHTML=G.p.slice(0,np()).map((p,i)=>`<div class="pl p${i+1} ${S.vs&&G.t==i&&G.st!='over'?'cur':''}">${S.vs?`<small style="margin:0 0 4px">Player ${i+1}</small>`:''}${S.arc?`<div style="font-size:22px;font-weight:800">🛹 ${p.b}</div>`:`<div class="let${S.word.length>5?' sm':''}">${letters(p.f)}</div>`}<small>✓ ${p.l} · ✗ ${p.f}</small></div>`).join('');
   const who=S.vs?`<div class="who ${G.t?'p2':''}">Player ${G.t+1}</div>`:'';
   c.innerHTML='';
   if(G.st=='load')t.innerHTML='<p>Loading tricks…</p>';
