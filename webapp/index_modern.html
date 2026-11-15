@@ -48,6 +48,17 @@ button:active{transform:scale(.96)}button:disabled{opacity:.35;pointer-events:no
 .dlg>div{background:var(--card);border-radius:24px;padding:22px;width:100%;max-width:360px;text-align:center}
 .dlg h3{margin:0 0 6px;font-size:22px}.dlg p{color:var(--mut);margin:0 0 16px}.dlg button{width:100%;margin-top:8px}
 input[type=range]{width:100%;accent-color:var(--ac)}.vr{display:flex;align-items:center;gap:12px;margin-bottom:10px}.vr span{width:70px}
+
+.body{min-height:0}
+.ai{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--card2)}.ai:last-of-type{border-bottom:0}
+.ai b{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;font-size:15px}
+.ai b.y{background:var(--ok);color:#052e1d}.ai b.n{background:var(--card2);color:var(--no)}.ai small{display:block;color:var(--mut);font-size:12px;margin-top:2px}
+.rst{width:100%;margin-top:12px;background:var(--no);color:#fff;font-weight:700}
+#ach{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;background:var(--ov);padding:20px}#ach.on{display:flex}
+#fw{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#achx{position:absolute;top:calc(env(safe-area-inset-top) + 12px);right:14px;z-index:2}
+.achc{position:relative;z-index:1;text-align:center;padding:30px 24px;background:var(--card);border-radius:28px;width:100%;max-width:340px;box-shadow:0 10px 40px #0007}
+.achc .ico{font-size:72px;line-height:1}.achc small{display:block;margin-top:10px;color:var(--ac);font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:12px}.achc h2{margin:8px 0 0;font-size:28px;line-height:1.15}
 </style></head><body>
 
 <section id="home" class="scr on">
@@ -66,11 +77,15 @@ input[type=range]{width:100%;accent-color:var(--ac)}.vr{display:flex;align-items
 
 <section id="set" class="scr">
   <div class="bar"><button class="ib" id="sback">←</button><b>Settings</b><span style="width:44px"></span></div>
+  <div class="body">
   <div class="grp"><h4>Theme</h4><div class="seg" id="themeseg"></div></div>
   <div class="grp"><div class="vr"><span>Music</span><input type="range" id="mv" min="0" max="5"></div>
   <div class="vr" style="margin:0"><span>Sounds</span><input type="range" id="sv" min="0" max="5"></div></div>
+  <div class="grp"><h4 id="acht">Achievements</h4><div id="achlist"></div><button class="rst" id="achreset">Reset achievements</button></div>
+  </div>
 </section>
 
+<div id="ach"><canvas id="fw"></canvas><button class="ib" id="achx" aria-label="Close">✕</button><div class="achc"><div class="ico">🏆</div><small>Achievement unlocked</small><h2 id="achn"></h2></div></div>
 <div class="dlg" id="dlg"><div id="dbox"></div></div>
 <script src="sound.js"></script>
 <script>
@@ -134,7 +149,7 @@ const np=()=>S.vs?2:1,cur=()=>G.p[G.t];
 const blank=()=>({b:100,cd:{r:0,e:0,d:0},sk:{},f:0,l:0});
 function summary(){const m=MODES.find(x=>x[0]==S.mode)[2],x=[S.diff=='hard'?'Hard':'Easy',m];S.vs&&x.push('2P');S.arc&&x.push('Arcade');return x.join(' · ')}
 async function newGame(){
-  G={p:[blank(),blank()],t:0,st:'load',trick:'',bet:null,ex:0,log:[],msg:''};
+  G={done:new Set(),p:[blank(),blank()],t:0,st:'load',trick:'',bet:null,ex:0,log:[],msg:''};
   $('title').textContent=summary();render();
   if(!await loadPool()){G.st='err';return render()}
   G.log.unshift({i:1,x:summary()});
@@ -145,7 +160,7 @@ function over(w){G.st='over';G.win=w;try{SoundEngine.setSlowdown(1.9,.82)}catch(
 function tick(p){['r','e','d'].forEach(k=>{if(p.sk[k])p.sk[k]=false;else if(p.cd[k]>0)p.cd[k]--})}
 function logIt(ok){G.log.unshift({ok,x:G.trick,pl:S.vs?G.t+1:0})}
 function judge(ok){
-  const p=cur();snd(ok?'landed':'failed');hap(ok?'success':'error');
+  const p=cur();snd(ok?'landed':'failed');hap(ok?'success':'error');if(ok){G.done.add(norm(G.trick));checkAch()}
   if(S.arc){
     if(!ok&&G.ex==1){G.ex=2;return render()}
     tick(p);if(ok){p.b+=G.bet*2;p.l++}else p.f++;logIt(ok);G.bet=null;G.ex=0;
@@ -212,9 +227,49 @@ $('quit').onclick=()=>{snd('click');dlg('<h3>Leave game?</h3><p>Your progress wi
 $('logb').onclick=()=>{snd('click');$('sheet').classList.add('on')};$('sx').onclick=()=>$('sheet').classList.remove('on');
 function renderTheme(){$('themeseg').innerHTML=[['auto','Auto'],['light','Light ☀️'],['dark','Dark 🌙']].map(([v,l])=>`<button data-th="${v}" class="${S.theme==v?'on':''}">${l}</button>`).join('')}
 $('themeseg').onclick=e=>{const b=e.target.closest('[data-th]');if(!b)return;S.theme=b.dataset.th;save();applyTheme();renderTheme();snd('toggle');hap()};
-$('gear').onclick=()=>{renderTheme();snd('click');$('mv').value=SoundEngine.getMusicVolume();$('sv').value=SoundEngine.getSfxVolume();show('set')};
+$('gear').onclick=()=>{renderTheme();renderAch();snd('click');$('mv').value=SoundEngine.getMusicVolume();$('sv').value=SoundEngine.getSfxVolume();show('set')};
 $('sback').onclick=()=>{snd('back');show('home')};
 $('mv').oninput=e=>SoundEngine.setMusicVolume(+e.target.value);$('sv').oninput=e=>{SoundEngine.setSfxVolume(+e.target.value);snd('click')};
+/* ---------- achievements ---------- */
+const norm=s=>String(s).toLowerCase().replace(/\s+/g,' ').trim();
+let ACH=[],got=new Set(),achQ=[];
+try{got=new Set(JSON.parse(localStorage.getItem('gs_ach')||'[]'))}catch(e){}
+const saveAch=()=>{try{localStorage.setItem('gs_ach',JSON.stringify([...got]))}catch(e){}};
+async function loadAch(){
+  try{const t=await(await fetch('data/Achievements.txt')).text();
+    ACH=t.split(/\r?\n[ \t]*\r?\n/).map(b=>b.split(/\r?\n/).map(s=>s.trim()).filter(Boolean)).filter(b=>b.length>1).map(b=>({n:b[0],t:b.slice(1)}))}catch(e){}
+  renderAch();
+}
+function renderAch(){
+  const l=$('achlist');if(!l)return;
+  $('acht').textContent=`Achievements ${[...got].filter(n=>ACH.some(a=>a.n==n)).length}/${ACH.length}`;
+  l.innerHTML=ACH.length?ACH.map(a=>{const y=got.has(a.n);return `<div class="ai"><b class="${y?'y':'n'}">${y?'✓':'✗'}</b><div>${esc(a.n)}<small>${a.t.map(esc).join(' · ')}</small></div></div>`}).join(''):'<small style="color:var(--mut)">No achievements found</small>';
+  $('achreset').disabled=!got.size;
+}
+function checkAch(){
+  ACH.forEach(a=>{if(!got.has(a.n)&&a.t.every(t=>G.done.has(norm(t)))){got.add(a.n);saveAch();achQ.push(a.n)}});
+  if(achQ.length&&!$('ach').classList.contains('on'))showAch();
+}
+function showAch(){$('achn').textContent=achQ.shift();$('ach').classList.add('on');snd('confirm');hap('success');fwStart()}
+$('achx').onclick=()=>{fwStop();$('ach').classList.remove('on');snd('click');if(achQ.length)setTimeout(showAch,250)};
+$('achreset').onclick=()=>{snd('click');dlg('<h3>Reset achievements?</h3><p>All achievements will be locked again.</p><button class="cta" id="dno">Cancel</button><button id="dyes" style="background:var(--no);color:#fff">Reset</button>');
+  $('dno').onclick=()=>$('dlg').classList.remove('on');$('dyes').onclick=()=>{got=new Set();saveAch();renderAch();$('dlg').classList.remove('on')}};
+/* fireworks */
+let fwRaf=0;
+function fwStop(){cancelAnimationFrame(fwRaf)}
+function fwStart(){
+  const c=$('fw'),x=c.getContext('2d');c.width=innerWidth;c.height=innerHeight;let P=[],t=0;fwStop();
+  const burst=()=>{const cx=c.width*(.15+Math.random()*.7),cy=c.height*(.12+Math.random()*.45),hu=Math.random()*360,n=56;
+    for(let i=0;i<n;i++){const a=Math.PI*2*i/n,s=1.5+Math.random()*3.2;P.push({x:cx,y:cy,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:70+Math.random()*30,m:100,h:hu+Math.random()*40})}};
+  const loop=()=>{
+    x.globalCompositeOperation='destination-out';x.fillStyle='rgba(0,0,0,.22)';x.fillRect(0,0,c.width,c.height);x.globalCompositeOperation='lighter';
+    if(t++%32==0)burst();
+    P=P.filter(p=>p.l>0);
+    P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.045;p.vx*=.99;p.l--;x.fillStyle=`hsla(${p.h},100%,60%,${Math.max(p.l/p.m,0)})`;x.beginPath();x.arc(p.x,p.y,2.6,0,6.3);x.fill()});
+    fwRaf=requestAnimationFrame(loop)};
+  loop();
+}
+loadAch();
 renderHome();
 /* iOS Safari ignores user-scalable=no: block double-tap and pinch zoom manually */
 ['gesturestart','gesturechange','gestureend'].forEach(g=>document.addEventListener(g,e=>e.preventDefault()));
