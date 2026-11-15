@@ -6,7 +6,8 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 @font-face{font-family:PS;src:url(fonts/press-start-2p-latin-400-normal.woff2) format('woff2');font-display:swap}
-:root{--bg:#0e1116;--card:#181c24;--card2:#222834;--tx:#f2f4f8;--mut:#8b94a7;--ac:#ffd23f;--ok:#34d399;--no:#fb5b5b;--p2:#60a5fa;--bh:64px;--jh:70px;--th:88px}
+:root{--bg:#0e1116;--card:#181c24;--card2:#222834;--tx:#f2f4f8;--mut:#8b94a7;--ac:#ffd23f;--ok:#34d399;--no:#fb5b5b;--p2:#60a5fa;--bh:64px;--jh:70px;--th:88px;--dim:#556079;--t1:#1c2230;--t2:#141821;--ov:#000c;--sub:#c9d0de;color-scheme:dark}
+:root[data-theme=light]{--bg:#f3f4f8;--card:#fff;--card2:#e6e9f0;--tx:#161a22;--mut:#667085;--ac:#f2b200;--ok:#12a36b;--no:#e5484d;--p2:#2f7be5;--dim:#c4cad6;--t1:#fff;--t2:#eceff5;--ov:#0008;--sub:#3b4352;color-scheme:light}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 html,body{margin:0;background:var(--bg);color:var(--tx);font:12px/1.25 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-text-size-adjust:100%}
 button{font:inherit;color:inherit;border:0;background:var(--card2);border-radius:10px;padding:6px 8px;cursor:pointer;min-height:34px}
@@ -16,16 +17,17 @@ button:active{transform:scale(.95)}button:disabled{opacity:.35;pointer-events:no
 .cta{display:block;width:100%;background:var(--ac);color:#171400;font-weight:800;font-size:28px;min-height:72px;border-radius:20px}
 .inf{position:absolute;top:3px;right:3px;width:22px;height:22px;min-height:0;padding:0;border-radius:50%;font-size:12px;color:var(--mut)}
 .top{display:flex;gap:5px}.top .cta{flex:1}
+.thmrow{display:flex;justify-content:flex-end;margin-top:6px;padding-bottom:10px}#thm{width:76px;height:76px;min-height:0;padding:0;border-radius:50%;font-size:38px}
 .g4{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:6px}
 .sq{aspect-ratio:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;min-height:176px;line-height:1.1;font-size:76px;border-radius:20px;background:var(--card)}.sq small{font-size:27px;font-weight:700;line-height:1.1;margin-top:6px;color:var(--tx);text-align:center;padding:0 4px}.sq.on{background:var(--ac);color:#171400}.sq.on small{color:#171400}
 .rw{display:flex;justify-content:space-between;align-items:center;width:100%;margin-top:5px;background:var(--card)}.rw b{color:var(--ac)}
 h5{margin:10px 0 4px;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
 .chips{display:flex;flex-wrap:wrap;gap:4px}.chip{padding:4px 9px;border-radius:99px;min-height:28px;font-size:11px}.chip.on{background:var(--ac);color:#171400;font-weight:700}
-.bar{display:flex;align-items:center;gap:4px;margin-bottom:4px}.mid{flex:1;text-align:center;line-height:1.1;min-width:0}#title{font-size:22px;font-weight:700;line-height:1.1;color:#c9d0de;white-space:nowrap}
+.bar{display:flex;align-items:center;gap:4px;margin-bottom:4px}.mid{flex:1;text-align:center;line-height:1.1;min-width:0}#title{font-size:22px;font-weight:700;line-height:1.1;color:var(--sub);white-space:nowrap}
 .ib{width:var(--bh);height:var(--bh);min-height:0;padding:0;border-radius:50%;font-size:28px;flex:none}
 .pl{margin:0 3px;font-weight:700;font-size:13px;white-space:nowrap}.pl.cur{color:var(--ac)}.pl.cur.p2{color:var(--p2)}
-.pl .let{font-size:9px;letter-spacing:1px}.let{display:flex;justify-content:space-between;padding:0 30px;font:22px/1.1 PS;color:#556079}.let i,.let u{font-style:normal;text-decoration:none}.let u{text-decoration:none;color:var(--no)}
-.trick{flex:none;height:var(--th);overflow:hidden;position:relative;background:linear-gradient(160deg,#1c2230,#141821);border-radius:14px;padding:4px;text-align:center;margin-bottom:5px;display:flex;flex-direction:column;justify-content:center;align-items:center}
+.pl .let{font-size:9px;letter-spacing:1px}.let{display:flex;justify-content:space-between;padding:0 30px;font:22px/1.1 PS;color:var(--dim)}.let i,.let u{font-style:normal;text-decoration:none}.let u{text-decoration:none;color:var(--no)}
+.trick{flex:none;height:var(--th);overflow:hidden;position:relative;background:linear-gradient(160deg,var(--t1),var(--t2));border-radius:14px;padding:4px;text-align:center;margin-bottom:5px;display:flex;flex-direction:column;justify-content:center;align-items:center}
 .trick h2{margin:0;font-size:30px;line-height:1.1;font-weight:800;word-break:break-word}.trick p{margin:3px 0 0;color:var(--mut);font-size:14px}
 .who{font-weight:700;font-size:14px;color:var(--ac)}.who.p2{color:var(--p2)}
 .link{background:none;color:var(--mut);min-height:0;padding:4px;text-decoration:underline;font-size:10px}
@@ -36,7 +38,7 @@ h5{margin:10px 0 4px;font-size:9px;letter-spacing:.08em;text-transform:uppercase
 .sheet{display:none;padding:0 2px 14px}.sheet.on{display:block}#game.lg>:not(.sheet){display:none}
 .sh{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;position:sticky;top:env(safe-area-inset-top);background:var(--bg);z-index:2;padding:4px 0}.sh::before{content:'';position:absolute;left:-8px;right:-8px;bottom:100%;height:env(safe-area-inset-top);background:var(--bg)}.sh h3{margin:0;font-size:30px}
 .li{display:flex;gap:8px;padding:14px 0;font-size:26px;border-bottom:1px solid var(--card2)}.li.info{color:var(--mut);font-size:18px}
-.dlg{position:fixed;inset:0;background:#000c;display:none;align-items:flex-start;justify-content:center;padding:calc(env(safe-area-inset-top) + 4px) 8px 8px;overflow-y:auto;z-index:9}.dlg.on{display:flex}
+.dlg{position:fixed;inset:0;background:var(--ov);display:none;align-items:flex-start;justify-content:center;padding:calc(env(safe-area-inset-top) + 4px) 8px 8px;overflow-y:auto;z-index:9}.dlg.on{display:flex}
 .dlg>div{background:var(--card);border-radius:14px;padding:8px;width:100%;text-align:center}.dlg h3{margin:0 0 6px;font-size:30px}.dlg p{margin:0 0 8px;color:var(--mut);font-size:14px}.dlg button{width:100%;margin-top:5px;min-height:58px;font-size:26px;border-radius:16px}.dlg .cta{font-size:26px;min-height:58px}
 input[type=range]{height:44px;width:100%;accent-color:var(--ac)}.vr{margin-top:10px;font-size:16px}
 </style></head><body>
@@ -60,6 +62,9 @@ try{Object.assign(S,JSON.parse(localStorage.getItem('gs2c')||'{}'))}catch(e){}
 const SHOW_ALL=false; /* set true to bring back Players + Game tiles */
 if(!SHOW_ALL){S.vs=0;S.arc=0}
 if(S.word!='SKATEBOARD')S.word='SKATE';
+if(S.theme!='light')S.theme='dark';
+function applyTheme(){document.documentElement.dataset.theme=S.theme;const c=S.theme=='light'?'#f3f4f8':'#0e1116';try{tg&&(tg.setHeaderColor(c),tg.setBackgroundColor(c))}catch(e){}}
+applyTheme();
 const save=()=>{try{localStorage.setItem('gs2c',JSON.stringify(S))}catch(e){}};
 const show=id=>{scrollTo(0,0);document.querySelectorAll('.scr').forEach(s=>s.classList.toggle('on',s.id==id));try{SoundEngine.startMusic(id=='game'?'punk':'hiphop')}catch(e){}};
 
@@ -75,7 +80,7 @@ function renderHome(){
   h+=b('word',long?'🔟':'5️⃣',long?'SKATE':'SKATEBOARD',S.word,long?'font-size:19px':'');
   h+=MODS[S.mode].map(([k])=>sq('o',k,S.o[S.mode+k])).join('');
   if(S.mode=='street')h+=OBS.map(([k])=>sq('obs',k,S.obs[k]!==0)).join('');
-  $('opts').innerHTML=h+'</div>';
+  $('opts').innerHTML=h+`</div><div class="thmrow"><button class="sq" id="thm" aria-label="Light / dark theme">${S.theme=='light'?'☀️':'🌙'}</button></div>`;
 }
 document.addEventListener('click',e=>{
   const b=e.target.closest('[data-k]');if(!b||!$('home').classList.contains('on'))return;
@@ -181,6 +186,7 @@ $('logb').onclick=()=>{snd('click');$('sheet').classList.add('on');$('game').cla
 $('gear').onclick=()=>{snd('click');$('mv').value=SoundEngine.getMusicVolume();$('sv').value=SoundEngine.getSfxVolume();show('set')};
 $('sback').onclick=()=>{snd('back');show('home')};
 $('mv').oninput=e=>SoundEngine.setMusicVolume(+e.target.value);$('sv').oninput=e=>{SoundEngine.setSfxVolume(+e.target.value);snd('click')};
+$('opts').addEventListener('click',e=>{if(e.target.closest('#thm')){S.theme=S.theme=='light'?'dark':'light';save();applyTheme();renderHome()}});
 renderHome();
 /* iOS Safari ignores user-scalable=no: block double-tap and pinch zoom manually */
 ['gesturestart','gesturechange','gestureend'].forEach(g=>document.addEventListener(g,e=>e.preventDefault()));
