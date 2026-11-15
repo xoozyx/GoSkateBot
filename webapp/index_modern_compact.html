@@ -6,7 +6,7 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 @font-face{font-family:PS;src:url(fonts/press-start-2p-latin-400-normal.woff2) format('woff2');font-display:swap}
-:root{--bg:#0e1116;--card:#181c24;--card2:#222834;--tx:#f2f4f8;--mut:#8b94a7;--ac:#ffd23f;--ok:#34d399;--no:#fb5b5b;--p2:#60a5fa;--bh:64px;--jh:96px;--th:88px}
+:root{--bg:#0e1116;--card:#181c24;--card2:#222834;--tx:#f2f4f8;--mut:#8b94a7;--ac:#ffd23f;--ok:#34d399;--no:#fb5b5b;--p2:#60a5fa;--bh:64px;--jh:70px;--th:88px}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 html,body{margin:0;background:var(--bg);color:var(--tx);font:12px/1.25 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-text-size-adjust:100%}
 button{font:inherit;color:inherit;border:0;background:var(--card2);border-radius:10px;padding:6px 8px;cursor:pointer;min-height:34px}
@@ -17,7 +17,7 @@ button:active{transform:scale(.95)}button:disabled{opacity:.35;pointer-events:no
 .inf{position:absolute;top:3px;right:3px;width:22px;height:22px;min-height:0;padding:0;border-radius:50%;font-size:12px;color:var(--mut)}
 .top{display:flex;gap:5px}.top .cta{flex:1}
 .g4{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:6px}
-.sq{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0;min-height:0;font-size:60px;border-radius:20px;background:var(--card)}.sq small{font-size:14px;line-height:1;margin-top:6px;color:var(--mut)}.sq.on{background:var(--ac);color:#171400}.sq.on small{color:#171400}
+.sq{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0;min-height:0;font-size:52px;border-radius:20px;background:var(--card)}.sq small{font-size:21px;font-weight:700;line-height:1.1;margin-top:8px;color:var(--tx);text-align:center;padding:0 4px}.sq.on{background:var(--ac);color:#171400}.sq.on small{color:#171400}
 .rw{display:flex;justify-content:space-between;align-items:center;width:100%;margin-top:5px;background:var(--card)}.rw b{color:var(--ac)}
 h5{margin:10px 0 4px;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
 .chips{display:flex;flex-wrap:wrap;gap:4px}.chip{padding:4px 9px;border-radius:99px;min-height:28px;font-size:11px}.chip.on{background:var(--ac);color:#171400;font-weight:700}
@@ -34,18 +34,19 @@ h5{margin:10px 0 4px;font-size:9px;letter-spacing:.08em;text-transform:uppercase
 .card{display:flex;align-items:center;justify-content:center;gap:4px;font-size:20px;padding:2px;min-height:48px;background:var(--card)}.card i{font-size:24px;font-style:normal}
 .go{display:flex;gap:5px}.go button{flex:1;min-height:var(--jh);font-size:44px;font-weight:800;border-radius:24px}.go .f{background:var(--no);color:#fff}.go .l{background:var(--ok);color:#052e1d}
 .sheet{position:fixed;inset:0;background:var(--bg);padding:calc(env(safe-area-inset-top) + 4px) 8px 14px;overflow-y:auto;display:none;z-index:5}.sheet.on{display:block}
-.sh{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}.sh h3{margin:0;font-size:20px}
-.li{display:flex;gap:8px;padding:10px 0;font-size:16px;border-bottom:1px solid var(--card2)}.li.info{color:var(--mut);font-size:13px}
-.dlg{position:fixed;inset:0;background:#000c;display:none;align-items:center;justify-content:center;padding:8px;z-index:9}.dlg.on{display:flex}
-.dlg>div{background:var(--card);border-radius:14px;padding:10px;width:100%;text-align:center}.dlg h3{margin:0 0 4px;font-size:22px}.dlg p{margin:0 0 8px;color:var(--mut);font-size:14px}.dlg button{width:100%;margin-top:6px;min-height:52px;font-size:18px}.dlg .cta{font-size:18px;min-height:52px}
+.sh{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}.sh h3{margin:0;font-size:30px}
+.li{display:flex;gap:8px;padding:14px 0;font-size:26px;border-bottom:1px solid var(--card2)}.li.info{color:var(--mut);font-size:18px}
+.dlg{position:fixed;inset:0;background:#000c;display:none;align-items:flex-start;justify-content:center;padding:calc(env(safe-area-inset-top) + 4px) 8px 8px;overflow-y:auto;z-index:9}.dlg.on{display:flex}
+.dlg>div{background:var(--card);border-radius:14px;padding:8px;width:100%;text-align:center}.dlg h3{margin:0 0 6px;font-size:30px}.dlg p{margin:0 0 8px;color:var(--mut);font-size:14px}.dlg button{width:100%;margin-top:5px;min-height:58px;font-size:26px;border-radius:16px}.dlg .cta{font-size:26px;min-height:58px}
 input[type=range]{height:44px;width:100%;accent-color:var(--ac)}.vr{margin-top:10px;font-size:16px}
 </style></head><body>
-<section id="home" class="scr on"><div class="top"><button class="cta" id="start">START</button><button class="sq" id="gear" aria-label="Sound" style="width:64px;height:60px;aspect-ratio:auto;flex:none;font-size:30px">⚙️</button></div><div id="opts"></div></section>
+<section id="home" class="scr on"><div class="top"><button class="cta" id="start">START</button><button class="sq" id="gear" aria-label="Sound" style="display:none;width:64px;height:60px;aspect-ratio:auto;flex:none;font-size:30px">⚙️</button></div><div id="opts"></div></section>
 <section id="game" class="scr"><div class="bar"><button class="ib" id="quit">✕</button><div class="mid"><div id="title"></div><div id="stat"></div></div><button class="ib" id="logb">☰</button></div><div class="trick" id="trick"></div><div id="ctl"></div>
-<div class="sheet" id="sheet"><div class="sh"><h3>Trick log</h3><button class="link" id="sx" style="font-size:18px;padding:14px 8px">close</button></div><div id="log"></div></div></section>
+<div class="sheet" id="sheet"><div class="sh"><h3>Trick log</h3><button class="link" id="sx" style="font-size:26px;padding:14px 8px">close</button></div><div id="log"></div></div></section>
 <section id="set" class="scr"><div class="bar"><button class="ib" id="sback">←</button><div class="mid"><b>Sound</b></div><span style="width:30px"></span></div><div class="vr"><span>Music</span><input type="range" id="mv" min="0" max="5"></div><div class="vr"><span>Effects</span><input type="range" id="sv" min="0" max="5"></div></section>
 <div class="dlg" id="dlg"><div id="dbox"></div></div>
-<script src="sound.js"></script>
+<script>const SOUND=false; /* set true to bring back music + sound effects and the Sound button */
+if(SOUND)document.write('<script src="sound.js"><\/script>');else window.SoundEngine=new Proxy({},{get:()=>()=>0});</script>
 <script>
 const tg=window.Telegram&&Telegram.WebApp;if(tg){tg.ready();tg.expand();try{tg.setHeaderColor('#0e1116');tg.setBackgroundColor('#0e1116')}catch(e){}}
 const $=i=>document.getElementById(i),hap=t=>{try{tg&&tg.HapticFeedback&&(t?tg.HapticFeedback.notificationOccurred(t):tg.HapticFeedback.impactOccurred('light'))}catch(e){}};
@@ -55,18 +56,22 @@ const MODES=[['flat','🛹','Flat'],['ramp','🌊','Ramp'],['street','🏙️','
 const OBS=[['manualbox','Manual Box','manualbox',1],['kicker','Kicker','kicker',0],['curb','Curb','slappy',1],['stairs','Stairs','stairs',0],['ledge','Ledge','ledge',1],['rail','Rail','rail',1]];
 const MODS={flat:[['old','Old School'],['body','Body Varial']],ramp:[['air','Air Tricks']],street:[['old','Old School'],['ins','Ins & Outs']]};
 let S={mode:'flat',diff:'easy',vs:0,arc:0,o:{},obs:{}};
-try{Object.assign(S,JSON.parse(localStorage.getItem('gs2')||'{}'))}catch(e){}
-const save=()=>{try{localStorage.setItem('gs2',JSON.stringify(S))}catch(e){}};
+try{Object.assign(S,JSON.parse(localStorage.getItem('gs2c')||'{}'))}catch(e){}
+const SHOW_ALL=false; /* set true to bring back Players + Game tiles */
+if(!SHOW_ALL){S.vs=0;S.arc=0}
+const save=()=>{try{localStorage.setItem('gs2c',JSON.stringify(S))}catch(e){}};
 const show=id=>{scrollTo(0,0);document.querySelectorAll('.scr').forEach(s=>s.classList.toggle('on',s.id==id));try{SoundEngine.startMusic(id=='game'?'punk':'hiphop')}catch(e){}};
 
 /* ---------- home ---------- */
 function seg(k,opts){return `<div class="seg">${opts.map(([v,l])=>`<button data-k="${k}" data-v="${v}" class="${S[k]==v?'on':''}">${l}</button>`).join('')}</div>`}
 function chip(t,k,l,on){return `<button class="chip ${on?'on':''}" data-t="${t}" data-k="${k}">${l}</button>`}
-const ICON={old:'📼',body:'🌀',air:'🪂',ins:'↔️',manualbox:'📦',kicker:'📐',curb:'🧱',stairs:'🪜',ledge:'🛤️',rail:'🚧'},CAP={old:'Old',body:'Body',air:'Air',ins:'In/Out',manualbox:'Box',kicker:'Kick',curb:'Curb',stairs:'Stairs',ledge:'Ledge',rail:'Rail'};
+const ICON={old:'📼',body:'🌀',air:'🪂',ins:'↔️',manualbox:'📦',kicker:'📐',curb:'🧱',stairs:'🪜',ledge:'🛤️',rail:'🚧'},CAP={old:'Old School',body:'Body Varial',air:'Air Tricks',ins:'Ins & Outs',manualbox:'Manual Box',kicker:'Kicker',curb:'Curb',stairs:'Stairs',ledge:'Ledge',rail:'Rail'};
 const sq=(t,k,on)=>`<button class="sq ${on?'on':''}" data-t="${t}" data-k="${k}">${ICON[k]}<small>${CAP[k]}</small></button>`;
 function renderHome(){
-  const mk=MODES.map(m=>m[0]),mi=mk.indexOf(S.mode),b=(k,i,nv,a)=>`<button class="sq" data-k="${k}" data-v="${nv}" aria-label="${a}">${i}</button>`;
-  let h='<div class="g4">'+b('mode',MODES[mi][1],mk[(mi+1)%3],MODES[mi][2])+b('diff',S.diff=='hard'?'🔥':'🟢',S.diff=='hard'?'easy':'hard',S.diff)+b('vs',S.vs?'👥':'👤',S.vs?0:1,'players')+b('arc',S.arc?'🎰':'🎯',S.arc?0:1,'game')+'</div>';
+  const mk=MODES.map(m=>m[0]),mi=mk.indexOf(S.mode),b=(k,i,nv,cap)=>`<button class="sq" data-k="${k}" data-v="${nv}">${i}<small>${cap}</small></button>`;
+  let h='<div class="g4">'+b('mode',MODES[mi][1],mk[(mi+1)%3],MODES[mi][2])+b('diff',S.diff=='hard'?'🔥':'🟢',S.diff=='hard'?'easy':'hard',S.diff=='hard'?'Hard':'Easy');
+  if(SHOW_ALL)h+=b('vs',S.vs?'👥':'👤',S.vs?0:1,S.vs?'Versus':'Solo')+b('arc',S.arc?'🎰':'🎯',S.arc?0:1,S.arc?'Arcade':'Classic');
+  h+='</div>';
   h+=`<div class="g4">${MODS[S.mode].map(([k])=>sq('o',k,S.o[S.mode+k])).join('')}</div>`;
   if(S.mode=='street')h+=`<div class="g4">${OBS.map(([k])=>sq('obs',k,S.obs[k]!==0)).join('')}</div>`;
   $('opts').innerHTML=h;
@@ -149,7 +154,7 @@ function render0(){
   else if(G.st=='ready'){t.innerHTML='<h2>Ready?</h2>';c.innerHTML='<button class="cta" id="roll">ROLL TRICK</button>'}
   else if(G.st=='bet'){t.innerHTML=`${who}<h2>${esc(G.msg)}</h2>`;const p=cur(),a=p.b>=1000?[500,1000,1500]:[50,100,250];c.innerHTML=`<div class="row">${a.map(x=>`<button class="bet" data-bet="${x}" ${x>p.b?'disabled':''}>${x}</button>`).join('')}</div>`+cards()}
   else if(G.st=='trick'){const m=G.ex==1?'2 attempts':G.ex==2?'Last attempt!':S.arc?`Bet ${G.bet} 🛹`:'';t.innerHTML=`${who}<h2>${esc(G.trick)}</h2>${m?`<p>${m}</p>`:''}`;c.innerHTML=(S.arc?cards():'')+'<div class="go"><button class="f" data-j="0">✗</button><button class="l" data-j="1">✓</button></div>'}
-  else if(G.st=='over'){t.innerHTML=`<h2>${S.vs?`🏆 Player ${G.win} wins`:'Game over!'}</h2>${S.arc&&!S.vs?'<p>Out of skatebucks</p>':''}`;c.innerHTML='<div class="row"><button id="quit2" style="min-height:56px;font-size:18px">Menu</button><button class="cta" id="again" style="min-height:56px;font-size:18px">New game</button></div>'}
+  else if(G.st=='over'){t.innerHTML=`<h2>${S.vs?`🏆 Player ${G.win} wins`:'Game over!'}</h2>${S.arc&&!S.vs?'<p>Out of skatebucks</p>':''}`;c.innerHTML='<div class="row"><button id="quit2" style="min-height:72px;font-size:24px">Menu</button><button class="cta" id="again" style="min-height:72px;font-size:24px">New game</button></div>'}
   $('log').innerHTML=G.log.map(e=>e.i?`<div class="li info">${esc(e.x)}</div>`:`<div class="li"><span>${e.ok?'✅':'❌'}</span><span>${e.pl?`P${e.pl} · `:''}${esc(e.x)}</span></div>`).join('')||'<p style="color:var(--mut)">Empty</p>';
 }
 function cards(){const p=cur(),n={r:['🔄','Reroll'],e:['☝️','Extra'],d:['✖️2','Double']};
@@ -166,11 +171,10 @@ document.addEventListener('click',e=>{
   else if(b.id=='quit2')leave();
   else if(b.id=='info'){const u=howto&&howto.get(G.trick)||'https://www.google.com/search?q='+encodeURIComponent('How to '+G.trick+' on a skateboard');tg&&tg.openLink?tg.openLink(u):window.open(u,'_blank')}
 });
-document.addEventListener('click',e=>{if(G&&G.st=='trick'&&$('game').classList.contains('on')&&e.target.closest('#trick')){const u=howto&&howto.get(G.trick)||'https://www.google.com/search?q='+encodeURIComponent('How to '+G.trick+' on a skateboard');tg&&tg.openLink?tg.openLink(u):window.open(u,'_blank')}});
 function leave(){snd('back');try{SoundEngine.setSlowdown(1,1)}catch(e){}$('dlg').classList.remove('on');$('sheet').classList.remove('on');show('home')}
 function dlg(h){$('dbox').innerHTML=h;$('dlg').classList.add('on')}
 $('start').onclick=()=>{snd('confirm');hap();show('game');newGame()};
-$('quit').onclick=()=>{snd('click');dlg('<h3>Leave game?</h3><p>Your progress will be lost.</p><button class="cta" id="dno">Keep playing</button><button id="dre">Restart</button><button id="dq">Quit to menu</button>');
+$('quit').onclick=()=>{snd('click');dlg('<h3>Leave game?</h3><button class="cta" id="dno">Keep playing</button><button id="dre">Restart</button><button id="dq">Quit to menu</button>');
   $('dno').onclick=()=>$('dlg').classList.remove('on');$('dre').onclick=()=>{$('dlg').classList.remove('on');try{SoundEngine.setSlowdown(1,1)}catch(e){}newGame()};$('dq').onclick=leave};
 $('logb').onclick=()=>{snd('click');$('sheet').classList.add('on')};$('sx').onclick=()=>$('sheet').classList.remove('on');
 $('gear').onclick=()=>{snd('click');$('mv').value=SoundEngine.getMusicVolume();$('sv').value=SoundEngine.getSfxVolume();show('set')};
