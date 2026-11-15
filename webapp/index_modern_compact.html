@@ -21,10 +21,10 @@ button:active{transform:scale(.95)}button:disabled{opacity:.35;pointer-events:no
 .rw{display:flex;justify-content:space-between;align-items:center;width:100%;margin-top:5px;background:var(--card)}.rw b{color:var(--ac)}
 h5{margin:10px 0 4px;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
 .chips{display:flex;flex-wrap:wrap;gap:4px}.chip{padding:4px 9px;border-radius:99px;min-height:28px;font-size:11px}.chip.on{background:var(--ac);color:#171400;font-weight:700}
-.bar{display:flex;align-items:center;gap:4px;margin-bottom:4px}.mid{flex:1;text-align:center;line-height:1.25;min-width:0}#title{font-size:14px;color:var(--mut);white-space:nowrap}
+.bar{display:flex;align-items:center;gap:4px;margin-bottom:4px}.mid{flex:1;text-align:center;line-height:1.1;min-width:0}#title{font-size:22px;font-weight:700;line-height:1.1;color:#c9d0de;white-space:nowrap}
 .ib{width:var(--bh);height:var(--bh);min-height:0;padding:0;border-radius:50%;font-size:28px;flex:none}
 .pl{margin:0 3px;font-weight:700;font-size:13px;white-space:nowrap}.pl.cur{color:var(--ac)}.pl.cur.p2{color:var(--p2)}
-.pl .let{font-size:9px;letter-spacing:1px}.let{font:15px PS;letter-spacing:2px;color:#394152}.let u{text-decoration:none;color:var(--no)}
+.pl .let{font-size:9px;letter-spacing:1px}.let{display:flex;justify-content:space-between;padding:0 30px;font:22px/1.1 PS;color:#556079}.let i,.let u{font-style:normal;text-decoration:none}.let u{text-decoration:none;color:var(--no)}
 .trick{flex:none;height:var(--th);overflow:hidden;position:relative;background:linear-gradient(160deg,#1c2230,#141821);border-radius:14px;padding:4px;text-align:center;margin-bottom:5px;display:flex;flex-direction:column;justify-content:center;align-items:center}
 .trick h2{margin:0;font-size:30px;line-height:1.1;font-weight:800;word-break:break-word}.trick p{margin:3px 0 0;color:var(--mut);font-size:14px}
 .who{font-weight:700;font-size:14px;color:var(--ac)}.who.p2{color:var(--p2)}
@@ -139,7 +139,7 @@ function card(k){
 function avail(k){const p=cur();return S.arc&&G.st=='trick'&&p.cd[k]==0&&!(k=='d'&&p.b<G.bet)&&!(G.ex&&(k=='r'||k=='d'))}
 
 /* ---------- render ---------- */
-function letters(f){const n=Math.min(5,S.diff=='hard'?f:Math.floor(f/3));return `<span class="let">${[...'SKATE'].map((c,i)=>i<n?`<u>${c}</u>`:c).join('')}</span>`}
+function letters(f){const n=Math.min(5,S.diff=='hard'?f:Math.floor(f/3));return `<span class="let">${[...'SKATE'].map((c,i)=>i<n?`<u>${c}</u>`:`<i>${c}</i>`).join('')}</span>`}
 function fit(){const t=$('trick'),h=t.querySelector('h2');if(!h||!t.offsetParent)return;let s=46;h.style.fontSize=s+'px';
   const used=()=>[...t.children].reduce((a,c)=>a+c.offsetHeight,0);while(s>12&&used()>t.clientHeight-8){s--;h.style.fontSize=s+'px'}}
 addEventListener('resize',()=>{try{fit()}catch(e){}});
