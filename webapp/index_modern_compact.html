@@ -13,11 +13,11 @@ button{font:inherit;color:inherit;border:0;background:var(--card2);border-radius
 button:active{transform:scale(.95)}button:disabled{opacity:.35;pointer-events:none}
 .scr{display:none;padding:calc(env(safe-area-inset-top) + 4px) 6px 6px}.scr.on{display:flex;flex-direction:column}
 .logo{font:9px PS;color:var(--ac);text-align:center;margin:2px 0 6px}
-.cta{display:block;width:100%;background:var(--ac);color:#171400;font-weight:800;font-size:22px;min-height:60px;border-radius:18px}
+.cta{display:block;width:100%;background:var(--ac);color:#171400;font-weight:800;font-size:28px;min-height:72px;border-radius:20px}
 .inf{position:absolute;top:3px;right:3px;width:22px;height:22px;min-height:0;padding:0;border-radius:50%;font-size:12px;color:var(--mut)}
 .top{display:flex;gap:5px}.top .cta{flex:1}
 .g4{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:6px}
-.sq{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0;min-height:0;font-size:52px;border-radius:20px;background:var(--card)}.sq small{font-size:21px;font-weight:700;line-height:1.1;margin-top:8px;color:var(--tx);text-align:center;padding:0 4px}.sq.on{background:var(--ac);color:#171400}.sq.on small{color:#171400}
+.sq{aspect-ratio:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;min-height:176px;line-height:1.1;font-size:76px;border-radius:20px;background:var(--card)}.sq small{font-size:27px;font-weight:700;line-height:1.1;margin-top:6px;color:var(--tx);text-align:center;padding:0 4px}.sq.on{background:var(--ac);color:#171400}.sq.on small{color:#171400}
 .rw{display:flex;justify-content:space-between;align-items:center;width:100%;margin-top:5px;background:var(--card)}.rw b{color:var(--ac)}
 h5{margin:10px 0 4px;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
 .chips{display:flex;flex-wrap:wrap;gap:4px}.chip{padding:4px 9px;border-radius:99px;min-height:28px;font-size:11px}.chip.on{background:var(--ac);color:#171400;font-weight:700}
@@ -33,14 +33,14 @@ h5{margin:10px 0 4px;font-size:9px;letter-spacing:.08em;text-transform:uppercase
 .bet{font-weight:800;font-size:22px;border:2px solid var(--ac);min-height:60px;padding:4px}
 .card{display:flex;align-items:center;justify-content:center;gap:4px;font-size:20px;padding:2px;min-height:48px;background:var(--card)}.card i{font-size:24px;font-style:normal}
 .go{display:flex;gap:5px}.go button{flex:1;min-height:var(--jh);font-size:44px;font-weight:800;border-radius:24px}.go .f{background:var(--no);color:#fff}.go .l{background:var(--ok);color:#052e1d}
-.sheet{position:fixed;inset:0;background:var(--bg);padding:calc(env(safe-area-inset-top) + 4px) 8px 14px;overflow-y:auto;display:none;z-index:5}.sheet.on{display:block}
-.sh{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}.sh h3{margin:0;font-size:30px}
+.sheet{display:none;padding:0 2px 14px}.sheet.on{display:block}#game.lg>:not(.sheet){display:none}
+.sh{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;position:sticky;top:env(safe-area-inset-top);background:var(--bg);z-index:2;padding:4px 0}.sh::before{content:'';position:absolute;left:-8px;right:-8px;bottom:100%;height:env(safe-area-inset-top);background:var(--bg)}.sh h3{margin:0;font-size:30px}
 .li{display:flex;gap:8px;padding:14px 0;font-size:26px;border-bottom:1px solid var(--card2)}.li.info{color:var(--mut);font-size:18px}
 .dlg{position:fixed;inset:0;background:#000c;display:none;align-items:flex-start;justify-content:center;padding:calc(env(safe-area-inset-top) + 4px) 8px 8px;overflow-y:auto;z-index:9}.dlg.on{display:flex}
 .dlg>div{background:var(--card);border-radius:14px;padding:8px;width:100%;text-align:center}.dlg h3{margin:0 0 6px;font-size:30px}.dlg p{margin:0 0 8px;color:var(--mut);font-size:14px}.dlg button{width:100%;margin-top:5px;min-height:58px;font-size:26px;border-radius:16px}.dlg .cta{font-size:26px;min-height:58px}
 input[type=range]{height:44px;width:100%;accent-color:var(--ac)}.vr{margin-top:10px;font-size:16px}
 </style></head><body>
-<section id="home" class="scr on"><div class="top"><button class="cta" id="start">START</button><button class="sq" id="gear" aria-label="Sound" style="display:none;width:64px;height:60px;aspect-ratio:auto;flex:none;font-size:30px">⚙️</button></div><div id="opts"></div></section>
+<section id="home" class="scr on"><div class="top"><button class="cta" id="start">START</button><button class="sq" id="gear" aria-label="Sound" style="display:none;min-height:0;width:64px;height:60px;aspect-ratio:auto;flex:none;font-size:30px">⚙️</button></div><div id="opts"></div></section>
 <section id="game" class="scr"><div class="bar"><button class="ib" id="quit">✕</button><div class="mid"><div id="title"></div><div id="stat"></div></div><button class="ib" id="logb">☰</button></div><div class="trick" id="trick"></div><div id="ctl"></div>
 <div class="sheet" id="sheet"><div class="sh"><h3>Trick log</h3><button class="link" id="sx" style="font-size:26px;padding:14px 8px">close</button></div><div id="log"></div></div></section>
 <section id="set" class="scr"><div class="bar"><button class="ib" id="sback">←</button><div class="mid"><b>Sound</b></div><span style="width:30px"></span></div><div class="vr"><span>Music</span><input type="range" id="mv" min="0" max="5"></div><div class="vr"><span>Effects</span><input type="range" id="sv" min="0" max="5"></div></section>
@@ -171,12 +171,12 @@ document.addEventListener('click',e=>{
   else if(b.id=='quit2')leave();
   else if(b.id=='info'){const u=howto&&howto.get(G.trick)||'https://www.google.com/search?q='+encodeURIComponent('How to '+G.trick+' on a skateboard');tg&&tg.openLink?tg.openLink(u):window.open(u,'_blank')}
 });
-function leave(){snd('back');try{SoundEngine.setSlowdown(1,1)}catch(e){}$('dlg').classList.remove('on');$('sheet').classList.remove('on');show('home')}
+function leave(){snd('back');try{SoundEngine.setSlowdown(1,1)}catch(e){}$('dlg').classList.remove('on');$('sheet').classList.remove('on');$('game').classList.remove('lg');show('home')}
 function dlg(h){$('dbox').innerHTML=h;$('dlg').classList.add('on')}
 $('start').onclick=()=>{snd('confirm');hap();show('game');newGame()};
 $('quit').onclick=()=>{snd('click');dlg('<h3>Leave game?</h3><button class="cta" id="dno">Keep playing</button><button id="dre">Restart</button><button id="dq">Quit to menu</button>');
   $('dno').onclick=()=>$('dlg').classList.remove('on');$('dre').onclick=()=>{$('dlg').classList.remove('on');try{SoundEngine.setSlowdown(1,1)}catch(e){}newGame()};$('dq').onclick=leave};
-$('logb').onclick=()=>{snd('click');$('sheet').classList.add('on')};$('sx').onclick=()=>$('sheet').classList.remove('on');
+$('logb').onclick=()=>{snd('click');$('sheet').classList.add('on');$('game').classList.add('lg');scrollTo(0,0)};$('sx').onclick=()=>{$('sheet').classList.remove('on');$('game').classList.remove('lg');scrollTo(0,0);try{fit()}catch(e){}};
 $('gear').onclick=()=>{snd('click');$('mv').value=SoundEngine.getMusicVolume();$('sv').value=SoundEngine.getSfxVolume();show('set')};
 $('sback').onclick=()=>{snd('back');show('home')};
 $('mv').oninput=e=>SoundEngine.setMusicVolume(+e.target.value);$('sv').oninput=e=>{SoundEngine.setSfxVolume(+e.target.value);snd('click')};
