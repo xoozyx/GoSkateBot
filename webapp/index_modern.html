@@ -50,13 +50,13 @@ button:active{transform:scale(.96)}button:disabled{opacity:.35;pointer-events:no
 input[type=range]{width:100%;accent-color:var(--ac)}.vr{display:flex;align-items:center;gap:12px;margin-bottom:10px}.vr span{width:70px}
 
 .body{min-height:0}
-.ai{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--card2)}.ai:last-of-type{border-bottom:0}
+.ai{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--card2)}.ai:last-of-type{border-bottom:0}
 .ai b{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;font-size:15px}
 .ai b.y{background:var(--ok);color:#052e1d}.ai b.n{background:var(--card2);color:var(--no)}.ai small{display:block;color:var(--mut);font-size:12px;margin-top:2px}
 .rst{width:100%;margin-top:12px;background:var(--no);color:#fff;font-weight:700}
 #ach{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;background:var(--ov);padding:20px}#ach.on{display:flex}
 #fw{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-#achx{position:absolute;top:calc(env(safe-area-inset-top) + 12px);right:14px;z-index:2}
+#achx{position:absolute;top:10px;right:10px;width:38px;height:38px;font-size:16px}
 .achc{position:relative;z-index:1;text-align:center;padding:30px 24px;background:var(--card);border-radius:28px;width:100%;max-width:340px;box-shadow:0 10px 40px #0007}
 .achc .ico{font-size:72px;line-height:1}.achc small{display:block;margin-top:10px;color:var(--ac);font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:12px}.achc h2{margin:8px 0 0;font-size:28px;line-height:1.15}
 </style></head><body>
@@ -85,7 +85,7 @@ input[type=range]{width:100%;accent-color:var(--ac)}.vr{display:flex;align-items
   </div>
 </section>
 
-<div id="ach"><canvas id="fw"></canvas><button class="ib" id="achx" aria-label="Close">✕</button><div class="achc"><div class="ico">🏆</div><small>Achievement unlocked</small><h2 id="achn"></h2></div></div>
+<div id="ach"><canvas id="fw"></canvas><div class="achc"><button class="ib" id="achx" aria-label="Close">✕</button><div class="ico">🏆</div><small>Achievement unlocked</small><h2 id="achn"></h2></div></div>
 <div class="dlg" id="dlg"><div id="dbox"></div></div>
 <script src="sound.js"></script>
 <script>
@@ -160,7 +160,7 @@ function over(w){G.st='over';G.win=w;try{SoundEngine.setSlowdown(1.9,.82)}catch(
 function tick(p){['r','e','d'].forEach(k=>{if(p.sk[k])p.sk[k]=false;else if(p.cd[k]>0)p.cd[k]--})}
 function logIt(ok){G.log.unshift({ok,x:G.trick,pl:S.vs?G.t+1:0})}
 function judge(ok){
-  const p=cur();snd(ok?'landed':'failed');hap(ok?'success':'error');if(ok){G.done.add(norm(G.trick));checkAch()}
+  const p=cur();snd(ok?'landed':'failed');hap(ok?'success':'error');if(ok&&!S.vs){G.done.add(norm(G.trick));checkAch()}
   if(S.arc){
     if(!ok&&G.ex==1){G.ex=2;return render()}
     tick(p);if(ok){p.b+=G.bet*2;p.l++}else p.f++;logIt(ok);G.bet=null;G.ex=0;
@@ -243,7 +243,7 @@ async function loadAch(){
 function renderAch(){
   const l=$('achlist');if(!l)return;
   $('acht').textContent=`Achievements ${[...got].filter(n=>ACH.some(a=>a.n==n)).length}/${ACH.length}`;
-  l.innerHTML=ACH.length?ACH.map(a=>{const y=got.has(a.n);return `<div class="ai"><b class="${y?'y':'n'}">${y?'✓':'✗'}</b><div>${esc(a.n)}<small>${a.t.map(esc).join(' · ')}</small></div></div>`}).join(''):'<small style="color:var(--mut)">No achievements found</small>';
+  l.innerHTML=ACH.length?ACH.map(a=>{const y=got.has(a.n);return `<div class="ai"><b class="${y?'y':'n'}">${y?'✓':'✗'}</b><div>${esc(a.n)}</div></div>`}).join(''):'<small style="color:var(--mut)">No achievements found</small>';
   $('achreset').disabled=!got.size;
 }
 function checkAch(){
